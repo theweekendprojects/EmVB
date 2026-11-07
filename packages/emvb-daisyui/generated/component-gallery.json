@@ -62,5 +62,138 @@
       "description": "12% increase",
       "direction": "horizontal"
     }
+  },
+  {
+    "id": "input",
+    "label": "Input",
+    "category": "Actions",
+    "defaults": {
+      "type": "text",
+      "placeholder": "Type here",
+      "value": "",
+      "name": "field",
+      "label": "Field",
+      "disabled": false,
+      "required": false,
+      "size": "md",
+      "tone": "neutral",
+      "variant": "default"
+    }
+  },
+  {
+    "id": "textarea",
+    "label": "Textarea",
+    "category": "Actions",
+    "defaults": {
+      "placeholder": "Write here",
+      "value": "",
+      "rows": 4,
+      "name": "field",
+      "label": "Field",
+      "disabled": false,
+      "required": false,
+      "size": "md",
+      "tone": "neutral",
+      "variant": "default"
+    }
+  },
+  {
+    "id": "select",
+    "label": "Select",
+    "category": "Actions",
+    "defaults": {
+      "options": "First option\nSecond option\nThird option",
+      "selected": "First option",
+      "name": "field",
+      "label": "Field",
+      "disabled": false,
+      "required": false,
+      "size": "md",
+      "tone": "neutral",
+      "variant": "default"
+    }
+  },
+  {
+    "id": "checkbox",
+    "label": "Checkbox",
+    "category": "Actions",
+    "defaults": {
+      "name": "checkbox",
+      "value": "on",
+      "label": "Checkbox",
+      "checked": false,
+      "disabled": false,
+      "size": "md",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "radio",
+    "label": "Radio",
+    "category": "Actions",
+    "defaults": {
+      "name": "radio",
+      "value": "on",
+      "label": "Radio",
+      "checked": false,
+      "disabled": false,
+      "size": "md",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "toggle",
+    "label": "Toggle",
+    "category": "Actions",
+    "defaults": {
+      "name": "toggle",
+      "value": "on",
+      "label": "Toggle",
+      "checked": false,
+      "disabled": false,
+      "size": "md",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "file-input",
+    "label": "File-Input",
+    "category": "Actions",
+    "defaults": {
+      "name": "upload",
+      "label": "Choose file",
+      "accept": "image/*",
+      "multiple": false,
+      "disabled": false,
+      "size": "md",
+      "tone": "neutral"
+    }
+  },
+  {
+    "id": "range",
+    "label": "Range",
+    "category": "Actions",
+    "defaults": {
+      "name": "range",
+      "label": "Range",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "value": 50,
+      "size": "md",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "rating",
+    "label": "Rating",
+    "category": "Actions",
+    "defaults": {
+      "name": "rating",
+      "label": "Rating",
+      "max": 5,
+      "value": 3,
+      "size": "md"
+    }
   }
 ]
