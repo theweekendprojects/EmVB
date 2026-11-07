@@ -12,7 +12,7 @@ export const BUTTON: DaisyComponentDefinition = {
     { key: "tone", label: "Color", kind: "select", default: "primary", options: tones, classMap: toneMap("btn") },
     { key: "variant", label: "Variant", kind: "select", default: "solid", options: ["solid", "outline", "dash", "soft", "ghost", "link"], classMap: { solid: "", outline: "btn-outline", dash: "btn-dash", soft: "btn-soft", ghost: "btn-ghost", link: "btn-link" } },
     { key: "size", label: "Size", kind: "select", default: "md", options: sizes, classMap: sizeMap("btn") },
-    { key: "disabled", label: "Disabled", kind: "boolean", default: false, attribute: "disabled" },
+    { key: "disabled", label: "Disabled", kind: "boolean", default: false, attribute: "aria-disabled" },
   ],
 };
 
@@ -53,12 +53,17 @@ export const CARD: DaisyComponentDefinition = {
 };
 
 export const PROGRESS: DaisyComponentDefinition = {
-  id: "progress", label: "Progress", category: "Data display", tag: "progress", rootClass: "progress",
+  id: "progress", label: "Progress", category: "Data display", tag: "div", rootClass: "progress",
   fields: [
-    { key: "value", label: "Value", kind: "number", default: 40, attribute: "value" },
-    { key: "max", label: "Maximum", kind: "number", default: 100, attribute: "max" },
+    { key: "value", label: "Value", kind: "number", default: 40 },
+    { key: "max", label: "Maximum", kind: "number", default: 100 },
     { key: "tone", label: "Color", kind: "select", default: "primary", options: tones, classMap: toneMap("progress") },
   ],
+  build(node, classes) {
+    const value = Math.max(0, Number(node.props.value));
+    const max = Math.max(1, Number(node.props.max));
+    return { tag: "div", attrs: { class: classes.join(" "), role: "progressbar", "aria-valuemin": "0", "aria-valuemax": String(max), "aria-valuenow": String(Math.min(value, max)) }, children: [] };
+  },
 };
 
 export const STATS: DaisyComponentDefinition = {

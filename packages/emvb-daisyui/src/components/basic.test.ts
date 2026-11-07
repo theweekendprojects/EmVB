@@ -10,7 +10,7 @@ describe("WP4 basic daisyUI components", () => {
   test("button uses semantic allowlisted classes", () => expect(render("button", { label: "Save", tone: "success", variant: "outline", size: "lg", disabled: false })).toEqual({ tag: "button", attrs: { class: "btn btn-success btn-outline btn-lg" }, children: ["Save"] }));
   test("alert receives an accessible role", () => expect(render("alert", { message: "Saved", tone: "success", variant: "soft" }).attrs.role).toBe("alert"));
   test("card produces body structure", () => expect(JSON.stringify(render("card", { title: "Plan", body: "Details", bordered: true, size: "md" }))).toContain("card-body"));
-  test("progress maps numeric attributes", () => expect(render("progress", { value: 60, max: 100, tone: "primary" }).attrs).toEqual({ value: "60", max: "100", class: "progress progress-primary" }));
+  test("progress maps numeric attributes", () => expect(render("progress", { value: 60, max: 100, tone: "primary" }).attrs).toEqual({ class: "progress progress-primary", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": "60" }));
   test("stats creates semantic stat parts", () => expect(JSON.stringify(render("stats", { title: "Users", value: "31K", description: "+12%", direction: "horizontal" }))).toContain("stat-value"));
   test("raw classes cannot be injected through props", () => expect(JSON.stringify(render("badge", { label: "Safe", tone: "fixed top-0", variant: "solid" }))).not.toContain("fixed"));
 });
