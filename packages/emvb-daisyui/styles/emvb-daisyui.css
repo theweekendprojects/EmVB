@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, corporate, business, cupcake;
+}
+@source "../src/**/*.{ts,tsx}";
+@source "../generated/**/*.ts";
