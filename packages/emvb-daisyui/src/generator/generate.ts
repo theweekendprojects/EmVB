@@ -11,8 +11,7 @@ function fieldAttrs(definition: DaisyComponentDefinition, node: DaisyComponentNo
     if (!field.attribute) continue;
     const value = node.props[field.key] ?? field.default;
     if (typeof value === "boolean") {
-      if (field.attribute.startsWith("aria-")) attrs[field.attribute] = String(value);
-      else if (value) attrs[field.attribute] = field.attribute;
+      if (value) attrs[field.attribute] = field.attribute.startsWith("aria-") ? "true" : field.attribute;
     } else if (value !== "") attrs[field.attribute] = String(value);
   }
   if (definition.role) attrs.role = definition.role;
