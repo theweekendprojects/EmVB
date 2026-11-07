@@ -1,4 +1,3 @@
-import type { DaisyComponentDefinition } from "../types.ts";
-
-/** Populated by WP4. Kept as a stable generator input. */
-export const DAISY_COMPONENT_CATALOG: readonly DaisyComponentDefinition[] = [];
+export { BASIC_DAISY_COMPONENTS, BUTTON, BADGE, ALERT, CARD, PROGRESS, STATS } from "./basic.ts";
+import { BASIC_DAISY_COMPONENTS } from "./basic.ts";
+export const DAISY_COMPONENT_CATALOG = BASIC_DAISY_COMPONENTS;

@@ -4,3 +4,4 @@
 }
 @source "../src/**/*.{ts,tsx}";
 @source "../generated/**/*.ts";
+@source "../generated/safelist.css";

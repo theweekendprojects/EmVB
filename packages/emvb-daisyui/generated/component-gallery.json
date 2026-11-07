@@ -1,0 +1,66 @@
+[
+  {
+    "id": "button",
+    "label": "Button",
+    "category": "Actions",
+    "defaults": {
+      "label": "Button",
+      "tone": "primary",
+      "variant": "solid",
+      "size": "md",
+      "disabled": false
+    }
+  },
+  {
+    "id": "badge",
+    "label": "Badge",
+    "category": "Data display",
+    "defaults": {
+      "label": "Badge",
+      "tone": "neutral",
+      "variant": "solid"
+    }
+  },
+  {
+    "id": "alert",
+    "label": "Alert",
+    "category": "Feedback",
+    "defaults": {
+      "message": "Your message goes here.",
+      "tone": "info",
+      "variant": "soft"
+    }
+  },
+  {
+    "id": "card",
+    "label": "Card",
+    "category": "Layout",
+    "defaults": {
+      "title": "Card title",
+      "body": "Add supporting content to this card.",
+      "bordered": true,
+      "size": "md"
+    }
+  },
+  {
+    "id": "progress",
+    "label": "Progress",
+    "category": "Data display",
+    "defaults": {
+      "value": 40,
+      "max": 100,
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "stats",
+    "label": "Statistic",
+    "category": "Data display",
+    "defaults": {
+      "title": "Total users",
+      "value": "31K",
+      "description": "12% increase",
+      "direction": "horizontal"
+    }
+  }
+]
