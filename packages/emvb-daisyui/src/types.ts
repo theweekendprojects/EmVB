@@ -26,7 +26,7 @@ export interface DaisyFieldDefinition {
 export interface DaisyComponentDefinition {
   id: string;
   label: string;
-  category: "Actions" | "Data display" | "Feedback" | "Layout" | "Marketing" | "Navigation";
+  category: "Actions" | "Data display" | "Feedback" | "Layout" | "Marketing" | "Navigation" | "Interactive";
   tag: string;
   rootClass: string;
   fields: readonly DaisyFieldDefinition[];

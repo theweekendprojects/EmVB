@@ -271,5 +271,276 @@
       "links": "About|/about\nContact|/contact\nPrivacy|/privacy",
       "layout": "horizontal"
     }
+  },
+  {
+    "id": "tabs",
+    "label": "Tabs",
+    "category": "Navigation",
+    "defaults": {
+      "label": "Content tabs",
+      "items": "Overview|Overview content\nDetails|Details content\nReviews|Reviews content",
+      "active": 1,
+      "style": "box"
+    }
+  },
+  {
+    "id": "accordion",
+    "label": "Accordion",
+    "category": "Layout",
+    "defaults": {
+      "label": "Frequently asked questions",
+      "items": "What is EmVB?|A visual editor for EmDash.\nDoes it support themes?|Yes, through daisyUI themes.",
+      "open": 1,
+      "icon": "arrow"
+    }
+  },
+  {
+    "id": "dropdown",
+    "label": "Dropdown",
+    "category": "Navigation",
+    "defaults": {
+      "label": "Open menu",
+      "items": "Profile|/profile\nSettings|/settings\nSign out|/logout",
+      "open": false,
+      "align": "start"
+    }
+  },
+  {
+    "id": "modal",
+    "label": "Modal",
+    "category": "Feedback",
+    "defaults": {
+      "title": "Confirm action",
+      "body": "Review the information before continuing.",
+      "open": true,
+      "closeLabel": "Close",
+      "position": "middle"
+    }
+  },
+  {
+    "id": "drawer",
+    "label": "Drawer",
+    "category": "Layout",
+    "defaults": {
+      "label": "Navigation drawer",
+      "buttonLabel": "Open drawer",
+      "side": "start",
+      "open": false
+    }
+  },
+  {
+    "id": "carousel",
+    "label": "Carousel",
+    "category": "Layout",
+    "defaults": {
+      "label": "Featured content",
+      "slides": "First slide|Welcome to EmVB\nSecond slide|Build with daisyUI\nThird slide|Publish with Astro",
+      "current": 1,
+      "width": "full"
+    }
+  },
+  {
+    "id": "collapse",
+    "label": "Collapse",
+    "category": "Layout",
+    "defaults": {
+      "title": "More information",
+      "content": "Additional details appear here.",
+      "open": false,
+      "icon": "arrow"
+    }
+  },
+  {
+    "id": "swap",
+    "label": "Swap",
+    "category": "Actions",
+    "defaults": {
+      "label": "Toggle state",
+      "on": "ON",
+      "off": "OFF",
+      "active": false,
+      "effect": "rotate"
+    }
+  },
+  {
+    "id": "table",
+    "label": "Table",
+    "category": "Data display",
+    "defaults": {
+      "caption": "Data table",
+      "headers": "Name|Role|Status",
+      "rows": "Jane|Designer|Active\nJohn|Developer|Away",
+      "style": "zebra",
+      "size": "md"
+    }
+  },
+  {
+    "id": "timeline",
+    "label": "Timeline",
+    "category": "Data display",
+    "defaults": {
+      "label": "Project milestones",
+      "items": "2024|Started|Initial release\n2025|Expanded|New components",
+      "direction": "vertical"
+    }
+  },
+  {
+    "id": "avatar",
+    "label": "Avatar",
+    "category": "Data display",
+    "defaults": {
+      "src": "/avatar.png",
+      "alt": "User avatar",
+      "size": "md",
+      "status": "none",
+      "shape": "round"
+    }
+  },
+  {
+    "id": "chat-bubble",
+    "label": "Chat Bubble",
+    "category": "Data display",
+    "defaults": {
+      "name": "Alice",
+      "message": "Hello from EmVB!",
+      "time": "12:45",
+      "side": "start",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "list",
+    "label": "List",
+    "category": "Data display",
+    "defaults": {
+      "label": "Items",
+      "items": "First|Description|/first\nSecond|Description|/second",
+      "striped": false
+    }
+  },
+  {
+    "id": "status",
+    "label": "Status",
+    "category": "Data display",
+    "defaults": {
+      "label": "Online",
+      "tone": "success",
+      "size": "md",
+      "animate": false
+    }
+  },
+  {
+    "id": "tooltip",
+    "label": "Tooltip",
+    "category": "Data display",
+    "defaults": {
+      "tip": "Helpful information",
+      "content": "Hover me",
+      "position": "top",
+      "open": false
+    }
+  },
+  {
+    "id": "countdown",
+    "label": "Countdown",
+    "category": "Data display",
+    "defaults": {
+      "label": "Time remaining",
+      "value": 42,
+      "max": 99,
+      "suffix": " seconds",
+      "size": "md"
+    }
+  },
+  {
+    "id": "hero",
+    "label": "Hero",
+    "category": "Marketing",
+    "defaults": {
+      "title": "Build beautiful pages",
+      "body": "Compose EmDash pages visually with daisyUI.",
+      "action": "Get started",
+      "href": "#start",
+      "height": "md",
+      "align": "center"
+    }
+  },
+  {
+    "id": "stack",
+    "label": "Stack",
+    "category": "Layout",
+    "defaults": {
+      "label": "Stacked content",
+      "count": 3,
+      "size": "md"
+    }
+  },
+  {
+    "id": "divider",
+    "label": "Divider",
+    "category": "Layout",
+    "defaults": {
+      "label": "OR",
+      "direction": "horizontal",
+      "tone": "neutral"
+    }
+  },
+  {
+    "id": "join",
+    "label": "Join",
+    "category": "Layout",
+    "defaults": {
+      "label": "Joined controls",
+      "direction": "horizontal"
+    }
+  },
+  {
+    "id": "indicator",
+    "label": "Indicator",
+    "category": "Layout",
+    "defaults": {
+      "badge": "New",
+      "position": "top-end",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "mask",
+    "label": "Mask",
+    "category": "Layout",
+    "defaults": {
+      "src": "/image.jpg",
+      "alt": "Masked image",
+      "shape": "squircle",
+      "size": "md"
+    }
+  },
+  {
+    "id": "browser-mockup",
+    "label": "Browser Mockup",
+    "category": "Marketing",
+    "defaults": {
+      "url": "https://emdash.dev",
+      "content": "Your page preview"
+    }
+  },
+  {
+    "id": "phone-mockup",
+    "label": "Phone Mockup",
+    "category": "Marketing",
+    "defaults": {
+      "camera": true,
+      "content": "Mobile preview"
+    }
+  },
+  {
+    "id": "code-mockup",
+    "label": "Code Mockup",
+    "category": "Marketing",
+    "defaults": {
+      "code": "npm install @perkyzz/emvb-daisyui",
+      "prefix": "$",
+      "tone": "neutral"
+    }
   }
 ]
