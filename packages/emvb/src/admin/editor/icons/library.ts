@@ -1,0 +1,253 @@
+import { getBundledIcon, sanitizeSvgMarkup } from "../../../core/index.ts";
+import { serialize } from "../../../core/render/vnode.ts";
+import type { UploadedIconItem } from "../../icon-uploads-api.ts";
+import { fold } from "../../search.ts";
+import type { IconEntry, IconSetFile } from "./set-format.ts";
+
+/**
+ * The Icon library (W-235): Lucide, Font Awesome Free, Tabler and Remix Icon, one lazily loaded
+ * JSON chunk per set (built by scripts/build-icon-sets.ts). Only the editor imports this; a picked
+ * icon is stored on the node as `iconId` + `iconSvg`, so public pages never load a set.
+ */
+export type IconSetId = "lucide" | "fontawesome" | "tabler" | "remix";
+
+type SetMeta = {
+  id: IconSetId;
+  label: string;
+  license: string;
+  styles: readonly { id: string; label: string; prefix: string }[];
+};
+
+/** What the sidebar shows before any set is loaded (checked against the set files in tests). */
+export const ICON_SETS: readonly SetMeta[] = [
+  {
+    id: "lucide",
+    label: "Lucide",
+    license: "ISC",
+    styles: [{ id: "lucide", label: "Lucide", prefix: "lucide" }],
+  },
+  {
+    id: "fontawesome",
+    label: "Font Awesome",
+    license: "CC BY 4.0",
+    styles: [
+      { id: "solid", label: "Solid", prefix: "fa-solid" },
+      { id: "regular", label: "Regular", prefix: "fa-regular" },
+      { id: "brands", label: "Brands", prefix: "fa-brands" },
+    ],
+  },
+  {
+    id: "tabler",
+    label: "Tabler",
+    license: "MIT",
+    styles: [
+      { id: "outline", label: "Outline", prefix: "tabler" },
+      { id: "filled", label: "Filled", prefix: "tabler-filled" },
+    ],
+  },
+  {
+    id: "remix",
+    label: "Remix",
+    license: "Apache-2.0",
+    styles: [
+      { id: "line", label: "Line", prefix: "remix" },
+      { id: "fill", label: "Fill", prefix: "remix" },
+    ],
+  },
+];
+
+/** A sidebar entry: everything, one set, or one style of a set. */
+export type IconCategory = {
+  id: string;
+  label: string;
+  set?: IconSetId;
+  style?: string;
+};
+
+export const ALL_ICONS = "all";
+
+/** W-239: the author's uploaded SVGs, stored as `upload:<id>`. */
+export const UPLOADS = "uploads";
+export const UPLOADS_CATEGORY: IconCategory = { id: UPLOADS, label: "My uploads" };
+const UPLOAD_PREFIX = "upload:";
+
+export const ICON_CATEGORIES: readonly IconCategory[] = [
+  { id: ALL_ICONS, label: "All icons" },
+  ...ICON_SETS.flatMap((set): IconCategory[] => [
+    { id: set.id, label: set.label, set: set.id },
+    ...(set.styles.length > 1
+      ? set.styles.map((style) => ({
+          id: `${set.id}/${style.id}`,
+          label: style.label,
+          set: set.id,
+          style: style.id,
+        }))
+      : []),
+  ]),
+];
+
+/** One icon as the picker shows it. */
+export type LibraryIcon = {
+  /** Stored as the node's iconId: `${prefix}:${name}`. */
+  id: string;
+  set: IconSetId | typeof UPLOADS;
+  setLabel: string;
+  style: string;
+  styleLabel: string;
+  name: string;
+  label: string;
+  /** Folded label, name, tags, set and style, for the word search. */
+  haystack: string;
+  /** Folded label and name only, to rank icons named for a search above icons tagged with it. */
+  named: string;
+  /** The complete `<svg>` stored on the node and shown in the tile. */
+  markup: string;
+};
+
+const LOADERS: Record<IconSetId, () => Promise<{ default: unknown }>> = {
+  lucide: () => import("@perkyzz/emvb-icons/lucide.json"),
+  fontawesome: () => import("@perkyzz/emvb-icons/fontawesome.json"),
+  tabler: () => import("@perkyzz/emvb-icons/tabler.json"),
+  remix: () => import("@perkyzz/emvb-icons/remix.json"),
+};
+
+const attrText = (attrs: Record<string, string>) =>
+  Object.entries(attrs)
+    .map(([name, value]) => ` ${name}="${value}"`)
+    .join("");
+
+/**
+ * The icons of one set file, ready for the grid. Tiles go through the same SVG allowlist as
+ * uploads: a viewBox or body that breaks out of the markup is left out, not shown.
+ */
+export function iconsOf(file: IconSetFile): LibraryIcon[] {
+  const styles = file.styles.map((style) => ({ style, root: attrText(style.attrs) }));
+  return file.icons.flatMap((entry: IconEntry) => {
+    const [name, styleIndex, label, body, tags] = entry;
+    const picked = styles[styleIndex] ?? styles[0];
+    if (!picked) throw new Error(`EmVB: icon set ${file.id} has no styles`);
+    const { style, root } = picked;
+    const viewBox = entry[5] ?? style.viewBox;
+    const raw = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${root}>${body}</svg>`;
+    const safe = sanitizeSvgMarkup(raw);
+    if (!safe) return [];
+    return [
+      {
+        id: `${style.prefix}:${name}`,
+        set: file.id as IconSetId,
+        setLabel: file.label,
+        style: style.id,
+        styleLabel: style.label,
+        name,
+        label,
+        haystack: fold(
+          `${label} ${name.replaceAll("-", " ")} ${tags} ${file.label} ${style.label}`,
+        ),
+        named: fold(`${label} | ${name.replaceAll("-", " ")}`),
+        markup: serialize(safe),
+      },
+    ];
+  });
+}
+
+const loaded = new Map<IconSetId, Promise<LibraryIcon[]>>();
+
+/** Loads a set once (a separate chunk the first time); later calls share the result. */
+export function loadIconSet(id: IconSetId): Promise<LibraryIcon[]> {
+  let pending = loaded.get(id);
+  if (!pending) {
+    pending = LOADERS[id]().then((mod) => iconsOf(mod.default as IconSetFile));
+    // A failed load (offline, chunk gone after a deploy) can be tried again.
+    pending.catch(() => loaded.delete(id));
+    loaded.set(id, pending);
+  }
+  return pending;
+}
+
+/** The sets a category needs. */
+export const setsFor = (category: IconCategory): IconSetId[] =>
+  category.set ? [category.set] : ICON_SETS.map((set) => set.id);
+
+/**
+ * Icons in a category matching the search: every word, any order (as W-217), case and accents
+ * aside. With a search, icons named for it come first ("heart": Heart, then Heart off, then icons
+ * only tagged heart); each group keeps the sets' order.
+ */
+export function filterIcons(
+  icons: readonly LibraryIcon[],
+  category: IconCategory,
+  query: string,
+): LibraryIcon[] {
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  const matched = icons.filter(
+    (icon) =>
+      (!category.set || icon.set === category.set) &&
+      (!category.style || icon.style === category.style) &&
+      words.every((word) => icon.haystack.includes(word)),
+  );
+  if (words.length === 0) return matched;
+  const phrase = words.join(" ");
+  const rank = (icon: LibraryIcon) => {
+    const [label, name] = icon.named.split(" | ");
+    if (label === phrase || name === phrase) return 0;
+    return words.every((word) => icon.named.includes(word)) ? 1 : 2;
+  };
+  const ranks = new Map(matched.map((icon) => [icon, rank(icon)]));
+  // toSorted is stable, so each rank keeps the sets' order.
+  return matched.toSorted((a, b) => (ranks.get(a) ?? 2) - (ranks.get(b) ?? 2));
+}
+
+const SET_OF_PREFIX = new Map<string, IconSetId>(
+  ICON_SETS.flatMap((set) => set.styles.map((style) => [style.prefix, set.id] as const)),
+);
+
+/**
+ * Where a stored iconId lives: `fa-solid:rocket` → Font Awesome, Solid. A bundled id from before
+ * the library ("star") is the Lucide icon of the same name.
+ */
+export function locateIcon(
+  iconId: string,
+): { set: IconSetId | typeof UPLOADS; style: string; id: string } | undefined {
+  if (iconId.startsWith(UPLOAD_PREFIX)) return { set: UPLOADS, style: UPLOADS, id: iconId };
+  const colon = iconId.indexOf(":");
+  if (colon < 0)
+    return getBundledIcon(iconId)
+      ? { set: "lucide", style: "lucide", id: `lucide:${iconId}` }
+      : undefined;
+  const prefix = iconId.slice(0, colon);
+  const set = SET_OF_PREFIX.get(prefix);
+  if (!set) return undefined;
+  const styles = ICON_SETS.find((item) => item.id === set)?.styles ?? [];
+  const style =
+    set === "remix"
+      ? iconId.endsWith("-fill")
+        ? "fill"
+        : "line"
+      : (styles.find((item) => item.prefix === prefix)?.id ?? set);
+  return { set, style, id: iconId };
+}
+
+/**
+ * Uploaded icons as grid tiles (W-239). The server stored them sanitized; they are sanitized
+ * again here before the tile shows them, and one that no longer passes is left out.
+ */
+export function uploadedIcons(items: readonly UploadedIconItem[]): LibraryIcon[] {
+  return items.flatMap((item): LibraryIcon[] => {
+    const tree = sanitizeSvgMarkup(item.svg);
+    if (!tree) return [];
+    return [
+      {
+        id: `${UPLOAD_PREFIX}${item.id}`,
+        set: UPLOADS,
+        setLabel: UPLOADS_CATEGORY.label,
+        style: UPLOADS,
+        styleLabel: UPLOADS_CATEGORY.label,
+        name: item.id,
+        label: item.name,
+        haystack: fold(item.name),
+        named: fold(`${item.name} | ${item.id}`),
+        markup: serialize(tree),
+      },
+    ];
+  });
+}

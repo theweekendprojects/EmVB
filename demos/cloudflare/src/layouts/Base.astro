@@ -1,0 +1,172 @@
+---
+import { getMenuWithCacheHint, getSiteSettingsWithCacheHint } from "emdash";
+import { EmDashHead, EmDashBodyStart, EmDashBodyEnd } from "emdash/ui";
+import { createPublicPageContext } from "emdash/page";
+import LiveSearch from "emdash/ui/search";
+import {
+	resolveThemeParts,
+	themeContext404,
+	themeContextFrom,
+	themeContextFront,
+	themeContextSearch,
+	type ResolvedThemeParts,
+} from "@perkyzz/emvb/astro";
+import { EmVBFloatsRuntime } from "@perkyzz/emvb/astro/floats";
+import { EmVBPopupsRuntime } from "@perkyzz/emvb/astro/popups";
+import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms/client";
+import { EmVBMenuRuntime } from "@perkyzz/emvb/astro/menu";
+import { EmVBTabsRuntime } from "@perkyzz/emvb/astro/tabs";
+import { resolveStarterSiteIdentity } from "../utils/site-identity";
+
+interface Props {
+	title: string;
+	pageTitle?: string | null;
+	description?: string | null;
+	image?: string | null;
+	canonical?: string | null;
+	/** Pass content reference for plugin page contributions on content pages */
+	content?: { collection: string; id: string; slug?: string | null };
+	/** When true, theme conditions treat this as the 404 route. */
+	is404?: boolean;
+	/** When true, theme conditions treat this as the site front page. */
+	isFront?: boolean;
+	/** When true, theme conditions treat this as the search results route. */
+	isSearch?: boolean;
+	/** Theme parts the route already resolved (numbered archive pages, W-223). */
+	theme?: ResolvedThemeParts;
+	/** The EmVB page's text direction (W-230); else the theme's. */
+	dir?: "ltr" | "rtl" | "auto";
+}
+
+const { title, pageTitle, description, image, content, is404, isFront, isSearch } = Astro.props;
+const [settingsResult, menuResult] = await Promise.all([
+	getSiteSettingsWithCacheHint(),
+	getMenuWithCacheHint("primary"),
+]);
+
+const { siteTitle, siteTagline, siteLogo, siteFavicon } = resolveStarterSiteIdentity(
+	settingsResult.data,
+);
+const titleIncludesSiteName =
+	title === siteTitle ||
+	title.endsWith(` | ${siteTitle}`) ||
+	title.endsWith(` — ${siteTitle}`);
+const fullTitle = titleIncludesSiteName ? title : `${title} — ${siteTitle}`;
+const pageDescription = description ?? siteTagline;
+const menu = menuResult.data;
+
+const themeCtx = is404
+	? themeContext404(Astro.url.pathname)
+	: isSearch
+		? themeContextSearch(Astro.url.pathname)
+		: isFront
+			? themeContextFront()
+			: themeContextFrom(Astro.url, { content: content ?? null });
+const theme = Astro.props.theme ?? (await resolveThemeParts(Astro, themeCtx, { pageCount: true }));
+// A/B tests and visitor rules (W-312, W-313) mark the response private: never route-cache it.
+const personalized = /\bprivate\b/.test(Astro.response.headers.get("Cache-Control") ?? "");
+if (Astro.cache?.enabled && !personalized) {
+	Astro.cache.set(settingsResult.cacheHint);
+	Astro.cache.set(menuResult.cacheHint);
+}
+// An EmVB archive page's canonical URL: page 1 is the bare archive URL (W-223).
+const canonical =
+	Astro.props.canonical ??
+	(theme.content && theme.canonicalPath ? new URL(theme.canonicalPath, Astro.url).href : undefined);
+
+const pageCtx = createPublicPageContext({
+	Astro,
+	kind: content ? "content" : "custom",
+	pageType: "website",
+	title: fullTitle,
+	pageTitle: pageTitle ?? title,
+	description: pageDescription,
+	canonical,
+	image,
+	content,
+	siteName: siteTitle,
+});
+
+---
+
+<!doctype html>
+<html lang="en" dir={Astro.props.dir ?? theme.dir}>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{fullTitle}</title>
+		<link rel="icon" href={siteFavicon} />
+		<EmDashHead page={pageCtx} />
+		<link rel="stylesheet" href="/site.css" />
+		{theme.css && <style set:html={theme.css} />}
+	</head>
+	<body>
+		<EmDashBodyStart page={pageCtx} />
+
+		{
+			theme.header ? (
+				<Fragment set:html={theme.header.html} />
+			) : (
+				<header>
+					<nav>
+						<a href="/">
+							{
+								siteLogo ? (
+									<img
+										src={siteLogo.url}
+										alt={siteLogo.alt || siteTitle}
+										style="height:48px;width:auto;margin:-8px 0;display:block;"
+									/>
+								) : (
+									siteTitle
+								)
+							}
+						</a>
+						{
+							menu?.items.map((item) => (
+								<a
+									href={item.url}
+									target={item.target}
+									rel={item.target === "_blank" ? "noopener noreferrer" : undefined}
+								>
+									{item.label}
+								</a>
+							))
+						}
+						<LiveSearch placeholder="Search..." collections={["posts", "pages"]} />
+					</nav>
+				</header>
+			)
+		}
+
+		<main>
+			{
+				theme.content ? (
+					<Fragment set:html={theme.content.html} />
+				) : (
+					<slot />
+				)
+			}
+		</main>
+
+		{theme.footer && <Fragment set:html={theme.footer.html} />}
+
+		{
+			theme.popups.map((popup) => (
+				<Fragment set:html={popup.html} />
+			))
+		}
+		{
+			theme.floats.map((float) => (
+				<Fragment set:html={float.html} />
+			))
+		}
+		{theme.needsPopupsRuntime && <EmVBPopupsRuntime />}
+		{theme.needsFloatsRuntime && <EmVBFloatsRuntime />}
+		{theme.needsTabsRuntime && <EmVBTabsRuntime />}
+		{theme.needsFormsRuntime && <EmVBFormsRuntime />}
+		{theme.needsMenuRuntime && <EmVBMenuRuntime />}
+
+		<EmDashBodyEnd page={pageCtx} />
+	</body>
+</html>
