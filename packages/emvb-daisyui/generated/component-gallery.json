@@ -195,5 +195,81 @@
       "value": 3,
       "size": "md"
     }
+  },
+  {
+    "id": "navbar",
+    "label": "Navbar",
+    "category": "Navigation",
+    "defaults": {
+      "ariaLabel": "Primary navigation",
+      "brand": "EmDash",
+      "brandHref": "/",
+      "items": "Home|/\nAbout|/about\nContact|/contact",
+      "position": "static"
+    }
+  },
+  {
+    "id": "menu",
+    "label": "Menu",
+    "category": "Navigation",
+    "defaults": {
+      "ariaLabel": "Menu",
+      "items": "Dashboard|/dashboard\nSettings|/settings",
+      "direction": "vertical",
+      "size": "md"
+    }
+  },
+  {
+    "id": "breadcrumbs",
+    "label": "Breadcrumbs",
+    "category": "Navigation",
+    "defaults": {
+      "ariaLabel": "Breadcrumb",
+      "items": "Home|/\nDocuments|/documents\nCurrent|"
+    }
+  },
+  {
+    "id": "pagination",
+    "label": "Pagination",
+    "category": "Navigation",
+    "defaults": {
+      "ariaLabel": "Pagination",
+      "pages": 5,
+      "current": 1,
+      "baseHref": "?page=",
+      "size": "md"
+    }
+  },
+  {
+    "id": "steps",
+    "label": "Steps",
+    "category": "Navigation",
+    "defaults": {
+      "items": "Register\nChoose plan\nPurchase\nReceive product",
+      "current": 2,
+      "direction": "horizontal"
+    }
+  },
+  {
+    "id": "dock",
+    "label": "Dock",
+    "category": "Navigation",
+    "defaults": {
+      "ariaLabel": "Mobile navigation",
+      "items": "Home|/\nSearch|/search\nProfile|/profile",
+      "active": "Home",
+      "size": "md"
+    }
+  },
+  {
+    "id": "footer",
+    "label": "Footer",
+    "category": "Navigation",
+    "defaults": {
+      "brand": "EmDash",
+      "description": "Visual publishing for modern teams.",
+      "links": "About|/about\nContact|/contact\nPrivacy|/privacy",
+      "layout": "horizontal"
+    }
   }
 ]
