@@ -33,7 +33,9 @@
     "bench:render": "bun scripts/bench-render.ts",
     "bench:css": "bun scripts/css-budget.ts",
     "pack:smoke": "bun scripts/pack-smoke.ts",
-    "icons:build": "bun scripts/build-icon-sets.ts"
+    "icons:build": "bun scripts/build-icon-sets.ts",
+    "daisy:generate": "bun run --cwd packages/emvb-daisyui generate",
+    "daisy:test": "bun run --cwd packages/emvb-daisyui test"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
