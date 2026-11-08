@@ -18,7 +18,8 @@
     "./styles.css": "./styles/emvb-daisyui.css",
     "./recipes": "./src/recipes/index.ts",
     "./validation": "./src/validation/index.ts",
-    "./compatibility": "./src/compatibility/index.ts"
+    "./compatibility": "./src/compatibility/index.ts",
+    "./conformance": "./src/conformance/index.ts"
   },
   "scripts": {
     "generate": "bun src/generator/cli.ts",
@@ -26,12 +27,12 @@
   },
   "peerDependencies": {
     "@perkyzz/emvb": "^0.9.0",
-    "daisyui": "^5.0.0",
-    "tailwindcss": "^4.0.0"
+    "daisyui": "5.7.50",
+    "tailwindcss": "4.1.17"
   },
   "devDependencies": {
     "@perkyzz/emvb": "workspace:*",
-    "daisyui": "^5.5.14",
-    "tailwindcss": "^4.1.17"
+    "daisyui": "5.7.50",
+    "tailwindcss": "4.1.17"
   }
 }

@@ -1,7 +1,7 @@
 import { Button, Input } from "@cloudflare/kumo";
 import * as React from "react";
 import { elementIcon } from "../element-chrome.ts";
-import { DAISY_RECIPES, daisyUIProvider } from "@perkyzz/emvb-daisyui";
+import { DAISY_RECIPES, daisyUIProvider, isVerifiedDaisyComponent } from "@perkyzz/emvb-daisyui";
 import {
   ELEMENT_DESCRIPTORS,
   SECTION_RECIPES,
@@ -46,9 +46,17 @@ export function AddPanel({
     setQuery("");
     searchRef.current?.focus();
   };
-  const daisyDescriptors = [...daisyUIProvider.components.values()].map((generated) => ({
-    type: `daisy:${generated.definition.id}`, name: generated.definition.label, group: "daisyui" as const, category: generated.definition.category,
-  }));
+  const daisyDescriptors = [...daisyUIProvider.components.values()]
+    .map((generated) => ({
+      type: `daisy:${generated.definition.id}`,
+      name: isVerifiedDaisyComponent(generated.definition.id)
+        ? generated.definition.label
+        : `${generated.definition.label} (experimental)`,
+      group: "daisyui" as const,
+      category: generated.definition.category,
+      verified: isVerifiedDaisyComponent(generated.definition.id),
+    }))
+    .sort((left, right) => Number(right.verified) - Number(left.verified) || left.name.localeCompare(right.name));
   const matched = [...ELEMENT_DESCRIPTORS, ...daisyDescriptors].filter(
     (d) => d.type !== "tab-panel" && d.type !== "daisy" && (formsAvailable || d.group !== "form") && matchesSearch(query, d.name, d.group, "category" in d ? d.category : ""),
   );
