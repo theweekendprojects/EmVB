@@ -10,7 +10,7 @@ import { paletteItems } from "./palette-items.ts";
 afterEach(cleanup);
 
 const layout: Layout = {
-  schemaVersion: 17,
+  schemaVersion: 18,
   root: {
     id: "root0001",
     type: "container",

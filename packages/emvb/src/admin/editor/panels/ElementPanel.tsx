@@ -8,7 +8,7 @@ import {
   WarningCircleIcon,
 } from "@phosphor-icons/react";
 import * as React from "react";
-import { daisyUIProvider } from "@perkyzz/emvb-daisyui";
+import { componentProviders } from "@perkyzz/emvb-provider-api";
 import { ELEMENT_NAMES, elementIcon } from "../element-chrome.ts";
 import { indexLayout } from "../../../core/tree-ops.ts";
 import type { ThemePartType } from "../../../core/theme/part-types.ts";
@@ -350,11 +350,12 @@ function fieldShown(key: string, node: LayoutNode, device: PopupDevice = "deskto
 
 const DAISY_THEMES = ["", "light", "dark", "corporate", "business", "cupcake"] as const;
 function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
-  if (node.type !== "daisy") return undefined;
+  if (node.type !== "provider") return undefined;
   const component = (node as LayoutNode & { component?: string }).component;
-  const generated = component ? daisyUIProvider.components.get(component) : undefined;
+  const provider = componentProviders().find((candidate) => candidate.nodeType === node.type);
+  const generated = component ? provider?.components.get(component) : undefined;
   if (!generated) return undefined;
-  return { type: "daisy", name: generated.definition.label, group: "content", defaultTab: "content", fields: [
+  return { type: "provider", name: generated.definition.label, group: "content", defaultTab: "content", fields: [
     ...generated.descriptor.fields,
     { key: "theme", kind: "select", label: "Theme", optional: true, options: DAISY_THEMES.map((value) => ({ value, label: value ? value[0]!.toUpperCase() + value.slice(1) : "Inherit" })) },
   ] };
@@ -362,7 +363,7 @@ function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
 
 /** Right panel with an element selected (IA / W-021): descriptor Content + Style sections. */
 export function ElementPanel(props: Props) {
-  const descriptor = props.node.type === "daisy" ? daisyDescriptor(props.node) : ELEMENT_DESCRIPTORS.find((d) => d.type === props.node.type);
+  const descriptor = props.node.type === "provider" ? daisyDescriptor(props.node) : ELEMENT_DESCRIPTORS.find((d) => d.type === props.node.type);
   if (!descriptor) {
     return (
       <div

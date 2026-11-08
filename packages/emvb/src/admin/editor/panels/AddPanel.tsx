@@ -1,7 +1,7 @@
 import { Button, Input } from "@cloudflare/kumo";
 import * as React from "react";
 import { elementIcon } from "../element-chrome.ts";
-import { DAISY_RECIPES, daisyUIProvider, isVerifiedDaisyComponent } from "@perkyzz/emvb-daisyui";
+import { componentProviders } from "@perkyzz/emvb-provider-api";
 import {
   ELEMENT_DESCRIPTORS,
   SECTION_RECIPES,
@@ -46,24 +46,22 @@ export function AddPanel({
     setQuery("");
     searchRef.current?.focus();
   };
-  const daisyDescriptors = [...daisyUIProvider.components.values()]
-    .map((generated) => ({
-      type: `daisy:${generated.definition.id}`,
-      name: isVerifiedDaisyComponent(generated.definition.id)
-        ? generated.definition.label
-        : `${generated.definition.label} (experimental)`,
+  const providerDescriptors = componentProviders().flatMap((provider) =>
+    [...provider.components.values()].map((generated) => ({
+      type: `provider:${provider.id}:${generated.descriptor.component}`,
+      name: generated.descriptor.support === "experimental" ? `${generated.descriptor.name} (experimental)` : generated.descriptor.name,
       group: "daisyui" as const,
-      category: generated.definition.category,
-      verified: isVerifiedDaisyComponent(generated.definition.id),
-    }))
-    .sort((left, right) => Number(right.verified) - Number(left.verified) || left.name.localeCompare(right.name));
-  const matched = [...ELEMENT_DESCRIPTORS, ...daisyDescriptors].filter(
+      category: generated.descriptor.category ?? provider.label,
+      verified: generated.descriptor.support !== "experimental",
+    })),
+  ).sort((left, right) => Number(right.verified) - Number(left.verified) || left.name.localeCompare(right.name));
+  const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(
     (d) => d.type !== "tab-panel" && d.type !== "daisy" && (formsAvailable || d.group !== "form") && matchesSearch(query, d.name, d.group, "category" in d ? d.category : ""),
   );
   const recipes = onRecipe
     ? [
         ...SECTION_RECIPES.map((recipe) => ({ ...recipe, insertId: `native:${recipe.id}`, provider: "EmVB" })),
-        ...DAISY_RECIPES.map((recipe) => ({ ...recipe, insertId: `daisy:${recipe.id}`, provider: "daisyUI" })),
+        ...componentProviders().flatMap((provider) => (provider.recipes ?? []).map((recipe) => ({ ...recipe, insertId: `provider:${provider.id}:${recipe.id}`, provider: provider.label }))),
       ].filter((recipe) => matchesSearch(query, recipe.name, recipe.description, recipe.provider, "recipe section"))
     : [];
   return (

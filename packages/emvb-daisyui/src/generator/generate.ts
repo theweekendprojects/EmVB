@@ -27,7 +27,7 @@ export function generateComponent(definition: DaisyComponentDefinition): Generat
   return {
     definition,
     descriptor: {
-      type: "daisy",
+      type: "provider",
       provider: "daisyui",
       component: definition.id,
       name: definition.label,
@@ -40,7 +40,7 @@ export function generateComponent(definition: DaisyComponentDefinition): Generat
         options: field.options?.map(value => ({ value, label: titleCase(value) })),
       })),
     },
-    defaults: () => ({ type: "daisy", component: definition.id, props: fieldDefaults(definition), ...(definition.container ? { children: [] } : {}) }),
+    defaults: () => ({ type: "provider", provider: "daisyui", component: definition.id, props: fieldDefaults(definition), ...(definition.container ? { children: [] } : {}) }),
     build(node, attrs = {}, children: VNode[] = []) {
       const classes = componentClasses(definition, node.props);
       if (definition.build) return definition.build(node, classes, children);

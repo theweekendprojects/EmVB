@@ -3,7 +3,7 @@ import { emptyDesign } from "../schema/design.ts";
 import { renderPage } from "./index.ts";
 
 const layoutOf = (children: unknown[]) => ({
-  schemaVersion: 17,
+  schemaVersion: 18,
   root: { id: "root0001", type: "container", props: {}, children },
 });
 const loopUsing = (id: string, itemPartId: string) => ({

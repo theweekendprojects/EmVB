@@ -21,7 +21,7 @@ import { findNode, nodeChildren } from "./tree-ops.ts";
 import { validateLayout } from "./validate.ts";
 
 const page = (children: LayoutNode[]): Layout => ({
-  schemaVersion: 17,
+  schemaVersion: 18,
   root: { id: "root0001", type: "container", props: {}, children },
 });
 
@@ -60,7 +60,7 @@ describe("clipboard envelope (W-093)", () => {
   test("an element round-trips through the envelope, and the copy doesn't share objects", () => {
     const node = heading();
     const clip = elementClip(node);
-    expect(clip).toMatchObject({ format: "emvb-clipboard", version: 1, schemaVersion: 17 });
+    expect(clip).toMatchObject({ format: "emvb-clipboard", version: 1, schemaVersion: 18 });
     (node.props as { text: string }).text = "Changed after copy";
     const back = readOk(encodeClip(clip));
     expect(back.kind).toBe("element");

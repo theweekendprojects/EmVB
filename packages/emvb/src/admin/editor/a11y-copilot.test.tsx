@@ -8,7 +8,7 @@ import { A11yDialog, A11yScoreButton } from "./A11yCopilot.tsx";
 afterEach(cleanup);
 
 const layout = {
-  schemaVersion: 17,
+  schemaVersion: 18,
   root: {
     id: "root0001",
     type: "container",

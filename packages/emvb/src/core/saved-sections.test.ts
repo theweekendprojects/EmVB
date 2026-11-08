@@ -19,7 +19,7 @@ import { validateDesign, validateLayout } from "./validate.ts";
 const NOW = "2026-10-21T21:00:00.000Z";
 
 const page = (children: LayoutNode[]): Layout => ({
-  schemaVersion: 17,
+  schemaVersion: 18,
   root: { id: "root0001", type: "container", props: {}, children },
 });
 

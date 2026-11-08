@@ -23,7 +23,8 @@
   },
   "scripts": {
     "generate": "bun src/generator/cli.ts",
-    "test": "bun test src"
+    "test": "bun test src",
+    "conformance:css": "bun src/conformance/cli.ts"
   },
   "peerDependencies": {
     "daisyui": "5.7.50",

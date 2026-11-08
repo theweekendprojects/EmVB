@@ -31,7 +31,7 @@ function Harness({ start, device }: { start: LayoutNode; device?: "mobile" }) {
     <ElementPanel
       node={node}
       layout={{
-        schemaVersion: 17,
+        schemaVersion: 18,
         root: { id: "root0001", type: "container", props: {}, children: [node] },
       }}
       design={emptyDesign()}

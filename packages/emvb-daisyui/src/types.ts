@@ -8,7 +8,8 @@ export type VNode = ProviderVNode;
 
 export interface DaisyComponentNode extends ProviderComponentNode {
   id: string;
-  type: "daisy";
+  type: "provider";
+  provider: "daisyui";
   component: string;
   props: DaisyProps;
   children?: DaisyComponentNode[];
@@ -40,7 +41,7 @@ export interface DaisyComponentDefinition {
 export interface GeneratedDaisyComponent extends ProviderComponent<DaisyComponentNode> {
   definition: DaisyComponentDefinition;
   descriptor: {
-    type: "daisy";
+    type: "provider";
     provider: "daisyui";
     component: string;
     name: string;

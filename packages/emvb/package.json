@@ -52,7 +52,6 @@
     "@perkyzz/emvb-icons": "0.9.0",
     "photocn": "0.1.2",
     "zod": "~4.5.4",
-    "@perkyzz/emvb-daisyui": "workspace:*",
     "@perkyzz/emvb-provider-api": "workspace:*"
   },
   "devDependencies": {

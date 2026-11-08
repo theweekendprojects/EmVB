@@ -116,7 +116,7 @@ describe("invalid layouts fail with the exact path", () => {
 
   test("a CSS id used twice is reported at the second use; different ids pass (W-091, W-016)", () => {
     const input = {
-      schemaVersion: 17,
+      schemaVersion: 18,
       root: container("root0001", [
         { ...heading("head0001"), htmlId: "hero" },
         container("cont0001", [{ ...heading("head0002"), htmlId: "hero" }]),
@@ -233,7 +233,7 @@ describe("design system document (D-013)", () => {
   });
 
   test("a newer design version is refused", () => {
-    const result = validateDesign({ ...design([]), schemaVersion: 17 });
+    const result = validateDesign({ ...design([]), schemaVersion: 18 });
     expect(result.ok ? undefined : result.issues[0]?.code).toBe("newer-version");
   });
 });
