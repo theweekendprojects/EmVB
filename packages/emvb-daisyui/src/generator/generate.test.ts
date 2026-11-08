@@ -17,7 +17,7 @@ const definition = {
 describe("component generator", () => {
   test("creates descriptor defaults and an allowlisted VNode", () => {
     const generated = generateComponent(definition);
-    expect(generated.descriptor.fields[1]?.key).toBe("props.tone");
+    expect(generated.descriptor.fields[1]?.key).toBe("tone");
     const node = { id: "x", ...generated.defaults() };
     expect(generated.build(node)).toEqual({ tag: "button", attrs: { class: "btn btn-primary" }, children: ["Button"] });
   });

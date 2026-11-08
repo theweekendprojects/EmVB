@@ -21,6 +21,7 @@ import type {
   SpacerNode,
   TextNode,
   VideoNode,
+  DaisyNode,
 } from "../schema/layout.ts";
 import { CONTAINER_TAGS, TEXT_TAGS } from "../schema/layout.ts";
 import type { ElementDescriptor } from "../schema/descriptors.ts";
@@ -31,6 +32,7 @@ import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import { getBundledIcon } from "../icons/catalog.ts";
 import { resolveEmbedUrl } from "../sanitize/embed-url.ts";
 import type { VNode } from "../render/vnode.ts";
+import { daisyUIProvider } from "@perkyzz/emvb-daisyui";
 
 import type { ElementDefinition } from "./definition.ts";
 import { menu, menuItem } from "./menu.ts";
@@ -1151,8 +1153,24 @@ const toc: ElementDefinition<TocNode> = {
   }),
 };
 
+const daisy: ElementDefinition<DaisyNode> = {
+  baseCss: "",
+  defaults: () => ({ type: "daisy", component: "button", props: {} }),
+  descriptor: { type: "daisy", name: "daisyUI component", group: "content", defaultTab: "content", fields: [] },
+  build: (node, attrs, children) => {
+    const theme = typeof node.props.theme === "string" ? node.props.theme : undefined;
+    const cleanProps = theme === undefined ? node.props : Object.fromEntries(Object.entries(node.props).filter(([key]) => key !== "theme"));
+    try {
+      return daisyUIProvider.render({ ...node, props: cleanProps }, { ...attrs, ...(theme ? { "data-theme": theme } : {}) }, children) as VNode;
+    } catch {
+      return { tag: "div", attrs: { ...attrs, class: [attrs.class, "emvb-unknown"].filter(Boolean).join(" ") }, children: [`Unknown daisyUI component "${node.component}"`] };
+    }
+  },
+};
+
 export const ELEMENTS = {
   heading,
+  daisy,
   toc,
   container,
   "layout-section": layoutSection,

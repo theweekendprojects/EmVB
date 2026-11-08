@@ -28,7 +28,7 @@ export function LeftPanel({
   layout: Layout | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onAdd: (type: ElementType) => void;
+  onAdd: (type: string) => void;
   /** Adds a section recipe (W-320). */
   onRecipe?: (id: string) => void;
   /** My sections (W-876). */

@@ -4,12 +4,21 @@
   "description": "Generated daisyUI component provider for EmVB",
   "license": "MIT",
   "type": "module",
-  "files": ["src", "generated", "styles", "README.md", "licenses"],
+  "files": [
+    "src",
+    "generated",
+    "styles",
+    "README.md",
+    "licenses"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./catalog": "./src/catalog/index.ts",
     "./themes": "./src/themes/index.ts",
-    "./styles.css": "./styles/emvb-daisyui.css"
+    "./styles.css": "./styles/emvb-daisyui.css",
+    "./recipes": "./src/recipes/index.ts",
+    "./validation": "./src/validation/index.ts",
+    "./compatibility": "./src/compatibility/index.ts"
   },
   "scripts": {
     "generate": "bun src/generator/cli.ts",

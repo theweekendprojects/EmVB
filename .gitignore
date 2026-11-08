@@ -34,3 +34,6 @@ demos/*/emdash-env.d.ts
 
 # Playwright auth state (local dev sessions)
 e2e/.auth/
+
+# project bundle text export (copyToFIle.py output)
+project_bundle.txt
