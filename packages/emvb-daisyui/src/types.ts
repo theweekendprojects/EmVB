@@ -1,4 +1,4 @@
-import type { ComponentProvider as NeutralComponentProvider, ProviderComponent, ProviderComponentDescriptor, ProviderComponentNode, ProviderFieldKind, ProviderFieldValue, ProviderProps, ProviderVNode } from "@perkyzz/emvb-provider-api";
+import type { ComponentProvider as NeutralComponentProvider, ProviderComponent, ProviderComponentDescriptor, ProviderComponentNode, ProviderFieldKind, ProviderFieldValue, ProviderProps, ProviderVNode, ProviderRenderContext } from "@perkyzz/emvb-provider-api";
 
 export type DaisyFieldKind = ProviderFieldKind;
 export type DaisyFieldValue = ProviderFieldValue;
@@ -58,6 +58,6 @@ export interface ComponentProvider extends NeutralComponentProvider<DaisyCompone
   label: string;
   components: ReadonlyMap<string, GeneratedDaisyComponent>;
   createNode(component: string, id: string): DaisyComponentNode;
-  render(node: DaisyComponentNode, attrs?: Record<string, string>, children?: VNode[]): VNode;
+  render(node: DaisyComponentNode, attrs?: Record<string, string>, children?: VNode[], context?: ProviderRenderContext): VNode;
   cssEntryPoints: readonly string[];
 }

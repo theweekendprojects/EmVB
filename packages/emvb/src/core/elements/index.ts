@@ -1163,7 +1163,7 @@ const providerElement: ElementDefinition<ProviderNode> = {
       if (!provider) throw new Error(`Provider is not registered: ${node.provider}`);
       const meta = node.providerMeta ?? {};
       const theme = typeof meta.theme === "string" ? meta.theme : undefined;
-      return provider.render(node, { ...attrs, ...(theme ? { "data-theme": theme } : {}) }, children) as VNode;
+      return provider.render(node, { ...attrs, ...(theme ? { "data-theme": theme } : {}) }, children, { mode: "public" }) as VNode;
     } catch {
       return { tag: "div", attrs: { ...attrs, class: [attrs.class, "emvb-unknown"].filter(Boolean).join(" ") }, children: [`Unknown provider component "${node.provider}:${node.component}"`] };
     }
