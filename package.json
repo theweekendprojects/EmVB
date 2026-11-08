@@ -35,7 +35,9 @@
     "pack:smoke": "bun scripts/pack-smoke.ts",
     "icons:build": "bun scripts/build-icon-sets.ts",
     "daisy:generate": "bun run --cwd packages/emvb-daisyui generate",
-    "daisy:test": "bun run --cwd packages/emvb-daisyui test"
+    "daisy:test": "bun run --cwd packages/emvb-daisyui test",
+    "providers:build": "bun scripts/build-provider-packages.ts",
+    "providers:smoke": "bun scripts/smoke-provider-packages.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

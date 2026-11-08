@@ -4,7 +4,19 @@
   "description": "Framework-neutral external component provider contracts and registry for EmVB",
   "license": "MIT",
   "type": "module",
-  "files": ["src", "README.md"],
-  "exports": { ".": "./src/index.ts" },
-  "scripts": { "test": "bun test src" }
+  "files": [
+    "dist",
+    "README.md",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "test": "bun test src",
+    "build": "bun ../../scripts/build-provider-packages.ts"
+  }
 }
