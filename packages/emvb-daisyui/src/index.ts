@@ -4,3 +4,6 @@ export * from "./generator/index.ts";
 export * from "./catalog/index.ts";
 export * from "./themes/index.ts";
 export { daisyUIProvider } from "./provider.ts";
+export * from "./recipes/index.ts";
+export * from "./validation/index.ts";
+export * from "./compatibility/index.ts";
