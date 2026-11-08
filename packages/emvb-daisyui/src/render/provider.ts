@@ -6,6 +6,7 @@ export function createDaisyUIProvider(definitions: readonly DaisyComponentDefini
   return {
     id: "daisyui",
     label: "daisyUI",
+    nodeType: "daisy",
     components,
     cssEntryPoints: ["@perkyzz/emvb-daisyui/styles.css"],
     createNode(component, id) {

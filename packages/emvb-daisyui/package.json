@@ -26,13 +26,14 @@
     "test": "bun test src"
   },
   "peerDependencies": {
-    "@perkyzz/emvb": "^0.9.0",
     "daisyui": "5.7.50",
     "tailwindcss": "4.1.17"
   },
   "devDependencies": {
-    "@perkyzz/emvb": "workspace:*",
     "daisyui": "5.7.50",
     "tailwindcss": "4.1.17"
+  },
+  "dependencies": {
+    "@perkyzz/emvb-provider-api": "workspace:*"
   }
 }

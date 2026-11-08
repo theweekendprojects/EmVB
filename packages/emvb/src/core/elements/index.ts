@@ -32,7 +32,7 @@ import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import { getBundledIcon } from "../icons/catalog.ts";
 import { resolveEmbedUrl } from "../sanitize/embed-url.ts";
 import type { VNode } from "../render/vnode.ts";
-import { daisyUIProvider } from "@perkyzz/emvb-daisyui";
+import { componentProvider } from "@perkyzz/emvb-provider-api";
 
 import type { ElementDefinition } from "./definition.ts";
 import { menu, menuItem } from "./menu.ts";
@@ -1161,7 +1161,9 @@ const daisy: ElementDefinition<DaisyNode> = {
     const theme = typeof node.props.theme === "string" ? node.props.theme : undefined;
     const cleanProps = theme === undefined ? node.props : Object.fromEntries(Object.entries(node.props).filter(([key]) => key !== "theme"));
     try {
-      return daisyUIProvider.render({ ...node, props: cleanProps }, { ...attrs, ...(theme ? { "data-theme": theme } : {}) }, children) as VNode;
+      const provider = componentProvider("daisyui");
+      if (!provider) throw new Error("daisyUI provider is not registered");
+      return provider.render({ ...node, props: cleanProps }, { ...attrs, ...(theme ? { "data-theme": theme } : {}) }, children) as VNode;
     } catch {
       return { tag: "div", attrs: { ...attrs, class: [attrs.class, "emvb-unknown"].filter(Boolean).join(" ") }, children: [`Unknown daisyUI component "${node.component}"`] };
     }
