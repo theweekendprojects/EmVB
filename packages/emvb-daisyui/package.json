@@ -5,26 +5,49 @@
   "license": "MIT",
   "type": "module",
   "files": [
-    "src",
+    "dist",
     "generated",
-    "styles",
     "README.md",
-    "licenses"
+    "licenses",
+    "src"
   ],
   "exports": {
-    ".": "./src/index.ts",
-    "./catalog": "./src/catalog/index.ts",
-    "./themes": "./src/themes/index.ts",
-    "./styles.css": "./styles/emvb-daisyui.css",
-    "./recipes": "./src/recipes/index.ts",
-    "./validation": "./src/validation/index.ts",
-    "./compatibility": "./src/compatibility/index.ts",
-    "./conformance": "./src/conformance/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./catalog": {
+      "types": "./dist/catalog.d.ts",
+      "import": "./dist/catalog/index.js"
+    },
+    "./themes": {
+      "types": "./dist/themes.d.ts",
+      "import": "./dist/themes/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./recipes": {
+      "types": "./dist/recipes.d.ts",
+      "import": "./dist/recipes/index.js"
+    },
+    "./validation": {
+      "types": "./dist/validation.d.ts",
+      "import": "./dist/validation/index.js"
+    },
+    "./compatibility": {
+      "types": "./dist/compatibility.d.ts",
+      "import": "./dist/compatibility/index.js"
+    },
+    "./conformance": {
+      "types": "./dist/conformance.d.ts",
+      "import": "./dist/conformance/index.js"
+    }
   },
   "scripts": {
     "generate": "bun src/generator/cli.ts",
     "test": "bun test src",
-    "conformance:css": "bun src/conformance/cli.ts"
+    "conformance:css": "bun src/conformance/cli.ts",
+    "build": "bun ../../scripts/build-provider-packages.ts",
+    "prepack": "bun run build"
   },
   "peerDependencies": {
     "daisyui": "5.7.50",
