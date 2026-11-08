@@ -1,0 +1,3 @@
+daisyUI is licensed under the MIT License.
+Copyright (c) 2020-PRESENT Pouya Saadeghi
+See https://github.com/saadeghi/daisyui/blob/master/LICENSE for the full license text.

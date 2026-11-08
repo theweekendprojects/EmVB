@@ -1,0 +1,114 @@
+import { z } from "zod";
+import { HEX_COLOR } from "../css-keywords.ts";
+import { DeviceStyles, HiddenOn, StyleProps, StyleStates } from "./style.ts";
+
+/**
+ * 15 since W-341, in step with layouts (optional fields only; the design document itself is unchanged).
+ * 14 since W-329, in step with layouts (optional fields only: `ch` lengths, negative margins).
+ * 13 since W-307, in step with layouts (the W-307 batch only adds optional fields).
+ * 12 since W-160: class gradients use the same stops as layouts. v11 `{ angle, from, to }` upgrades on read.
+ */
+export const DESIGN_SCHEMA_VERSION = 16;
+
+/** Tags a site can give a starting style. Classes and local styles still win. */
+export const DEFAULT_STYLE_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6", "p", "a", "button"] as const;
+
+export type DefaultStyleTag = (typeof DEFAULT_STYLE_TAGS)[number];
+
+const VariableId = z
+  .string()
+  .regex(/^[a-z0-9-]{1,40}$/, "Ids are 1-40 lowercase letters, digits or -");
+
+export const ColorVariable = z.strictObject({
+  id: VariableId,
+  name: z.string().min(1).max(60),
+  value: z.string().regex(HEX_COLOR, "Use a hex color such as #1a2b3c"),
+});
+
+/** Font stack string — commas and quoted family names allowed; `generateCss` drops an unsafe one. */
+export const FontVariable = z.strictObject({
+  id: VariableId,
+  name: z.string().min(1).max(60),
+  value: z.string().min(1).max(200),
+});
+
+/**
+ * A fluid size (W-316): `min` px on small screens growing to `max` px on large ones, emitted as
+ * `clamp()` between the site's fluid range. `value` stays as the fixed fallback the editor shows.
+ */
+const FluidSize = z.strictObject({
+  min: z.number().finite().min(0).max(1000),
+  max: z.number().finite().min(0).max(1000),
+});
+
+export const LengthVariable = z.strictObject({
+  id: VariableId,
+  name: z.string().min(1).max(60),
+  value: z.strictObject({
+    value: z.number().finite().min(0).max(10_000),
+    unit: z.enum(["px", "rem", "em", "%"]),
+  }),
+  fluid: FluidSize.optional(),
+});
+
+/** Screen widths fluid sizes grow between (W-316). Unset = 360 to 1280 px. */
+const FluidRange = z
+  .strictObject({
+    minWidth: z.number().int().min(240).max(1200),
+    maxWidth: z.number().int().min(480).max(3840),
+  })
+  .refine((range) => range.minWidth < range.maxWidth, "The small screen must be narrower");
+export type FluidRange = z.infer<typeof FluidRange>;
+
+/** Shared style class (R-021 / W-030). CSS selector is always `.emvb-k-<id>`. */
+const StyleClass = z.strictObject({
+  id: VariableId,
+  name: z.string().min(1).max(60),
+  style: StyleProps,
+  states: StyleStates.optional(),
+  devices: DeviceStyles.optional(),
+  hiddenOn: HiddenOn.optional(),
+});
+
+/** Design system document (D-013 / W-028 / W-030). */
+export const DesignSystem = z.strictObject({
+  schemaVersion: z.literal(DESIGN_SCHEMA_VERSION),
+  variables: z.strictObject({
+    colors: z.array(ColorVariable).max(200),
+    fonts: z.array(FontVariable).max(50).optional(),
+    fontSizes: z.array(LengthVariable).max(50).optional(),
+    spacings: z.array(LengthVariable).max(100).optional(),
+  }),
+  classes: z.array(StyleClass).max(100).optional(),
+  fluidRange: FluidRange.optional(),
+  /**
+   * Site text direction (W-230). Unset is left to right. Rendered as `dir` on every EmVB root
+   * and returned to hosts for `<html dir>`. Layout uses logical properties, so styles flip.
+   */
+  direction: z.enum(["ltr", "rtl", "auto"]).optional(),
+  /** Starting styles for HTML tags, emitted under `:where(.emvb-root)` so a class still wins. */
+  defaults: z
+    .strictObject({
+      h1: StyleProps.optional(),
+      h2: StyleProps.optional(),
+      h3: StyleProps.optional(),
+      h4: StyleProps.optional(),
+      h5: StyleProps.optional(),
+      h6: StyleProps.optional(),
+      p: StyleProps.optional(),
+      a: StyleProps.optional(),
+      button: StyleProps.optional(),
+    })
+    .optional(),
+});
+
+export type ColorVariable = z.infer<typeof ColorVariable>;
+export type FontVariable = z.infer<typeof FontVariable>;
+export type LengthVariable = z.infer<typeof LengthVariable>;
+export type DesignSystem = z.infer<typeof DesignSystem>;
+
+export const emptyDesign = (): DesignSystem => ({
+  schemaVersion: DESIGN_SCHEMA_VERSION,
+  variables: { colors: [], fonts: [], fontSizes: [], spacings: [] },
+  classes: [],
+});

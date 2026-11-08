@@ -1,0 +1,174 @@
+import { Button, Dialog } from "@cloudflare/kumo";
+import { WarningCircleIcon, WarningIcon } from "@phosphor-icons/react";
+import * as React from "react";
+import {
+  applyA11yFix,
+  applyAllA11yFixes,
+  findNode,
+  type A11yReport,
+  type Layout,
+} from "../../core/index.ts";
+import { ELEMENT_NAMES } from "./element-chrome.ts";
+import { BUTTON, SOLID_PRIMARY } from "../ui.ts";
+
+/** Score bands for the badge colour (W-317). */
+const scoreBand = (score: number) => (score >= 90 ? "good" : score >= 70 ? "fair" : "poor");
+
+/** The live score in the top bar (W-317); opens the co-pilot. */
+export function A11yScoreButton({ report, onOpen }: { report: A11yReport; onOpen: () => void }) {
+  const count = report.issues.length;
+  return (
+    <button
+      type="button"
+      className="emvb-a11y-score"
+      data-band={scoreBand(report.score)}
+      data-emvb-a11y-open=""
+      title={
+        count === 0
+          ? "Accessibility: no issues found"
+          : `Accessibility: ${count} issue${count === 1 ? "" : "s"}`
+      }
+      aria-label={`Accessibility score ${report.score} of 100, ${count} issue${count === 1 ? "" : "s"}`}
+      onClick={onOpen}
+    >
+      A11y <b>{report.score}</b>
+    </button>
+  );
+}
+
+/**
+ * Accessibility co-pilot (W-317): the page's issues with what's wrong, a jump to the element,
+ * and a one-click fix where there is a safe one (or all at once). Fixes are ordinary edits.
+ */
+export function A11yDialog({
+  open,
+  onOpenChange,
+  report,
+  layout,
+  onSelect,
+  onApply,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  report: A11yReport;
+  layout: Layout | null;
+  onSelect: (id: string) => void;
+  onApply: (layout: Layout, note: string) => void;
+}) {
+  const fixable = report.issues.filter((issue) => issue.fix);
+  // W-833: a fixed issue leaves the list with its focused Fix button, so focus fell back to the
+  // dialog itself. Move it to the next fix, else Fix all, else Close.
+  const refocusAfterFix = React.useRef(false);
+  React.useEffect(() => {
+    if (!refocusAfterFix.current) return;
+    refocusAfterFix.current = false;
+    const body = document.querySelector<HTMLElement>('[data-emvb-dialog="a11y"]');
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== body && body?.contains(active)) return;
+    const next =
+      body?.querySelector<HTMLElement>("[data-emvb-a11y-fix]") ??
+      body?.querySelector<HTMLElement>("[data-emvb-a11y-fix-all]") ??
+      body?.querySelector<HTMLElement>("[data-emvb-a11y-close]");
+    next?.focus();
+  });
+  const apply = (next: Layout, note: string) => {
+    refocusAfterFix.current = true;
+    onApply(next, note);
+  };
+  const name = (id: string) => {
+    const node = layout ? findNode(layout, id) : undefined;
+    if (!node) return "Element";
+    if (layout && node.id === layout.root.id) return "Page";
+    return node.label || ELEMENT_NAMES[node.type] || node.type;
+  };
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog size="base" className="p-6 emvb-a11y" data-emvb-a11y="">
+        <div className="emvb-dialog" data-emvb-dialog="a11y">
+          <Dialog.Title>
+            Accessibility · <span data-band={scoreBand(report.score)}>{report.score}</span>/100
+          </Dialog.Title>
+          {report.issues.length === 0 ? (
+            <p className="emvb-helper" data-emvb-a11y-clean="">
+              No issues found. Automated checks catch some problems, not all: try the page with a
+              keyboard and a screen reader too.
+            </p>
+          ) : (
+            <ul className="emvb-a11y-issues">
+              {report.issues.map((issue) => (
+                <li key={issue.id} data-emvb-a11y-issue={issue.id} data-severity={issue.severity}>
+                  {/* UX-022: severity has a shape and a name, not only the bar's colour. */}
+                  {issue.severity === "error" ? (
+                    <WarningCircleIcon
+                      className="emvb-a11y-severity"
+                      size={16}
+                      role="img"
+                      aria-label="Error"
+                    />
+                  ) : (
+                    <WarningIcon
+                      className="emvb-a11y-severity"
+                      size={16}
+                      role="img"
+                      aria-label="Warning"
+                    />
+                  )}
+                  <span className="emvb-a11y-what">
+                    <button
+                      type="button"
+                      className="emvb-link-button"
+                      onClick={() => {
+                        onSelect(issue.nodeId);
+                        onOpenChange(false);
+                      }}
+                    >
+                      {name(issue.nodeId)}
+                    </button>
+                    : {issue.message}
+                  </span>
+                  {issue.fix && layout && (
+                    <Button
+                      variant="secondary"
+                      className={BUTTON}
+                      data-emvb-a11y-fix={issue.id}
+                      onClick={() =>
+                        apply(applyA11yFix(layout, issue), `Fixed: ${issue.fixLabel ?? "issue"}`)
+                      }
+                    >
+                      {issue.fixLabel ?? "Fix"}
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="emvb-a11y-actions">
+            <Dialog.Close
+              render={(props) => (
+                <Button {...props} variant="secondary" className={BUTTON} data-emvb-a11y-close="">
+                  Close
+                </Button>
+              )}
+            />
+            {fixable.length > 1 && layout && (
+              <Button
+                variant="primary"
+                className={BUTTON}
+                style={SOLID_PRIMARY}
+                data-emvb-a11y-fix-all=""
+                onClick={() =>
+                  apply(
+                    applyAllA11yFixes(layout, fixable),
+                    `Fixed ${fixable.length} accessibility issues`,
+                  )
+                }
+              >
+                Fix {fixable.length} issues
+              </Button>
+            )}
+          </div>
+        </div>
+      </Dialog>
+    </Dialog.Root>
+  );
+}
