@@ -721,6 +721,7 @@ export const KNOWN_ELEMENT_TYPES = [
   "menu-item",
   "layout-section",
   "toc",
+  "daisy",
 ] as const;
 
 /** Headings on this page, as a list of links. No script (W-345). */
@@ -730,6 +731,22 @@ export const TocNode = leafNode(
     title: z.string().max(80).optional(),
   }),
 );
+
+
+/** A generated daisyUI component selected from the allowlisted provider catalog. */
+export const DaisyNode = z.strictObject({
+  id: NodeId,
+  type: z.literal("daisy"),
+  component: z.string().regex(/^[a-z][a-z0-9-]*$/).max(64),
+  props: z.record(
+    z.string().max(64),
+    z.union([z.string().max(4000), z.number().finite(), z.boolean()]),
+  ),
+  ...sharedNodeFields,
+  get children(): z.ZodType<LayoutNode[] | undefined> {
+    return z.array(LayoutNode).optional();
+  },
+});
 
 const knownTypeSet = new Set<string>(KNOWN_ELEMENT_TYPES);
 
@@ -794,11 +811,13 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
   AccordionItemNode,
   MenuNode,
   MenuItemNode,
+  DaisyNode,
 ]);
 
 /** One strict schema per known element type, for the MCP element catalogue (W-453). */
 export const KNOWN_NODE_SCHEMAS = KnownLayoutNode.options;
 
+export type DaisyNode = { id: string; type: "daisy"; component: string; props: Record<string, string | number | boolean>; children?: LayoutNode[] };
 export type HeadingNode = z.infer<typeof HeadingNode>;
 export type TocNode = z.infer<typeof TocNode>;
 export type SpacerNode = z.infer<typeof SpacerNode>;
@@ -1027,6 +1046,7 @@ export type LayoutNode =
   | AccordionItemNode
   | MenuNode
   | MenuItemNode
+  | DaisyNode
   | UnknownNode;
 
 /**

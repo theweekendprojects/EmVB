@@ -1,11 +1,11 @@
 import { Button, Input } from "@cloudflare/kumo";
 import * as React from "react";
 import { elementIcon } from "../element-chrome.ts";
+import { daisyUIProvider } from "@perkyzz/emvb-daisyui";
 import {
   ELEMENT_DESCRIPTORS,
   SECTION_RECIPES,
   typeMayAddScript,
-  type ElementType,
 } from "../../../core/index.ts";
 import { NEW_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { BUTTON, FIELD } from "../../ui.ts";
@@ -20,6 +20,7 @@ const GROUPS = [
   { id: "content", label: "Content" },
   { id: "dynamic", label: "Dynamic" },
   { id: "form", label: "Form" },
+  { id: "daisyui", label: "daisyUI" },
 ] as const;
 
 export function AddPanel({
@@ -29,7 +30,7 @@ export function AddPanel({
   defaultQuery = "",
   formsAvailable = true,
 }: {
-  onAdd: (type: ElementType) => void;
+  onAdd: (type: string) => void;
   /** Adds a section recipe (W-320); without it, recipes are not offered. */
   onRecipe?: (id: string) => void;
   /** My sections (W-876); without it the group is not shown. */
@@ -45,11 +46,11 @@ export function AddPanel({
     setQuery("");
     searchRef.current?.focus();
   };
-  const matched = ELEMENT_DESCRIPTORS.filter(
-    (d) =>
-      d.type !== "tab-panel" &&
-      (formsAvailable || d.group !== "form") &&
-      matchesSearch(query, d.name, d.group),
+  const daisyDescriptors = [...daisyUIProvider.components.values()].map((generated) => ({
+    type: `daisy:${generated.definition.id}`, name: generated.definition.label, group: "daisyui" as const, category: generated.definition.category,
+  }));
+  const matched = [...ELEMENT_DESCRIPTORS, ...daisyDescriptors].filter(
+    (d) => d.type !== "tab-panel" && d.type !== "daisy" && (formsAvailable || d.group !== "form") && matchesSearch(query, d.name, d.group, "category" in d ? d.category : ""),
   );
   const recipes = onRecipe
     ? SECTION_RECIPES.filter((r) => matchesSearch(query, r.name, r.description, "recipe section"))
@@ -93,7 +94,7 @@ export function AddPanel({
               <h3 className="emvb-add-group-title">{group.label}</h3>
               <div className="emvb-add-tiles" aria-label={group.label}>
                 {tiles.map((tile) => {
-                  const Icon = elementIcon(tile.type);
+                  const Icon = elementIcon(tile.type.startsWith("daisy:") ? "container" : tile.type);
                   return (
                     <button
                       key={tile.type}
@@ -110,7 +111,7 @@ export function AddPanel({
                         event.dataTransfer.effectAllowed = "copy";
                         dragStash.new(tile.type);
                       }}
-                      onClick={() => onAdd(tile.type as ElementType)}
+                      onClick={() => onAdd(tile.type)}
                     >
                       <Icon size={20} aria-hidden="true" />
                       <span>{tile.name}</span>

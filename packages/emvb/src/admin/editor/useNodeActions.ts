@@ -20,7 +20,6 @@ import {
   withFreshIds,
   subtreeSize,
   type Arranged,
-  type ElementType,
   type Layout,
   type LayoutNode,
 } from "../../core/index.ts";
@@ -222,7 +221,7 @@ export function useNodeActions({
     announce(`${label} added inside ${nameOf(result.parentId) ?? "Container"}`);
   };
 
-  const addFromPanel = (type: ElementType) => {
+  const addFromPanel = (type: string) => {
     const current = latest.current.page.layout;
     if (!current && type === "container") {
       dispatch({ type: "add-root-container" });
@@ -233,7 +232,8 @@ export function useNodeActions({
     const layout = current ?? startingLayout();
     const node = newElement(type);
     if (!node) return;
-    place(layout, node, ELEMENT_DESCRIPTORS.find((d) => d.type === type)?.name ?? type);
+    const label = type.startsWith("daisy:") ? type.slice("daisy:".length).replace(/-/g, " ") : ELEMENT_DESCRIPTORS.find((d) => d.type === type)?.name ?? type;
+    place(layout, node, label);
   };
 
   /** A section recipe built from the site's styles (W-320). */

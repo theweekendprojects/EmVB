@@ -34,7 +34,7 @@ export function generateComponent(definition: DaisyComponentDefinition): Generat
       group: "content",
       defaultTab: "content",
       fields: definition.fields.map(field => ({
-        key: `props.${field.key}`,
+        key: field.key,
         kind: field.kind,
         label: field.label,
         options: field.options?.map(value => ({ value, label: titleCase(value) })),

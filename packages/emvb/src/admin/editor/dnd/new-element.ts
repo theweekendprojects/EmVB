@@ -6,6 +6,7 @@ import {
   type Layout,
   type LayoutNode,
 } from "../../../core/index.ts";
+import { daisyUIProvider } from "@perkyzz/emvb-daisyui";
 
 const hasH1 = (node: LayoutNode): boolean =>
   ((node.type === "heading" || node.type === "post-title") &&
@@ -56,6 +57,11 @@ export function newTabPanel(n: number, random?: () => number): LayoutNode {
  * saved Accordions and Tabs with no items keep working as they are (W-130).
  */
 export function newElement(type: string, random?: () => number): LayoutNode | null {
+  if (type.startsWith("daisy:")) {
+    const component = type.slice("daisy:".length);
+    if (!daisyUIProvider.components.has(component)) return null;
+    return daisyUIProvider.createNode(component, newNodeId(random)) as LayoutNode;
+  }
   if (!(type in ELEMENTS)) return null;
   if (type === "tabs") {
     const tabs = defaultElement("tabs", newNodeId(random));
