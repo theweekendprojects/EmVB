@@ -1,0 +1,72 @@
+---
+import type { RenderedPage } from "./render.ts";
+
+/** The resolved meta of the page (EmDash's `getSeoMeta` result fits), for blank canvas mode. */
+interface PageMeta {
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogImage?: string | null;
+  canonical?: string | null;
+  robots?: string | null;
+}
+
+interface Props {
+  page: RenderedPage;
+  /** Blank canvas mode: a whole document, without the site's layout. The slot ends the body. */
+  standalone?: boolean;
+  title?: string;
+  description?: string | null;
+  /**
+   * W-274: blank canvas mode has no site layout to print the page's SEO tags, so it prints them:
+   * canonical, robots (No index), Open Graph and Twitter card. Pass `getSeoMeta(entry, …)`.
+   */
+  seo?: PageMeta;
+  /**
+   * W-528: the document language in blank canvas mode, e.g. "fr-CA". Defaults to the request's
+   * Astro locale, then "en"; it was always "en", so screen readers read other sites in English.
+   */
+  lang?: string;
+}
+
+/** A BCP 47-shaped language tag, or undefined. */
+const LANG_TAG = /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/;
+
+const { page, standalone = false, title = "", description, seo, lang } = Astro.props;
+const docLang = [lang, Astro.currentLocale].find((tag) => tag && LANG_TAG.test(tag)) ?? "en";
+const ogTitle = seo?.ogTitle || title;
+const ogDescription = seo?.ogDescription ?? description;
+---
+
+{
+  standalone ? (
+    <html lang={docLang} dir={page.dir}>
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{title}</title>
+        {description && <meta name="description" content={description} />}
+        {seo?.robots && <meta name="robots" content={seo.robots} />}
+        {seo?.canonical && <link rel="canonical" href={seo.canonical} />}
+        {seo && <meta property="og:type" content="website" />}
+        {seo && ogTitle && <meta property="og:title" content={ogTitle} />}
+        {seo && ogDescription && <meta property="og:description" content={ogDescription} />}
+        {seo?.canonical && <meta property="og:url" content={seo.canonical} />}
+        {seo?.ogImage && <meta property="og:image" content={seo.ogImage} />}
+        {seo && (
+          <meta name="twitter:card" content={seo.ogImage ? "summary_large_image" : "summary"} />
+        )}
+        <style is:inline set:html={page.css} />
+      </head>
+      <body>
+        <Fragment set:html={page.html} />
+        <slot />
+      </body>
+    </html>
+  ) : (
+    <>
+      <style is:inline set:html={page.css} />
+      <Fragment set:html={page.html} />
+      <slot />
+    </>
+  )
+}

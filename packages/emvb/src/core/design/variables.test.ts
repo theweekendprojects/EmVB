@@ -1,0 +1,401 @@
+import { describe, expect, test } from "bun:test";
+import { emptyDesign } from "../schema/design.ts";
+import type { Layout } from "../schema/layout.ts";
+import {
+  clearVariableRefs,
+  deleteVariable,
+  duplicateVariable,
+  findVariableUsages,
+  findVariableUsagesInDesign,
+  renameVariable,
+  removeVariable,
+} from "./variables.ts";
+
+const layout = (): Layout => ({
+  schemaVersion: 17,
+  root: {
+    id: "root0001",
+    type: "container",
+    props: {},
+    style: { gap: { var: "md", from: "spacing" } },
+    children: [
+      {
+        id: "head0001",
+        type: "heading",
+        props: { text: "Hi", level: 1 },
+        style: {
+          color: { var: "brand" },
+          fontSize: { var: "lg", from: "fontSize" },
+        },
+      },
+      {
+        id: "wrap0001",
+        type: "container",
+        props: {},
+        children: [
+          {
+            id: "text0001",
+            type: "text",
+            props: { text: "nested" },
+            style: {
+              color: { var: "brand" },
+              fontFamily: { var: "body", from: "font" },
+              paddingTop: { var: "md", from: "spacing" as const },
+            },
+          },
+        ],
+      },
+    ],
+  },
+});
+
+const designWithVars = () => {
+  const d = emptyDesign();
+  return {
+    ...d,
+    variables: {
+      colors: [{ id: "brand", name: "Brand", value: "#0055ff" }],
+      fonts: [{ id: "body", name: "Body", value: "Noto Sans, sans-serif" }],
+      fontSizes: [{ id: "lg", name: "Large", value: { value: 24, unit: "px" as const } }],
+      spacings: [{ id: "md", name: "Medium", value: { value: 16, unit: "px" as const } }],
+    },
+  };
+};
+
+describe("findVariableUsages (W-029)", () => {
+  test("finds usages across nested trees", () => {
+    const usages = findVariableUsages(layout(), "brand", "color");
+    expect(usages).toEqual([
+      { nodeId: "head0001", prop: "color" },
+      { nodeId: "text0001", prop: "color" },
+    ]);
+  });
+
+  test("matches spacing and fontSize kinds on nested and root nodes", () => {
+    expect(findVariableUsages(layout(), "md", "spacing")).toEqual([
+      { nodeId: "root0001", prop: "gap" },
+      { nodeId: "text0001", prop: "paddingTop" },
+    ]);
+    expect(findVariableUsages(layout(), "lg", "fontSize")).toEqual([
+      { nodeId: "head0001", prop: "fontSize" },
+    ]);
+    expect(findVariableUsages(layout(), "body", "font")).toEqual([
+      { nodeId: "text0001", prop: "fontFamily" },
+    ]);
+  });
+
+  test("kind filter ignores the same id under a different kind", () => {
+    const page: Layout = {
+      schemaVersion: 17,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          {
+            id: "head0001",
+            type: "heading",
+            props: { text: "x", level: 1 },
+            style: {
+              color: { var: "shared", from: "color" },
+              gap: { var: "shared", from: "spacing" },
+            },
+          },
+        ],
+      },
+    };
+    expect(findVariableUsages(page, "shared", "color")).toEqual([
+      { nodeId: "head0001", prop: "color" },
+    ]);
+    expect(findVariableUsages(page, "shared", "spacing")).toEqual([
+      { nodeId: "head0001", prop: "gap" },
+    ]);
+  });
+});
+
+describe("clearVariableRefs / deleteVariable (W-029)", () => {
+  test("delete clears refs and removes the variable; unused delete is silent", () => {
+    const before = layout();
+    const design = designWithVars();
+
+    const unused = deleteVariable(design, before, "missing", "color");
+    expect(unused.design).toEqual(design);
+    expect(unused.layout).toEqual(before);
+
+    const { design: afterDesign, layout: afterLayout } = deleteVariable(
+      design,
+      before,
+      "brand",
+      "color",
+    );
+    expect(afterDesign.variables.colors).toEqual([]);
+    expect(findVariableUsages(afterLayout, "brand", "color")).toEqual([]);
+    // Other bindings stay.
+    expect(findVariableUsages(afterLayout, "md", "spacing")).toHaveLength(2);
+    expect(afterLayout.root.children[0]?.style).toEqual({
+      fontSize: { var: "lg", from: "fontSize" },
+    });
+  });
+
+  test("clearVariableRefs drops only matching props and removes empty style objects", () => {
+    const page: Layout = {
+      schemaVersion: 17,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          {
+            id: "head0001",
+            type: "heading",
+            props: { text: "x", level: 1 },
+            style: { color: { var: "brand" } },
+          },
+        ],
+      },
+    };
+    const cleared = clearVariableRefs(page, "brand", "color");
+    expect(cleared.root.children[0]?.style).toBeUndefined();
+  });
+});
+
+describe("renameVariable / removeVariable (W-029)", () => {
+  test("rename is name-only; ids stay stable", () => {
+    const design = designWithVars();
+    const renamed = renameVariable(design, "brand", "color", "Primary");
+    expect(renamed.variables.colors[0]).toEqual({
+      id: "brand",
+      name: "Primary",
+      value: "#0055ff",
+    });
+    expect(removeVariable(renamed, "brand", "color").variables.colors).toEqual([]);
+  });
+});
+
+describe("findVariableUsagesInDesign (W-029 prep for classes)", () => {
+  test("reports class style refs when classes are present", () => {
+    const design = {
+      ...emptyDesign(),
+      classes: [
+        {
+          id: "card",
+          name: "Card",
+          style: {
+            backgroundColor: { var: "brand" },
+            paddingTop: { var: "md", from: "spacing" as const },
+          },
+        },
+      ],
+    };
+    expect(findVariableUsagesInDesign(design, "brand", "color")).toEqual([
+      { nodeId: "", prop: "backgroundColor", classId: "card" },
+    ]);
+  });
+});
+
+describe("box shadow colour refs (W-088)", () => {
+  const shadowed = (): Layout => ({
+    schemaVersion: 17,
+    root: {
+      id: "root0001",
+      type: "container",
+      props: {},
+      style: {
+        boxShadow: { x: 0, y: 4, blur: 12, spread: 0, color: { var: "brand" }, inset: true },
+        color: { var: "ink" },
+      },
+      children: [],
+    },
+  });
+
+  test("the managers count a colour variable used by a box shadow", () => {
+    expect(findVariableUsages(shadowed(), "brand", "color")).toEqual([
+      { nodeId: "root0001", prop: "boxShadow.color" },
+    ]);
+    expect(findVariableUsages(shadowed(), "brand", "spacing")).toEqual([]);
+    const design = {
+      ...emptyDesign(),
+      classes: [{ id: "lift", name: "Lift", style: shadowed().root.style ?? {} }],
+    };
+    expect(findVariableUsagesInDesign(design, "brand", "color")).toEqual([
+      { nodeId: "", prop: "boxShadow.color", classId: "lift" },
+    ]);
+  });
+
+  test("deleting the variable clears only the shadow's colour", () => {
+    const next = clearVariableRefs(shadowed(), "brand", "color");
+    expect(next.root.style).toEqual({
+      boxShadow: { x: 0, y: 4, blur: 12, spread: 0, inset: true },
+      color: { var: "ink" },
+    });
+    expect(clearVariableRefs(shadowed(), "other", "color")).toEqual(shadowed());
+  });
+});
+
+describe("icon shadow colour refs (W-245)", () => {
+  const iconPage = (): Layout => ({
+    schemaVersion: 17,
+    root: {
+      id: "root0001",
+      type: "container",
+      props: {},
+      children: [
+        {
+          id: "icon0001",
+          type: "icon",
+          props: { iconId: "star" },
+          style: { iconShadow: { x: 0, y: 2, blur: 4, color: { var: "brand" } } },
+          states: { hover: { iconShadow: { x: 0, y: 4, blur: 8, color: { var: "brand" } } } },
+        },
+      ],
+    },
+  });
+
+  test("the managers count a colour variable used by an icon shadow, in states too", () => {
+    expect(findVariableUsages(iconPage(), "brand", "color")).toEqual([
+      { nodeId: "icon0001", prop: "iconShadow.color" },
+      { nodeId: "icon0001", prop: "hover.iconShadow.color" },
+    ]);
+  });
+
+  test("deleting the variable clears only the shadow's colour", () => {
+    const next = clearVariableRefs(iconPage(), "brand", "color");
+    const icon = next.root.children[0];
+    expect(icon?.style).toEqual({ iconShadow: { x: 0, y: 2, blur: 4 } });
+    expect(icon?.states).toEqual({ hover: { iconShadow: { x: 0, y: 4, blur: 8 } } });
+    expect(findVariableUsages(next, "brand", "color")).toEqual([]);
+  });
+});
+
+describe("deleting a variable clears class styles too", () => {
+  const withClasses = () => ({
+    ...emptyDesign(),
+    variables: {
+      colors: [
+        { id: "brand", name: "Brand", value: "#0055ff" },
+        { id: "ink", name: "Ink", value: "#111111" },
+      ],
+      spacings: [{ id: "brand", name: "Brand gap", value: { value: 8, unit: "px" as const } }],
+    },
+    classes: [
+      {
+        id: "card",
+        name: "Card",
+        style: {
+          backgroundColor: { var: "brand" },
+          color: { var: "ink" },
+          paddingTop: { var: "brand", from: "spacing" as const },
+          boxShadow: { x: 0, y: 2, blur: 4, spread: 0, color: { var: "brand" } },
+        },
+      },
+      { id: "tint", name: "Tint", style: { color: { var: "brand" } } },
+      { id: "plain", name: "Plain", style: { opacity: 0.5 } },
+    ],
+  });
+
+  test("removeVariable drops the bindings of that kind on every class and keeps the rest", () => {
+    const before = withClasses();
+    const next = removeVariable(before, "brand", "color");
+    expect(next.variables.colors).toEqual([{ id: "ink", name: "Ink", value: "#111111" }]);
+    expect(next.classes).toEqual([
+      {
+        id: "card",
+        name: "Card",
+        style: {
+          color: { var: "ink" },
+          paddingTop: { var: "brand", from: "spacing" },
+          boxShadow: { x: 0, y: 2, blur: 4, spread: 0 },
+        },
+      },
+      { id: "tint", name: "Tint", style: {} },
+      { id: "plain", name: "Plain", style: { opacity: 0.5 } },
+    ]);
+    expect(next.classes?.[2]).toBe(before.classes[2]);
+    expect(findVariableUsagesInDesign(next, "brand", "color")).toEqual([]);
+    expect(findVariableUsagesInDesign(next, "brand", "spacing")).toHaveLength(1);
+    expect(before).toEqual(withClasses());
+  });
+
+  test("deleteVariable clears the page and the classes in one go", () => {
+    const result = deleteVariable(withClasses(), layout(), "brand", "color");
+    expect(findVariableUsages(result.layout, "brand", "color")).toEqual([]);
+    expect(findVariableUsagesInDesign(result.design, "brand", "color")).toEqual([]);
+  });
+
+  test("a variable used only by a class is still cleared, and an unused one changes nothing", () => {
+    const design = withClasses();
+    design.variables.colors = design.variables.colors.filter((c) => c.id !== "brand");
+    expect(removeVariable(design, "brand", "color").classes?.[1]?.style).toEqual({});
+    const untouched = withClasses();
+    expect(removeVariable(untouched, "missing", "color")).toBe(untouched);
+  });
+});
+
+describe("state styles use variables too (W-089)", () => {
+  const stateLayout = (): Layout => ({
+    schemaVersion: 17,
+    root: {
+      id: "root0001",
+      type: "container",
+      props: {},
+      children: [
+        {
+          id: "btn00001",
+          type: "button",
+          props: { text: "Go", href: "/go" },
+          style: { color: { var: "ink" } },
+          states: {
+            hover: { color: { var: "brand" }, opacity: 0.8 },
+            focus: { borderColor: { var: "brand" } },
+          },
+        },
+      ],
+    },
+  });
+  const stateDesign = () => ({
+    ...emptyDesign(),
+    classes: [
+      {
+        id: "card",
+        name: "Card",
+        style: { opacity: 0.5 },
+        states: { active: { backgroundColor: { var: "brand" } } },
+      },
+    ],
+  });
+
+  test("usages on node and class states are counted with the state in the prop", () => {
+    expect(findVariableUsages(stateLayout(), "brand", "color")).toEqual([
+      { nodeId: "btn00001", prop: "hover.color" },
+      { nodeId: "btn00001", prop: "focus.borderColor" },
+    ]);
+    expect(findVariableUsagesInDesign(stateDesign(), "brand", "color")).toEqual([
+      { nodeId: "", prop: "active.backgroundColor", classId: "card" },
+    ]);
+  });
+
+  test("deleting the variable clears state bindings and drops states left empty", () => {
+    const result = deleteVariable(stateDesign(), stateLayout(), "brand", "color");
+    const button = result.layout.root.children[0];
+    expect(button?.style).toEqual({ color: { var: "ink" } });
+    expect(button?.states).toEqual({ hover: { opacity: 0.8 } });
+    expect(result.design.classes?.[0]).toEqual({
+      id: "card",
+      name: "Card",
+      style: { opacity: 0.5 },
+    });
+  });
+});
+
+describe("duplicateVariable", () => {
+  test("copies the value under a new id and leaves the source", () => {
+    const design = emptyDesign();
+    design.variables.colors = [{ id: "brand", name: "Brand", value: "#112233" }];
+    const next = duplicateVariable(design, "brand", "color");
+    expect(next.variables.colors.map((entry) => entry.name)).toEqual(["Brand", "Brand copy"]);
+    expect(next.variables.colors[1]?.value).toBe("#112233");
+    expect(next.variables.colors[1]?.id).not.toBe("brand");
+    expect(next.variables.colors[0]).toBe(design.variables.colors[0]);
+    expect(duplicateVariable(design, "missing", "color")).toBe(design);
+  });
+});

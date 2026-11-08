@@ -1,0 +1,373 @@
+import { z } from "zod";
+import {
+  ALIGN_ITEMS,
+  BACKGROUND_POSITIONS,
+  BACKGROUND_REPEATS,
+  BACKGROUND_SIZES,
+  BORDER_STYLES,
+  CURSORS,
+  FLEX_DIRECTIONS,
+  FLEX_WRAPS,
+  HEX_COLOR,
+  JUSTIFY_CONTENT,
+  LENGTH_UNITS,
+  OBJECT_FITS,
+  OVERFLOWS,
+  POSITIONS,
+  TEXT_ALIGNS,
+  TEXT_DECORATIONS,
+  TEXT_TRANSFORMS,
+  TRANSITION_EASINGS,
+  TRANSITION_PROPERTIES,
+} from "../css-keywords.ts";
+import { isSafeFontStack } from "../sanitize/css.ts";
+import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
+import { POPUP_DEVICES } from "../theme/popup-rules.ts";
+import { MOTION_EFFECTS, MOTION_LIMITS } from "./motion.ts";
+
+/** Colour refs omit `from` (legacy). Length/font refs set `from` (W-028). */
+export const VariableRef = z.strictObject({
+  var: z.string().regex(/^[a-z0-9-]{1,40}$/),
+  from: z.enum(["color", "font", "fontSize", "spacing"]).optional(),
+});
+
+export const ColorValue = z.union([
+  z.string().regex(HEX_COLOR, "Use a hex color such as #1a2b3c"),
+  VariableRef,
+]);
+
+/** `ch` since W-331: the width of a "0", for readable line lengths such as 65ch. */
+const LengthUnit = z.enum(LENGTH_UNITS);
+
+export const Length = z.strictObject({
+  value: z.number().finite().min(0).max(10_000),
+  unit: LengthUnit,
+});
+
+/** Literal length or a fontSize/spacing variable reference. */
+export const LengthValue = z.union([Length, VariableRef]);
+
+/** Width, height and margins may also be `auto` (W-088). */
+const SizeValue = z.union([Length, VariableRef, z.literal("auto")]);
+
+/**
+ * Top, right, bottom and left may be negative, `auto` or a spacing variable (W-088); so may
+ * margins since W-331, to pull an element over its neighbour.
+ */
+const OffsetValue = z.union([
+  z.strictObject({ value: z.number().finite().min(-10_000).max(10_000), unit: LengthUnit }),
+  VariableRef,
+  z.literal("auto"),
+]);
+
+/** `w/h` with whole numbers 1–9999, emitted as `w / h` (W-088). */
+const ASPECT_RATIO = /^[1-9]\d{0,3}\/[1-9]\d{0,3}$/;
+
+const num = (min: number, max: number) => z.number().finite().min(min).max(max);
+
+/** One box shadow in px (W-088). No colour means the text colour, as in CSS. */
+const BoxShadow = z.strictObject({
+  x: num(-1000, 1000),
+  y: num(-1000, 1000),
+  blur: num(0, 1000),
+  spread: num(-1000, 1000),
+  color: ColorValue.optional(),
+  inset: z.boolean().optional(),
+});
+
+/** Filter functions, emitted in a fixed order; at least one is set (W-088). */
+const Filter = z
+  .strictObject({
+    blur: num(0, 100).optional(),
+    brightness: num(0, 300).optional(),
+    contrast: num(0, 300).optional(),
+    saturate: num(0, 300).optional(),
+    grayscale: num(0, 100).optional(),
+    hueRotate: num(0, 360).optional(),
+  })
+  .refine(
+    (filter) => Object.values(filter).some((v) => v !== undefined),
+    "Set at least one filter",
+  );
+
+/**
+ * A simple transition (W-089, Normal only): one duration, delay and easing for a fixed property
+ * group. `colors` means color, background-color and border-color. No free-form lists or curves.
+ */
+const Transition = z.strictObject({
+  duration: z.number().int().min(0).max(2000),
+  delay: z.number().int().min(0).max(2000).optional(),
+  easing: z.enum(TRANSITION_EASINGS),
+  property: z.enum(TRANSITION_PROPERTIES),
+});
+
+/** Style properties for layout and text elements (W-017 / R-012). Unknown keys are rejected. */
+export const StyleProps = z.strictObject({
+  flexDirection: z.enum(FLEX_DIRECTIONS).optional(),
+  flexWrap: z.enum(FLEX_WRAPS).optional(),
+  justifyContent: z.enum(JUSTIFY_CONTENT).optional(),
+  alignItems: z.enum(ALIGN_ITEMS).optional(),
+  gap: LengthValue.optional(),
+  /** How many grid columns this element spans (1–12). */
+  gridColumnSpan: z.number().int().min(1).max(12).optional(),
+  /** How many grid rows this element spans (1–12). */
+  gridRowSpan: z.number().int().min(1).max(12).optional(),
+  /** First column line (1–13). With a span, emits `start / span n`. */
+  gridColumnStart: z.number().int().min(1).max(13).optional(),
+  /** First row line (1–13). With a span, emits `start / span n`. */
+  gridRowStart: z.number().int().min(1).max(13).optional(),
+  width: SizeValue.optional(),
+  minWidth: LengthValue.optional(),
+  maxWidth: LengthValue.optional(),
+  height: SizeValue.optional(),
+  minHeight: LengthValue.optional(),
+  maxHeight: LengthValue.optional(),
+  overflow: z.enum(OVERFLOWS).optional(),
+  aspectRatio: z
+    .union([z.literal("auto"), z.string().regex(ASPECT_RATIO, "Use a ratio such as 16/9")])
+    .optional(),
+  objectFit: z.enum(OBJECT_FITS).optional(),
+  paddingTop: LengthValue.optional(),
+  paddingRight: LengthValue.optional(),
+  paddingBottom: LengthValue.optional(),
+  paddingLeft: LengthValue.optional(),
+  marginTop: OffsetValue.optional(),
+  marginRight: OffsetValue.optional(),
+  marginBottom: OffsetValue.optional(),
+  marginLeft: OffsetValue.optional(),
+  position: z.enum(POSITIONS).optional(),
+  top: OffsetValue.optional(),
+  right: OffsetValue.optional(),
+  bottom: OffsetValue.optional(),
+  left: OffsetValue.optional(),
+  zIndex: z.number().int().min(-9999).max(9999).optional(),
+  fontFamily: z
+    .union([
+      z.string().min(1).max(200).refine(isSafeFontStack, "Font stack looks unsafe."),
+      VariableRef,
+    ])
+    .optional(),
+  fontSize: LengthValue.optional(),
+  /** W-213: any weight 100–900 in steps of 100 (the font must ship it to look different). */
+  fontWeight: z
+    .union([
+      z.literal(100),
+      z.literal(200),
+      z.literal(300),
+      z.literal(400),
+      z.literal(500),
+      z.literal(600),
+      z.literal(700),
+      z.literal(800),
+      z.literal(900),
+      z.enum(["normal", "bold"]),
+    ])
+    .optional(),
+  /** W-213: also a plain number (unitless, 0–100), which scales with each child's font size. */
+  lineHeight: z.union([Length, VariableRef, z.number().finite().min(0).max(100)]).optional(),
+  /** W-213: may be negative, for tight display headings. */
+  letterSpacing: z
+    .union([
+      z.strictObject({ value: z.number().finite().min(-10_000).max(10_000), unit: LengthUnit }),
+      VariableRef,
+    ])
+    .optional(),
+  textAlign: z.enum(TEXT_ALIGNS).optional(),
+  textTransform: z.enum(TEXT_TRANSFORMS).optional(),
+  /** W-113. A button sets `none` in its base CSS, so it is not underlined unless a style says so. */
+  textDecoration: z.enum(TEXT_DECORATIONS).optional(),
+  color: ColorValue.optional(),
+  backgroundColor: ColorValue.optional(),
+  /** http(s) or a site path. Spaces, quotes and parentheses are refused so the URL can sit inside `url("")`. */
+  backgroundImage: z
+    .string()
+    .min(1)
+    .max(2000)
+    .refine(
+      (value) => sanitizeMediaUrl(value) === value && !/[()\\\s"'`]/.test(value),
+      "Use an http(s) URL or a site path, with no spaces or parentheses",
+    )
+    .optional(),
+  backgroundSize: z.enum(BACKGROUND_SIZES).optional(),
+  backgroundPosition: z.enum(BACKGROUND_POSITIONS).optional(),
+  backgroundRepeat: z.enum(BACKGROUND_REPEATS).optional(),
+  /** Video behind the element. Same URL rules as a background image (W-110). */
+  backgroundVideo: z
+    .string()
+    .min(1)
+    .max(2000)
+    .refine(
+      (value) => sanitizeMediaUrl(value) === value && !/[()\\\s"'`]/.test(value),
+      "Use an http(s) URL or a site path, with no spaces or parentheses",
+    )
+    .optional(),
+  /**
+   * Background gradient (W-160). Up to 10 stops. `angle` is the linear direction and the conic
+   * start; `position` is the radial centre. A stop colour variable is a colour use.
+   */
+  gradient: z
+    .strictObject({
+      type: z.enum(["linear", "radial", "conic"]),
+      angle: z.number().int().min(0).max(360).optional(),
+      position: z.enum(BACKGROUND_POSITIONS).optional(),
+      stops: z
+        .array(
+          z.strictObject({
+            color: ColorValue,
+            at: z.number().int().min(0).max(100),
+          }),
+        )
+        .min(2)
+        .max(10),
+    })
+    .optional(),
+  /** A colour laid over the image and gradient. `opacity` is 0–1 (W-094). */
+  overlay: z
+    .strictObject({
+      color: ColorValue,
+      opacity: z.number().finite().min(0).max(1),
+    })
+    .optional(),
+  borderWidth: LengthValue.optional(),
+  /** Per-side widths (W-138, D-044), after `borderWidth`, so a side beats the all-sides value. */
+  borderTopWidth: LengthValue.optional(),
+  borderRightWidth: LengthValue.optional(),
+  borderBottomWidth: LengthValue.optional(),
+  borderLeftWidth: LengthValue.optional(),
+  borderStyle: z.enum(BORDER_STYLES).optional(),
+  borderColor: ColorValue.optional(),
+  borderRadius: LengthValue.optional(),
+  /** Per-corner radii (W-138, D-044), after `borderRadius`. */
+  borderTopLeftRadius: LengthValue.optional(),
+  borderTopRightRadius: LengthValue.optional(),
+  borderBottomRightRadius: LengthValue.optional(),
+  borderBottomLeftRadius: LengthValue.optional(),
+  opacity: z.number().finite().min(0).max(1).optional(),
+  boxShadow: BoxShadow.optional(),
+  filter: Filter.optional(),
+  cursor: z.enum(CURSORS).optional(),
+  transition: Transition.optional(),
+  /**
+   * Icon element glyph styling (W-237). Emitted as custom properties on the icon's wrapper, so
+   * they work in states, devices and classes; the Icon's base CSS applies them to its `<svg>`.
+   * Elsewhere they do nothing. `iconScale` scales the whole icon (with its background shape).
+   */
+  iconRotate: z.number().int().min(-360).max(360).optional(),
+  iconFlip: z.enum(["none", "horizontal", "vertical", "both"]).optional(),
+  iconScale: num(0.1, 4).optional(),
+  iconStrokeWidth: num(0.25, 6).optional(),
+  /** A drop shadow that follows the glyph's shape (CSS `drop-shadow`), in px. */
+  iconShadow: z
+    .strictObject({
+      x: num(-100, 100),
+      y: num(-100, 100),
+      blur: num(0, 100),
+      color: ColorValue.optional(),
+    })
+    .optional(),
+  /**
+   * A spin or pulse; off for visitors who prefer reduced motion. It stops after about 5 s
+   * (W-848) unless `loop` is true (W-853, D-059). `{ type: "none" }` (W-248) stops an animation a
+   * device would otherwise inherit from a wider one.
+   */
+  iconAnimation: z
+    .union([
+      z.strictObject({
+        type: z.enum(["spin", "pulse"]),
+        duration: z.number().int().min(200).max(10_000),
+        loop: z.literal(true).optional(),
+      }),
+      z.strictObject({ type: z.literal("none") }),
+    ])
+    .optional(),
+  /**
+   * Scroll motion (W-319): effects tied to the element's trip through the screen (or the page's
+   * scroll), with CSS scroll-driven animations. Browsers without them, and visitors who prefer
+   * reduced motion, see the element still. `{ type: "none" }` stops motion a wider device sets.
+   */
+  scrollMotion: z
+    .union([
+      z.strictObject({
+        effects: z
+          .array(
+            z.strictObject({
+              type: z.enum(MOTION_EFFECTS),
+              from: z.number().min(-1000).max(1000),
+              to: z.number().min(-1000).max(1000),
+            }),
+          )
+          .min(1)
+          .max(MOTION_EFFECTS.length)
+          .superRefine((effects, ctx) => {
+            const seen = new Set<string>();
+            for (const effect of effects) {
+              const [min, max] = MOTION_LIMITS[effect.type];
+              if ([effect.from, effect.to].some((n) => n < min || n > max)) {
+                ctx.addIssue({
+                  code: "custom",
+                  message: `${effect.type} goes from ${min} to ${max}`,
+                });
+              }
+              if (seen.has(effect.type)) {
+                ctx.addIssue({ code: "custom", message: `${effect.type} is set twice` });
+              }
+              seen.add(effect.type);
+            }
+          }),
+        range: z.enum(["enter", "cross", "exit", "page"]),
+      }),
+      z.strictObject({ type: z.literal("none") }),
+    ])
+    .optional(),
+  /**
+   * Plays once (W-101, W-107). `delay` waits before it starts. `view` starts as the element
+   * scrolls into view, using CSS scroll-driven animations, and falls back to playing on load.
+   * Not a state style.
+   */
+  entrance: z
+    .strictObject({
+      type: z.enum(["fade", "fade-up", "fade-down", "slide-up", "slide-down", "scale"]),
+      duration: z.number().int().min(0).max(2000),
+      delay: z.number().int().min(0).max(2000).optional(),
+      trigger: z.enum(["load", "view"]).optional(),
+    })
+    .optional(),
+});
+
+export type StyleProps = z.infer<typeof StyleProps>;
+
+/**
+ * `states` on a node or class (D-032, W-089): hover, focus (`:focus-visible`) and active, each with
+ * the same keys and limits as `style` except `transition`, `entrance`, `iconAnimation` and
+ * `scrollMotion`. Unknown states are refused.
+ */
+const StateStyle = StyleProps.omit({
+  transition: true,
+  entrance: true,
+  iconAnimation: true,
+  scrollMotion: true,
+});
+
+export const StyleStates = z.strictObject({
+  hover: StateStyle.optional(),
+  focus: StateStyle.optional(),
+  active: StateStyle.optional(),
+});
+
+export type StyleStates = z.infer<typeof StyleStates>;
+
+/**
+ * Tablet and mobile overrides (W-096). Desktop is the element's `style`. Only keys that differ
+ * are stored. A phone matches both media queries, so mobile wins over tablet for the same key.
+ */
+export const DeviceStyles = z.strictObject({
+  tablet: StyleProps.optional(),
+  mobile: StyleProps.optional(),
+});
+
+export type DeviceStyles = z.infer<typeof DeviceStyles>;
+
+/** Devices on which the element is `display: none`. Empty means shown everywhere. */
+export const HiddenOn = z.array(z.enum(POPUP_DEVICES)).max(3);
+
+export type HiddenOn = z.infer<typeof HiddenOn>;

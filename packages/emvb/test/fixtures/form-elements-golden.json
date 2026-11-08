@@ -1,0 +1,1946 @@
+{
+  "checkbox": {
+    "defaults": {
+      "type": "checkbox",
+      "props": {
+        "field": "agree",
+        "label": "I agree"
+      }
+    },
+    "descriptor": {
+      "type": "checkbox",
+      "name": "Checkbox",
+      "group": "form",
+      "defaultTab": "content",
+      "fields": [
+        {
+          "key": "field",
+          "kind": "text",
+          "label": "Field name"
+        },
+        {
+          "key": "label",
+          "kind": "text",
+          "label": "Label",
+          "optional": true
+        }
+      ]
+    },
+    "baseCss": ".emvb-checkbox{display:flex;align-items:center;gap:8px}",
+    "built": {
+      "defaults": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-checkbox-label"
+            },
+            "children": [
+              {
+                "tag": "input",
+                "attrs": {
+                  "type": "checkbox",
+                  "id": "emvb-field-node0001",
+                  "name": "agree",
+                  "value": "true",
+                  "aria-describedby": "emvb-field-node0001-error"
+                },
+                "children": []
+              },
+              " I agree"
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "agree",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "defaults, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-checkbox-label"
+            },
+            "children": [
+              {
+                "tag": "input",
+                "attrs": {
+                  "type": "checkbox",
+                  "id": "emvb-field-node0001",
+                  "name": "agree",
+                  "value": "true",
+                  "aria-describedby": "emvb-field-node0001-error"
+                },
+                "children": []
+              },
+              " I agree"
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "agree",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "bare": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-checkbox-label"
+            },
+            "children": [
+              {
+                "tag": "input",
+                "attrs": {
+                  "type": "checkbox",
+                  "id": "emvb-field-node0001",
+                  "name": "agree",
+                  "value": "true",
+                  "aria-describedby": "emvb-field-node0001-error"
+                },
+                "children": []
+              },
+              " agree"
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "agree",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "bare, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-checkbox-label"
+            },
+            "children": [
+              {
+                "tag": "input",
+                "attrs": {
+                  "type": "checkbox",
+                  "id": "emvb-field-node0001",
+                  "name": "agree",
+                  "value": "true",
+                  "aria-describedby": "emvb-field-node0001-error"
+                },
+                "children": []
+              },
+              " agree"
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "agree",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "placeholder": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-checkbox-label"
+            },
+            "children": [
+              {
+                "tag": "input",
+                "attrs": {
+                  "type": "checkbox",
+                  "id": "emvb-field-node0001",
+                  "name": "agree",
+                  "value": "true",
+                  "aria-describedby": "emvb-field-node0001-error"
+                },
+                "children": []
+              },
+              " I agree"
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "agree",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "placeholder, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-checkbox-label"
+            },
+            "children": [
+              {
+                "tag": "input",
+                "attrs": {
+                  "type": "checkbox",
+                  "id": "emvb-field-node0001",
+                  "name": "agree",
+                  "value": "true",
+                  "aria-describedby": "emvb-field-node0001-error"
+                },
+                "children": []
+              },
+              " I agree"
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "agree",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "unlabelled": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-checkbox-label"
+            },
+            "children": [
+              {
+                "tag": "input",
+                "attrs": {
+                  "type": "checkbox",
+                  "id": "emvb-field-node0001",
+                  "name": "agree",
+                  "value": "true",
+                  "aria-describedby": "emvb-field-node0001-error"
+                },
+                "children": []
+              },
+              " agree"
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "agree",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "unlabelled, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-checkbox-label"
+            },
+            "children": [
+              {
+                "tag": "input",
+                "attrs": {
+                  "type": "checkbox",
+                  "id": "emvb-field-node0001",
+                  "name": "agree",
+                  "value": "true",
+                  "aria-describedby": "emvb-field-node0001-error"
+                },
+                "children": []
+              },
+              " agree"
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "agree",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      }
+    }
+  },
+  "form": {
+    "defaults": {
+      "type": "form",
+      "props": {
+        "formId": ""
+      },
+      "children": []
+    },
+    "descriptor": {
+      "type": "form",
+      "name": "Form",
+      "group": "form",
+      "defaultTab": "content",
+      "fields": [
+        {
+          "key": "formId",
+          "kind": "text",
+          "label": "Form id",
+          "message": "Paste a forms-plugin form id."
+        }
+      ]
+    },
+    "baseCss": ".emvb-form{display:flex;flex-direction:column;gap:12px;min-width:0}.emvb-form-unbound{min-height:48px;padding:12px;color:var(--text-color-kumo-subtle,#666);background:var(--color-kumo-tint,#eee)}.emvb-form-field[hidden]{display:none!important}.ec-form-hp{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}:where(.emvb-form-paused){padding:12px 16px;border:1px solid rgba(128,128,128,.5);border:1px solid color-mix(in srgb,currentColor 25%,transparent);border-radius:6px}:where(.emvb-form-paused p){margin:0}:where(.emvb-form .emvb-form-label){font-weight:600}:where(.emvb-form .ec-form-input){box-sizing:border-box;width:100%;max-width:100%;margin:0;padding:.625em .75em;font:inherit;color:inherit;background-color:transparent;border:1px solid rgba(128,128,128,.5);border:1px solid color-mix(in srgb,currentColor 30%,transparent);border-radius:6px}:where(.emvb-form textarea.ec-form-input){min-height:7.5em;resize:vertical}:where(.emvb-form .ec-form-input)::placeholder{color:inherit;opacity:.55}:where(.emvb-form .ec-form-input:focus-visible){outline:2px solid currentColor;outline-offset:1px;border-color:currentColor}:where(.emvb-form .ec-form-input[aria-invalid=\"true\"]){border-color:#b3261e}:where(.emvb-form input[type=\"checkbox\"],.emvb-form input[type=\"radio\"]){width:1.1em;height:1.1em;margin:0;accent-color:currentColor}:where(.emvb-form .emvb-form-checkbox-label,.emvb-form .emvb-form-radio-label){display:inline-flex;align-items:center;gap:.5em;overflow-wrap:anywhere}:where(.emvb-form .emvb-radio-group){display:flex;flex-direction:column;gap:6px;margin:0;padding:0;border:0;min-width:0}:where(.emvb-form .emvb-radio-group>legend){float:left;width:100%;margin:0 0 -2px;padding:0}:where(.emvb-form .ec-form-error){font-size:.875em;color:#b3261e}",
+    "built": {
+      "defaults": {
+        "tag": "form",
+        "attrs": {
+          "class": "emvb-e-x",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "i",
+            "attrs": {},
+            "children": []
+          }
+        ]
+      },
+      "defaults, no class": {
+        "tag": "form",
+        "attrs": {},
+        "children": []
+      },
+      "bare": {
+        "tag": "form",
+        "attrs": {
+          "class": "emvb-e-x",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "i",
+            "attrs": {},
+            "children": []
+          }
+        ]
+      },
+      "bare, no class": {
+        "tag": "form",
+        "attrs": {},
+        "children": []
+      },
+      "placeholder": {
+        "tag": "form",
+        "attrs": {
+          "class": "emvb-e-x",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "i",
+            "attrs": {},
+            "children": []
+          }
+        ]
+      },
+      "placeholder, no class": {
+        "tag": "form",
+        "attrs": {},
+        "children": []
+      },
+      "unlabelled": {
+        "tag": "form",
+        "attrs": {
+          "class": "emvb-e-x",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "i",
+            "attrs": {},
+            "children": []
+          }
+        ]
+      },
+      "unlabelled, no class": {
+        "tag": "form",
+        "attrs": {},
+        "children": []
+      }
+    }
+  },
+  "radio": {
+    "defaults": {
+      "type": "radio",
+      "props": {
+        "field": "option",
+        "label": "Option"
+      }
+    },
+    "descriptor": {
+      "type": "radio",
+      "name": "Radio",
+      "group": "form",
+      "defaultTab": "content",
+      "fields": [
+        {
+          "key": "field",
+          "kind": "text",
+          "label": "Field name"
+        },
+        {
+          "key": "label",
+          "kind": "text",
+          "label": "Label",
+          "optional": true
+        }
+      ]
+    },
+    "baseCss": ".emvb-radio{display:flex;flex-direction:column;gap:4px}",
+    "built": {
+      "defaults": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "fieldset",
+            "attrs": {
+              "class": "emvb-radio-group",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "legend",
+                "attrs": {
+                  "class": "emvb-form-label",
+                  "id": "emvb-field-node0001-label"
+                },
+                "children": ["Option"]
+              },
+              {
+                "tag": "label",
+                "attrs": {
+                  "class": "emvb-form-radio-label"
+                },
+                "children": [
+                  {
+                    "tag": "input",
+                    "attrs": {
+                      "type": "radio",
+                      "name": "option",
+                      "value": "a"
+                    },
+                    "children": []
+                  },
+                  " Option A"
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "option",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "defaults, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "fieldset",
+            "attrs": {
+              "class": "emvb-radio-group",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "legend",
+                "attrs": {
+                  "class": "emvb-form-label",
+                  "id": "emvb-field-node0001-label"
+                },
+                "children": ["Option"]
+              },
+              {
+                "tag": "label",
+                "attrs": {
+                  "class": "emvb-form-radio-label"
+                },
+                "children": [
+                  {
+                    "tag": "input",
+                    "attrs": {
+                      "type": "radio",
+                      "name": "option",
+                      "value": "a"
+                    },
+                    "children": []
+                  },
+                  " Option A"
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "option",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "bare": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "fieldset",
+            "attrs": {
+              "class": "emvb-radio-group",
+              "aria-describedby": "emvb-field-node0001-error",
+              "aria-label": "option"
+            },
+            "children": [
+              {
+                "tag": "label",
+                "attrs": {
+                  "class": "emvb-form-radio-label"
+                },
+                "children": [
+                  {
+                    "tag": "input",
+                    "attrs": {
+                      "type": "radio",
+                      "name": "option",
+                      "value": "a"
+                    },
+                    "children": []
+                  },
+                  " Option A"
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "option",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "bare, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "fieldset",
+            "attrs": {
+              "class": "emvb-radio-group",
+              "aria-describedby": "emvb-field-node0001-error",
+              "aria-label": "option"
+            },
+            "children": [
+              {
+                "tag": "label",
+                "attrs": {
+                  "class": "emvb-form-radio-label"
+                },
+                "children": [
+                  {
+                    "tag": "input",
+                    "attrs": {
+                      "type": "radio",
+                      "name": "option",
+                      "value": "a"
+                    },
+                    "children": []
+                  },
+                  " Option A"
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "option",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "placeholder": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "fieldset",
+            "attrs": {
+              "class": "emvb-radio-group",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "legend",
+                "attrs": {
+                  "class": "emvb-form-label",
+                  "id": "emvb-field-node0001-label"
+                },
+                "children": ["Option"]
+              },
+              {
+                "tag": "label",
+                "attrs": {
+                  "class": "emvb-form-radio-label"
+                },
+                "children": [
+                  {
+                    "tag": "input",
+                    "attrs": {
+                      "type": "radio",
+                      "name": "option",
+                      "value": "a"
+                    },
+                    "children": []
+                  },
+                  " Option A"
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "option",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "placeholder, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "fieldset",
+            "attrs": {
+              "class": "emvb-radio-group",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "legend",
+                "attrs": {
+                  "class": "emvb-form-label",
+                  "id": "emvb-field-node0001-label"
+                },
+                "children": ["Option"]
+              },
+              {
+                "tag": "label",
+                "attrs": {
+                  "class": "emvb-form-radio-label"
+                },
+                "children": [
+                  {
+                    "tag": "input",
+                    "attrs": {
+                      "type": "radio",
+                      "name": "option",
+                      "value": "a"
+                    },
+                    "children": []
+                  },
+                  " Option A"
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "option",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "unlabelled": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "fieldset",
+            "attrs": {
+              "class": "emvb-radio-group",
+              "aria-describedby": "emvb-field-node0001-error",
+              "aria-label": "option"
+            },
+            "children": [
+              {
+                "tag": "label",
+                "attrs": {
+                  "class": "emvb-form-radio-label"
+                },
+                "children": [
+                  {
+                    "tag": "input",
+                    "attrs": {
+                      "type": "radio",
+                      "name": "option",
+                      "value": "a"
+                    },
+                    "children": []
+                  },
+                  " Option A"
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "option",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "unlabelled, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "fieldset",
+            "attrs": {
+              "class": "emvb-radio-group",
+              "aria-describedby": "emvb-field-node0001-error",
+              "aria-label": "option"
+            },
+            "children": [
+              {
+                "tag": "label",
+                "attrs": {
+                  "class": "emvb-form-radio-label"
+                },
+                "children": [
+                  {
+                    "tag": "input",
+                    "attrs": {
+                      "type": "radio",
+                      "name": "option",
+                      "value": "a"
+                    },
+                    "children": []
+                  },
+                  " Option A"
+                ]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "option",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      }
+    }
+  },
+  "selectEl": {
+    "defaults": {
+      "type": "select",
+      "props": {
+        "field": "choice",
+        "label": "Choice"
+      }
+    },
+    "descriptor": {
+      "type": "select",
+      "name": "Select",
+      "group": "form",
+      "defaultTab": "content",
+      "fields": [
+        {
+          "key": "field",
+          "kind": "text",
+          "label": "Field name"
+        },
+        {
+          "key": "label",
+          "kind": "text",
+          "label": "Label",
+          "optional": true
+        },
+        {
+          "key": "placeholder",
+          "kind": "text",
+          "label": "Placeholder",
+          "optional": true
+        }
+      ]
+    },
+    "baseCss": ".emvb-select{display:flex;flex-direction:column;gap:4px}",
+    "built": {
+      "defaults": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Choice"]
+          },
+          {
+            "tag": "select",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "choice",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "option",
+                "attrs": {
+                  "value": ""
+                },
+                "children": ["Choose…"]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "choice",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "defaults, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Choice"]
+          },
+          {
+            "tag": "select",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "choice",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "option",
+                "attrs": {
+                  "value": ""
+                },
+                "children": ["Choose…"]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "choice",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "bare": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "select",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "choice",
+              "aria-label": "choice",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "option",
+                "attrs": {
+                  "value": ""
+                },
+                "children": ["Choose…"]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "choice",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "bare, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "select",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "choice",
+              "aria-label": "choice",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "option",
+                "attrs": {
+                  "value": ""
+                },
+                "children": ["Choose…"]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "choice",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "placeholder": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Choice"]
+          },
+          {
+            "tag": "select",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "choice",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "option",
+                "attrs": {
+                  "value": ""
+                },
+                "children": ["Type here"]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "choice",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "placeholder, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Choice"]
+          },
+          {
+            "tag": "select",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "choice",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "option",
+                "attrs": {
+                  "value": ""
+                },
+                "children": ["Type here"]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "choice",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "unlabelled": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "select",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "choice",
+              "aria-label": "choice",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "option",
+                "attrs": {
+                  "value": ""
+                },
+                "children": ["Choose…"]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "choice",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "unlabelled, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "select",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "choice",
+              "aria-label": "choice",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": [
+              {
+                "tag": "option",
+                "attrs": {
+                  "value": ""
+                },
+                "children": ["Choose…"]
+              }
+            ]
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "choice",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      }
+    }
+  },
+  "submit": {
+    "defaults": {
+      "type": "submit",
+      "props": {
+        "label": "Submit"
+      }
+    },
+    "descriptor": {
+      "type": "submit",
+      "name": "Submit",
+      "group": "form",
+      "defaultTab": "content",
+      "fields": [
+        {
+          "key": "label",
+          "kind": "text",
+          "label": "Label",
+          "optional": true
+        }
+      ]
+    },
+    "baseCss": ".emvb-submit{display:inline-flex;max-width:100%;overflow-wrap:anywhere}",
+    "built": {
+      "defaults": {
+        "tag": "button",
+        "attrs": {
+          "class": "emvb-e-x ec-form-submit",
+          "data-emvb-id": "node0001",
+          "type": "submit"
+        },
+        "children": ["Submit"]
+      },
+      "defaults, no class": {
+        "tag": "button",
+        "attrs": {
+          "type": "submit",
+          "class": "ec-form-submit"
+        },
+        "children": ["Submit"]
+      },
+      "bare": {
+        "tag": "button",
+        "attrs": {
+          "class": "emvb-e-x ec-form-submit",
+          "data-emvb-id": "node0001",
+          "type": "submit"
+        },
+        "children": ["Submit"]
+      },
+      "bare, no class": {
+        "tag": "button",
+        "attrs": {
+          "type": "submit",
+          "class": "ec-form-submit"
+        },
+        "children": ["Submit"]
+      },
+      "placeholder": {
+        "tag": "button",
+        "attrs": {
+          "class": "emvb-e-x ec-form-submit",
+          "data-emvb-id": "node0001",
+          "type": "submit"
+        },
+        "children": ["Submit"]
+      },
+      "placeholder, no class": {
+        "tag": "button",
+        "attrs": {
+          "type": "submit",
+          "class": "ec-form-submit"
+        },
+        "children": ["Submit"]
+      },
+      "unlabelled": {
+        "tag": "button",
+        "attrs": {
+          "class": "emvb-e-x ec-form-submit",
+          "data-emvb-id": "node0001",
+          "type": "submit"
+        },
+        "children": ["Submit"]
+      },
+      "unlabelled, no class": {
+        "tag": "button",
+        "attrs": {
+          "type": "submit",
+          "class": "ec-form-submit"
+        },
+        "children": ["Submit"]
+      }
+    }
+  },
+  "textInput": {
+    "defaults": {
+      "type": "text-input",
+      "props": {
+        "field": "name",
+        "label": "Name"
+      }
+    },
+    "descriptor": {
+      "type": "text-input",
+      "name": "Text input",
+      "group": "form",
+      "defaultTab": "content",
+      "fields": [
+        {
+          "key": "field",
+          "kind": "text",
+          "label": "Field name"
+        },
+        {
+          "key": "label",
+          "kind": "text",
+          "label": "Label",
+          "optional": true
+        },
+        {
+          "key": "placeholder",
+          "kind": "text",
+          "label": "Placeholder",
+          "optional": true
+        }
+      ]
+    },
+    "baseCss": ".emvb-text-input{display:flex;flex-direction:column;gap:4px}",
+    "built": {
+      "defaults": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Name"]
+          },
+          {
+            "tag": "input",
+            "attrs": {
+              "type": "text",
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "name",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "name",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "defaults, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Name"]
+          },
+          {
+            "tag": "input",
+            "attrs": {
+              "type": "text",
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "name",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "name",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "bare": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "input",
+            "attrs": {
+              "type": "text",
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "name",
+              "aria-label": "name",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "name",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "bare, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "input",
+            "attrs": {
+              "type": "text",
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "name",
+              "aria-label": "name",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "name",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "placeholder": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Name"]
+          },
+          {
+            "tag": "input",
+            "attrs": {
+              "type": "text",
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "name",
+              "placeholder": "Type here",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "name",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "placeholder, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Name"]
+          },
+          {
+            "tag": "input",
+            "attrs": {
+              "type": "text",
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "name",
+              "placeholder": "Type here",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "name",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "unlabelled": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "input",
+            "attrs": {
+              "type": "text",
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "name",
+              "aria-label": "name",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "name",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "unlabelled, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "input",
+            "attrs": {
+              "type": "text",
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "name",
+              "aria-label": "name",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "name",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      }
+    }
+  },
+  "textareaEl": {
+    "defaults": {
+      "type": "textarea",
+      "props": {
+        "field": "message",
+        "label": "Message"
+      }
+    },
+    "descriptor": {
+      "type": "textarea",
+      "name": "Textarea",
+      "group": "form",
+      "defaultTab": "content",
+      "fields": [
+        {
+          "key": "field",
+          "kind": "text",
+          "label": "Field name"
+        },
+        {
+          "key": "label",
+          "kind": "text",
+          "label": "Label",
+          "optional": true
+        },
+        {
+          "key": "placeholder",
+          "kind": "text",
+          "label": "Placeholder",
+          "optional": true
+        }
+      ]
+    },
+    "baseCss": ".emvb-textarea-field{display:flex;flex-direction:column;gap:4px}",
+    "built": {
+      "defaults": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Message"]
+          },
+          {
+            "tag": "textarea",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "message",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "message",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "defaults, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Message"]
+          },
+          {
+            "tag": "textarea",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "message",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "message",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "bare": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "textarea",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "message",
+              "aria-label": "message",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "message",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "bare, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "textarea",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "message",
+              "aria-label": "message",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "message",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "placeholder": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Message"]
+          },
+          {
+            "tag": "textarea",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "message",
+              "placeholder": "Type here",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "message",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "placeholder, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "label",
+            "attrs": {
+              "class": "emvb-form-label",
+              "for": "emvb-field-node0001"
+            },
+            "children": ["Message"]
+          },
+          {
+            "tag": "textarea",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "message",
+              "placeholder": "Type here",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "message",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "unlabelled": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-e-x emvb-form-field",
+          "data-emvb-id": "node0001"
+        },
+        "children": [
+          {
+            "tag": "textarea",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "message",
+              "aria-label": "message",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "message",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      },
+      "unlabelled, no class": {
+        "tag": "div",
+        "attrs": {
+          "class": "emvb-form-field"
+        },
+        "children": [
+          {
+            "tag": "textarea",
+            "attrs": {
+              "class": "ec-form-input",
+              "id": "emvb-field-node0001",
+              "name": "message",
+              "aria-label": "message",
+              "aria-describedby": "emvb-field-node0001-error"
+            },
+            "children": []
+          },
+          {
+            "tag": "span",
+            "attrs": {
+              "class": "ec-form-error",
+              "id": "emvb-field-node0001-error",
+              "data-error-for": "message",
+              "aria-live": "polite"
+            },
+            "children": []
+          }
+        ]
+      }
+    }
+  }
+}

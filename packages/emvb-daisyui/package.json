@@ -1,0 +1,37 @@
+{
+  "name": "@perkyzz/emvb-daisyui",
+  "version": "0.1.0",
+  "description": "Generated daisyUI component provider for EmVB",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "src",
+    "generated",
+    "styles",
+    "README.md",
+    "licenses"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./catalog": "./src/catalog/index.ts",
+    "./themes": "./src/themes/index.ts",
+    "./styles.css": "./styles/emvb-daisyui.css",
+    "./recipes": "./src/recipes/index.ts",
+    "./validation": "./src/validation/index.ts",
+    "./compatibility": "./src/compatibility/index.ts"
+  },
+  "scripts": {
+    "generate": "bun src/generator/cli.ts",
+    "test": "bun test src"
+  },
+  "peerDependencies": {
+    "@perkyzz/emvb": "^0.9.0",
+    "daisyui": "^5.0.0",
+    "tailwindcss": "^4.0.0"
+  },
+  "devDependencies": {
+    "@perkyzz/emvb": "workspace:*",
+    "daisyui": "^5.5.14",
+    "tailwindcss": "^4.1.17"
+  }
+}
