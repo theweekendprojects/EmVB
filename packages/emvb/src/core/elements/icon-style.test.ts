@@ -17,7 +17,7 @@ import { defaultElement } from "./index.ts";
 const design = emptyDesign();
 const page = (node: LayoutNode) => {
   const layout: Layout = {
-    schemaVersion: 17,
+    schemaVersion: 18,
     root: { id: "root0001", type: "container", props: {}, children: [node] },
   };
   return renderPage(layout, design);

@@ -4,7 +4,7 @@ import { generateCss } from "../css/generate.ts";
 import type { Layout } from "./layout.ts";
 
 const page = (style: Record<string, unknown>): Layout => ({
-  schemaVersion: 17,
+  schemaVersion: 18,
   root: {
     id: "root0001",
     type: "container",

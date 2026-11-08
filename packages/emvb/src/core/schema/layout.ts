@@ -17,7 +17,7 @@ import { DeviceStyles, HiddenOn, Length, StyleProps, StyleStates } from "./style
  * (`{ angle, from, to }`) become a linear gradient on read.
  * 11 since W-156 and W-157 (D-045): the layout Section element and an editor-only node label.
  */
-export const LAYOUT_SCHEMA_VERSION = 17;
+export const LAYOUT_SCHEMA_VERSION = 18;
 
 export const NodeId = z
   .string()
@@ -721,7 +721,7 @@ export const KNOWN_ELEMENT_TYPES = [
   "menu-item",
   "layout-section",
   "toc",
-  "daisy",
+  "provider",
 ] as const;
 
 /** Headings on this page, as a list of links. No script (W-345). */
@@ -733,19 +733,17 @@ export const TocNode = leafNode(
 );
 
 
-/** A generated daisyUI component selected from the allowlisted provider catalog. */
-export const DaisyNode = z.strictObject({
+/** A component supplied by a registered external provider. */
+export const ProviderNode = z.strictObject({
   id: NodeId,
-  type: z.literal("daisy"),
+  type: z.literal("provider"),
+  provider: z.string().regex(/^[a-z][a-z0-9-]*$/).max(64),
   component: z.string().regex(/^[a-z][a-z0-9-]*$/).max(64),
-  props: z.record(
-    z.string().max(64),
-    z.union([z.string().max(4000), z.number().finite(), z.boolean()]),
-  ),
+  providerVersion: z.number().int().min(1).max(999).optional(),
+  props: z.record(z.string().max(64), z.union([z.string().max(4000), z.number().finite(), z.boolean()])),
+  providerMeta: z.record(z.string().max(64), z.union([z.string().max(4000), z.number().finite(), z.boolean()])).optional(),
   ...sharedNodeFields,
-  get children(): z.ZodType<LayoutNode[] | undefined> {
-    return z.array(LayoutNode).optional();
-  },
+  get children(): z.ZodType<LayoutNode[] | undefined> { return z.array(LayoutNode).optional(); },
 });
 
 const knownTypeSet = new Set<string>(KNOWN_ELEMENT_TYPES);
@@ -811,13 +809,13 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
   AccordionItemNode,
   MenuNode,
   MenuItemNode,
-  DaisyNode,
+  ProviderNode,
 ]);
 
 /** One strict schema per known element type, for the MCP element catalogue (W-453). */
 export const KNOWN_NODE_SCHEMAS = KnownLayoutNode.options;
 
-export type DaisyNode = { id: string; type: "daisy"; component: string; props: Record<string, string | number | boolean>; children?: LayoutNode[] };
+export type ProviderNode = z.infer<typeof ProviderNode>;
 export type HeadingNode = z.infer<typeof HeadingNode>;
 export type TocNode = z.infer<typeof TocNode>;
 export type SpacerNode = z.infer<typeof SpacerNode>;
@@ -1046,7 +1044,7 @@ export type LayoutNode =
   | AccordionItemNode
   | MenuNode
   | MenuItemNode
-  | DaisyNode
+  | ProviderNode
   | UnknownNode;
 
 /**

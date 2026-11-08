@@ -21,7 +21,7 @@ import type {
   SpacerNode,
   TextNode,
   VideoNode,
-  DaisyNode,
+  ProviderNode,
 } from "../schema/layout.ts";
 import { CONTAINER_TAGS, TEXT_TAGS } from "../schema/layout.ts";
 import type { ElementDescriptor } from "../schema/descriptors.ts";
@@ -32,7 +32,7 @@ import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import { getBundledIcon } from "../icons/catalog.ts";
 import { resolveEmbedUrl } from "../sanitize/embed-url.ts";
 import type { VNode } from "../render/vnode.ts";
-import { daisyUIProvider } from "@perkyzz/emvb-daisyui";
+import { componentProvider } from "@perkyzz/emvb-provider-api";
 
 import type { ElementDefinition } from "./definition.ts";
 import { menu, menuItem } from "./menu.ts";
@@ -1153,24 +1153,26 @@ const toc: ElementDefinition<TocNode> = {
   }),
 };
 
-const daisy: ElementDefinition<DaisyNode> = {
+const providerElement: ElementDefinition<ProviderNode> = {
   baseCss: "",
-  defaults: () => ({ type: "daisy", component: "button", props: {} }),
-  descriptor: { type: "daisy", name: "daisyUI component", group: "content", defaultTab: "content", fields: [] },
+  defaults: () => ({ type: "provider", provider: "unregistered", component: "unknown", props: {} }),
+  descriptor: { type: "provider", name: "Provider component", group: "content", defaultTab: "content", fields: [] },
   build: (node, attrs, children) => {
-    const theme = typeof node.props.theme === "string" ? node.props.theme : undefined;
-    const cleanProps = theme === undefined ? node.props : Object.fromEntries(Object.entries(node.props).filter(([key]) => key !== "theme"));
     try {
-      return daisyUIProvider.render({ ...node, props: cleanProps }, { ...attrs, ...(theme ? { "data-theme": theme } : {}) }, children) as VNode;
+      const provider = componentProvider(node.provider);
+      if (!provider) throw new Error(`Provider is not registered: ${node.provider}`);
+      const meta = node.providerMeta ?? {};
+      const theme = typeof meta.theme === "string" ? meta.theme : undefined;
+      return provider.render(node, { ...attrs, ...(theme ? { "data-theme": theme } : {}) }, children, { mode: "public" }) as VNode;
     } catch {
-      return { tag: "div", attrs: { ...attrs, class: [attrs.class, "emvb-unknown"].filter(Boolean).join(" ") }, children: [`Unknown daisyUI component "${node.component}"`] };
+      return { tag: "div", attrs: { ...attrs, class: [attrs.class, "emvb-unknown"].filter(Boolean).join(" ") }, children: [`Unknown provider component "${node.provider}:${node.component}"`] };
     }
   },
 };
 
 export const ELEMENTS = {
   heading,
-  daisy,
+  provider: providerElement,
   toc,
   container,
   "layout-section": layoutSection,

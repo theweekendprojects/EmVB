@@ -7,3 +7,7 @@ export { daisyUIProvider } from "./provider.ts";
 export * from "./recipes/index.ts";
 export * from "./validation/index.ts";
 export * from "./compatibility/index.ts";
+export * from "./conformance/index.ts";
+export * from "./verified/primitives.ts";
+export * from "./compound/index.ts";
+export * from "./runtime/index.ts";

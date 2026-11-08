@@ -1,12 +1,15 @@
-export type DaisyFieldKind = "text" | "textarea" | "number" | "select" | "boolean" | "href";
-export type DaisyFieldValue = string | number | boolean;
-export type DaisyProps = Record<string, DaisyFieldValue | undefined>;
+import type { ComponentProvider as NeutralComponentProvider, ProviderComponent, ProviderComponentDescriptor, ProviderComponentNode, ProviderFieldKind, ProviderFieldValue, ProviderProps, ProviderVNode, ProviderRenderContext } from "@perkyzz/emvb-provider-api";
 
-export type VNode = { tag: string; attrs: Record<string, string>; children: Array<VNode | string> };
+export type DaisyFieldKind = ProviderFieldKind;
+export type DaisyFieldValue = ProviderFieldValue;
+export type DaisyProps = ProviderProps;
 
-export interface DaisyComponentNode {
+export type VNode = ProviderVNode;
+
+export interface DaisyComponentNode extends ProviderComponentNode {
   id: string;
-  type: "daisy";
+  type: "provider";
+  provider: "daisyui";
   component: string;
   props: DaisyProps;
   children?: DaisyComponentNode[];
@@ -35,10 +38,10 @@ export interface DaisyComponentDefinition {
   build?: (node: DaisyComponentNode, classes: string[], children: VNode[]) => VNode;
 }
 
-export interface GeneratedDaisyComponent {
+export interface GeneratedDaisyComponent extends ProviderComponent<DaisyComponentNode> {
   definition: DaisyComponentDefinition;
   descriptor: {
-    type: "daisy";
+    type: "provider";
     provider: "daisyui";
     component: string;
     name: string;
@@ -50,11 +53,11 @@ export interface GeneratedDaisyComponent {
   build: (node: DaisyComponentNode, attrs?: Record<string, string>, children?: VNode[]) => VNode;
 }
 
-export interface ComponentProvider {
+export interface ComponentProvider extends NeutralComponentProvider<DaisyComponentNode> {
   id: string;
   label: string;
   components: ReadonlyMap<string, GeneratedDaisyComponent>;
   createNode(component: string, id: string): DaisyComponentNode;
-  render(node: DaisyComponentNode, attrs?: Record<string, string>, children?: VNode[]): VNode;
+  render(node: DaisyComponentNode, attrs?: Record<string, string>, children?: VNode[], context?: ProviderRenderContext): VNode;
   cssEntryPoints: readonly string[];
 }

@@ -1,7 +1,7 @@
 import { Button, Input } from "@cloudflare/kumo";
 import * as React from "react";
 import { elementIcon } from "../element-chrome.ts";
-import { daisyUIProvider } from "@perkyzz/emvb-daisyui";
+import { componentProviders } from "@perkyzz/emvb-provider-api";
 import {
   ELEMENT_DESCRIPTORS,
   SECTION_RECIPES,
@@ -46,14 +46,23 @@ export function AddPanel({
     setQuery("");
     searchRef.current?.focus();
   };
-  const daisyDescriptors = [...daisyUIProvider.components.values()].map((generated) => ({
-    type: `daisy:${generated.definition.id}`, name: generated.definition.label, group: "daisyui" as const, category: generated.definition.category,
-  }));
-  const matched = [...ELEMENT_DESCRIPTORS, ...daisyDescriptors].filter(
+  const providerDescriptors = componentProviders().flatMap((provider) =>
+    [...provider.components.values()].map((generated) => ({
+      type: `provider:${provider.id}:${generated.descriptor.component}`,
+      name: generated.descriptor.support === "experimental" ? `${generated.descriptor.name} (experimental)` : generated.descriptor.name,
+      group: "daisyui" as const,
+      category: generated.descriptor.category ?? provider.label,
+      verified: generated.descriptor.support !== "experimental",
+    })),
+  ).sort((left, right) => Number(right.verified) - Number(left.verified) || left.name.localeCompare(right.name));
+  const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(
     (d) => d.type !== "tab-panel" && d.type !== "daisy" && (formsAvailable || d.group !== "form") && matchesSearch(query, d.name, d.group, "category" in d ? d.category : ""),
   );
   const recipes = onRecipe
-    ? SECTION_RECIPES.filter((r) => matchesSearch(query, r.name, r.description, "recipe section"))
+    ? [
+        ...SECTION_RECIPES.map((recipe) => ({ ...recipe, insertId: `native:${recipe.id}`, provider: "EmVB" })),
+        ...componentProviders().flatMap((provider) => (provider.recipes ?? []).map((recipe) => ({ ...recipe, insertId: `provider:${provider.id}:${recipe.id}`, provider: provider.label }))),
+      ].filter((recipe) => matchesSearch(query, recipe.name, recipe.description, recipe.provider, "recipe section"))
     : [];
   return (
     <div className="emvb-panel-body" data-emvb-panel="add">
@@ -141,13 +150,14 @@ export function AddPanel({
           <div className="emvb-recipe-list" aria-label="Section recipes">
             {recipes.map((recipe) => (
               <button
-                key={recipe.id}
+                key={recipe.insertId}
                 type="button"
                 className="emvb-recipe-tile"
-                data-emvb-recipe={recipe.id}
-                onClick={() => onRecipe(recipe.id)}
+                data-emvb-recipe={recipe.insertId}
+                onClick={() => onRecipe(recipe.insertId)}
               >
                 <span className="emvb-recipe-name">{recipe.name}</span>
+                <span className="emvb-recipe-provider">{recipe.provider}</span>
                 <span className="emvb-recipe-desc">{recipe.description}</span>
               </button>
             ))}
