@@ -15,7 +15,11 @@ await mkdir(linkRoot, { recursive: true });
 for (const name of await readdir(pkgDir)) {
   const target = join(pkgDir, name);
   const pkgJson = join(target, "package.json");
-  const pkgName = (await Bun.file(pkgJson).json().catch(() => null))?.name as string | undefined;
+  const pkgName = (
+    await Bun.file(pkgJson)
+      .json()
+      .catch(() => null)
+  )?.name as string | undefined;
   if (!pkgName?.startsWith(`${scope}/`)) continue;
   const link = join(root, "node_modules", pkgName);
   await mkdir(dirname(link), { recursive: true });

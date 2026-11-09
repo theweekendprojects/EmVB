@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { generateComponent, validateDefinition } from "./generate.ts";
 import { generateSafelistCss } from "./artifacts.ts";
+import type { DaisyComponentDefinition } from "../types.ts";
 
 const definition = {
   id: "button",
@@ -10,7 +11,14 @@ const definition = {
   rootClass: "btn",
   fields: [
     { key: "label", label: "Label", kind: "text", default: "Button", textContent: true },
-    { key: "tone", label: "Tone", kind: "select", default: "primary", options: ["primary", "error"], classMap: { primary: "btn-primary", error: "btn-error" } },
+    {
+      key: "tone",
+      label: "Tone",
+      kind: "select",
+      default: "primary",
+      options: ["primary", "error"],
+      classMap: { primary: "btn-primary", error: "btn-error" },
+    },
   ],
 } as const;
 
@@ -19,10 +27,20 @@ describe("component generator", () => {
     const generated = generateComponent(definition);
     expect(generated.descriptor.fields[1]?.key).toBe("tone");
     const node = { id: "x", ...generated.defaults() };
-    expect(generated.build(node)).toEqual({ tag: "button", attrs: { class: "btn btn-primary" }, children: ["Button"] });
+    expect(generated.build(node)).toEqual({
+      tag: "button",
+      attrs: { class: "btn btn-primary" },
+      children: ["Button"],
+    });
   });
   test("rejects incomplete class maps", () => {
-    expect(() => validateDefinition({ ...definition, fields: [{ ...definition.fields[1], classMap: { primary: "btn-primary" } }] } as any)).toThrow("missing class");
+    expect(() =>
+      validateDefinition({
+        ...definition,
+        fields: [{ ...definition.fields[1], classMap: { primary: "btn-primary" } }],
+      } as DaisyComponentDefinition),
+    ).toThrow("missing class");
   });
-  test("generates a deterministic safelist", () => expect(generateSafelistCss([definition])).toContain(".btn-primary {}"));
+  test("generates a deterministic safelist", () =>
+    expect(generateSafelistCss([definition])).toContain(".btn-primary {}"));
 });

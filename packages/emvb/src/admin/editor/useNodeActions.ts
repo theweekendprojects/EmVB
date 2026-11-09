@@ -233,7 +233,9 @@ export function useNodeActions({
     const layout = current ?? startingLayout();
     const node = newElement(type);
     if (!node) return;
-    const label = type.startsWith("daisy:") ? type.slice("daisy:".length).replace(/-/g, " ") : ELEMENT_DESCRIPTORS.find((d) => d.type === type)?.name ?? type;
+    const label = type.startsWith("daisy:")
+      ? type.slice("daisy:".length).replace(/-/g, " ")
+      : (ELEMENT_DESCRIPTORS.find((d) => d.type === type)?.name ?? type);
     place(layout, node, label);
   };
 
@@ -243,19 +245,36 @@ export function useNodeActions({
     if (id.startsWith("provider:") || id.startsWith("daisy:")) {
       const legacy = id.startsWith("daisy:");
       const parts = id.split(":");
-      const providerId = legacy ? "daisyui" : parts[1]!;
-      const recipeId = legacy ? parts[1]! : parts.slice(2).join(":");
+      const providerId = legacy ? "daisyui" : (parts[1] ?? "");
+      const recipeId = legacy ? (parts[1] ?? "") : parts.slice(2).join(":");
       const provider = componentProvider(providerId);
       const recipe = provider?.recipes?.find((candidate) => candidate.id === recipeId);
-      if (!provider || !recipe) { notice(`Unknown provider recipe: ${id}`); return; }
+      if (!provider || !recipe) {
+        notice(`Unknown provider recipe: ${id}`);
+        return;
+      }
       try {
         const nodes = recipe.create(() => newNodeId());
         const issues = provider.validate?.(nodes) ?? [];
-        if (issues.length > 0) { notice(`Recipe cannot be inserted: ${issues[0]?.message ?? "validation failed"}`); return; }
+        if (issues.length > 0) {
+          notice(`Recipe cannot be inserted: ${issues[0]?.message ?? "validation failed"}`);
+          return;
+        }
         const children = nodes as unknown as LayoutNode[];
-        const node: LayoutNode = children.length === 1 ? children[0]! : { id: newNodeId(), type: "container", props: {}, label: `${recipeId.replace(/-/g, " ")} recipe`, children };
+        const node: LayoutNode =
+          children.length === 1 && children[0]
+            ? children[0]
+            : {
+                id: newNodeId(),
+                type: "container",
+                props: {},
+                label: `${recipeId.replace(/-/g, " ")} recipe`,
+                children,
+              };
         place(layout, node, `${recipeId.replace(/-/g, " ")} recipe`, true);
-      } catch (error) { notice(error instanceof Error ? error.message : "Recipe could not be inserted."); }
+      } catch (error) {
+        notice(error instanceof Error ? error.message : "Recipe could not be inserted.");
+      }
       return;
     }
     const nativeId = id.startsWith("native:") ? id.slice("native:".length) : id;

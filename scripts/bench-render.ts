@@ -1,5 +1,10 @@
 // N-002: renderPage on a 300-node layout must take ≤ 20 ms (median, Bun runtime, measured locally).
-import { LAYOUT_SCHEMA_VERSION, renderPage, type DesignSystem, type Layout } from "../packages/emvb/src/core/index.ts";
+import {
+  LAYOUT_SCHEMA_VERSION,
+  renderPage,
+  type DesignSystem,
+  type Layout,
+} from "../packages/emvb/src/core/index.ts";
 
 export const BUDGET_MS = 20;
 export const ITERATIONS = 200;

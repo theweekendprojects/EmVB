@@ -11,14 +11,20 @@ type AnyComponentProvider = ComponentProvider<any>;
 const providers = new Map<string, AnyComponentProvider>();
 
 export function registerComponentProvider(provider: AnyComponentProvider): () => void {
-  if (!/^[a-z][a-z0-9-]*$/.test(provider.id)) throw new Error(`Invalid provider id: ${provider.id}`);
+  if (!/^[a-z][a-z0-9-]*$/.test(provider.id))
+    throw new Error(`Invalid provider id: ${provider.id}`);
   const current = providers.get(provider.id);
-  if (current && current !== provider) throw new Error(`Component provider already registered: ${provider.id}`);
+  if (current && current !== provider)
+    throw new Error(`Component provider already registered: ${provider.id}`);
   providers.set(provider.id, provider);
-  return () => { if (providers.get(provider.id) === provider) providers.delete(provider.id); };
+  return () => {
+    if (providers.get(provider.id) === provider) providers.delete(provider.id);
+  };
 }
 
-export const componentProvider = (id: string): ComponentProvider<ProviderComponentNode> | undefined =>
+export const componentProvider = (
+  id: string,
+): ComponentProvider<ProviderComponentNode> | undefined =>
   providers.get(id) as ComponentProvider<ProviderComponentNode> | undefined;
 export const componentProviders = (): readonly ComponentProvider<ProviderComponentNode>[] =>
   [...providers.values()] as ComponentProvider<ProviderComponentNode>[];

@@ -60,12 +60,20 @@ describe("upgradeLayout", () => {
     const snapshot = structuredClone(v0);
     const once = upgradeLayout(v0, migrations);
     if (!once.ok) throw new Error("upgrade failed");
-    expect(upgradeLayout(once.doc, migrations)).toEqual({ ok: true, doc: once.doc, from: LAYOUT_SCHEMA_VERSION });
+    expect(upgradeLayout(once.doc, migrations)).toEqual({
+      ok: true,
+      doc: once.doc,
+      from: LAYOUT_SCHEMA_VERSION,
+    });
     expect(v0).toEqual(snapshot);
   });
 
   test("a current document is returned unchanged", () => {
-    expect(upgradeLayout(s1Page())).toEqual({ ok: true, doc: s1Page(), from: LAYOUT_SCHEMA_VERSION });
+    expect(upgradeLayout(s1Page())).toEqual({
+      ok: true,
+      doc: s1Page(),
+      from: LAYOUT_SCHEMA_VERSION,
+    });
   });
 
   test("a missing step is reported instead of skipped", () => {
@@ -90,7 +98,11 @@ describe("upgradeLayout", () => {
       expect(first).toEqual({ ok: true, doc: layout, from: LAYOUT_SCHEMA_VERSION });
       if (!first.ok) continue;
       expect(upgradeLayout(first.doc, migrations)).toEqual(first);
-      expect(validateLayout(layout, migrations)).toEqual({ ok: true, layout, upgradedFrom: LAYOUT_SCHEMA_VERSION });
+      expect(validateLayout(layout, migrations)).toEqual({
+        ok: true,
+        layout,
+        upgradedFrom: LAYOUT_SCHEMA_VERSION,
+      });
     }
   });
 
@@ -165,7 +177,11 @@ describe("schema versions (D-031, D-032)", () => {
 
   test("an older EmVB meets a v3 page as newer, not as invalid", () => {
     const page = s1Page();
-    expect(upgradeLayout(page, {}, 2)).toEqual({ ok: false, reason: "newer-version", version: LAYOUT_SCHEMA_VERSION });
+    expect(upgradeLayout(page, {}, 2)).toEqual({
+      ok: false,
+      reason: "newer-version",
+      version: LAYOUT_SCHEMA_VERSION,
+    });
     expect(validateLayout({ ...page, schemaVersion: LAYOUT_SCHEMA_VERSION + 1 })).toMatchObject({
       ok: false,
       issues: [{ path: "schemaVersion", code: "newer-version" }],

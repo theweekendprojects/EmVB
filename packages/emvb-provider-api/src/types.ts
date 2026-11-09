@@ -59,7 +59,10 @@ export interface ProviderValidationIssue {
   message: string;
 }
 
-export interface ProviderRenderContext { mode: "editor" | "public"; previewState?: Readonly<Record<string, unknown>>; }
+export interface ProviderRenderContext {
+  mode: "editor" | "public";
+  previewState?: Readonly<Record<string, unknown>>;
+}
 
 export interface ComponentProvider<N extends ProviderComponentNode = ProviderComponentNode> {
   id: string;
@@ -68,7 +71,12 @@ export interface ComponentProvider<N extends ProviderComponentNode = ProviderCom
   components: ReadonlyMap<string, ProviderComponent<N>>;
   recipes?: readonly ProviderRecipe<N>[];
   createNode(component: string, id: string): N;
-  render(node: N, attrs?: Record<string, string>, children?: ProviderVNode[], context?: ProviderRenderContext): ProviderVNode;
+  render(
+    node: N,
+    attrs?: Record<string, string>,
+    children?: ProviderVNode[],
+    context?: ProviderRenderContext,
+  ): ProviderVNode;
   validate?(nodes: readonly N[]): ProviderValidationIssue[];
   cssEntryPoints: readonly string[];
 }

@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { auditVerifiedPrimitive, primitiveSignature, renderVerifiedPrimitive, VERIFIED_PRIMITIVE_IDS } from "../verified/primitives.ts";
+import {
+  auditVerifiedPrimitive,
+  primitiveSignature,
+  renderVerifiedPrimitive,
+  VERIFIED_PRIMITIVE_IDS,
+} from "../verified/primitives.ts";
 import { daisyUIProvider } from "../provider.ts";
 
 describe("R5 verified primitive subset", () => {
@@ -13,9 +18,12 @@ describe("R5 verified primitive subset", () => {
     }
   });
   test("blocks unnamed controls and invalid progress ranges", () => {
-    const input = daisyUIProvider.createNode("input", "input-a"); input.props.label = "";
+    const input = daisyUIProvider.createNode("input", "input-a");
+    input.props.label = "";
     expect(auditVerifiedPrimitive(input)[0]?.code).toBe("accessible-name");
-    const progress = daisyUIProvider.createNode("progress", "progress-a"); progress.props.value = 120; progress.props.max = 100;
+    const progress = daisyUIProvider.createNode("progress", "progress-a");
+    progress.props.value = 120;
+    progress.props.max = 100;
     expect(auditVerifiedPrimitive(progress)[0]?.code).toBe("progress-range");
   });
 });

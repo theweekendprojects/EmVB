@@ -1,6 +1,9 @@
 import type { DaisyComponentDefinition, DaisyProps } from "../types.ts";
 
-export function componentClasses(definition: DaisyComponentDefinition, props: DaisyProps): string[] {
+export function componentClasses(
+  definition: DaisyComponentDefinition,
+  props: DaisyProps,
+): string[] {
   const classes = [definition.rootClass];
   for (const field of definition.fields) {
     if (!field.classMap) continue;
@@ -12,5 +15,7 @@ export function componentClasses(definition: DaisyComponentDefinition, props: Da
 }
 
 export function mergeClasses(...values: Array<string | undefined>): string {
-  return [...new Set(values.flatMap(value => value?.split(/\s+/).filter(Boolean) ?? []))].join(" ");
+  return [...new Set(values.flatMap((value) => value?.split(/\s+/).filter(Boolean) ?? []))].join(
+    " ",
+  );
 }

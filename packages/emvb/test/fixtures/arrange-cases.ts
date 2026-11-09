@@ -10,7 +10,12 @@ import {
 } from "../../src/core/arrange.ts";
 import { defaultElement } from "../../src/core/elements/index.ts";
 import { MAX_DEPTH, MAX_NODES } from "../../src/core/limits.ts";
-import { KNOWN_ELEMENT_TYPES, LAYOUT_SCHEMA_VERSION, type Layout, type LayoutNode } from "../../src/core/schema/layout.ts";
+import {
+  KNOWN_ELEMENT_TYPES,
+  LAYOUT_SCHEMA_VERSION,
+  type Layout,
+  type LayoutNode,
+} from "../../src/core/schema/layout.ts";
 import { nodeChildren } from "../../src/core/tree-ops.ts";
 
 const el = (type: (typeof KNOWN_ELEMENT_TYPES)[number], id: string, children?: LayoutNode[]) =>

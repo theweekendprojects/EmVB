@@ -732,18 +732,30 @@ export const TocNode = leafNode(
   }),
 );
 
-
 /** A component supplied by a registered external provider. */
 export const ProviderNode = z.strictObject({
   id: NodeId,
   type: z.literal("provider"),
-  provider: z.string().regex(/^[a-z][a-z0-9-]*$/).max(64),
-  component: z.string().regex(/^[a-z][a-z0-9-]*$/).max(64),
+  provider: z
+    .string()
+    .regex(/^[a-z][a-z0-9-]*$/)
+    .max(64),
+  component: z
+    .string()
+    .regex(/^[a-z][a-z0-9-]*$/)
+    .max(64),
   providerVersion: z.number().int().min(1).max(999).optional(),
-  props: z.record(z.string().max(64), z.union([z.string().max(4000), z.number().finite(), z.boolean()])),
-  providerMeta: z.record(z.string().max(64), z.union([z.string().max(4000), z.number().finite(), z.boolean()])).optional(),
+  props: z.record(
+    z.string().max(64),
+    z.union([z.string().max(4000), z.number().finite(), z.boolean()]),
+  ),
+  providerMeta: z
+    .record(z.string().max(64), z.union([z.string().max(4000), z.number().finite(), z.boolean()]))
+    .optional(),
   ...sharedNodeFields,
-  get children(): z.ZodType<LayoutNode[] | undefined> { return z.array(LayoutNode).optional(); },
+  get children(): z.ZodType<LayoutNode[] | undefined> {
+    return z.array(LayoutNode).optional();
+  },
 });
 
 const knownTypeSet = new Set<string>(KNOWN_ELEMENT_TYPES);

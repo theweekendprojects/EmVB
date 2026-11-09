@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "Generated daisyUI component provider for EmVB",
   "license": "MIT",
-  "type": "module",
   "files": [
     "dist",
     "generated",
@@ -11,6 +10,7 @@
     "licenses",
     "src"
   ],
+  "type": "module",
   "exports": {
     ".": {
       "bun": "./src/index.ts",
@@ -56,15 +56,15 @@
     "build": "bun ../../scripts/build-provider-packages.ts",
     "prepack": "bun run build"
   },
-  "peerDependencies": {
-    "daisyui": "5.7.50",
-    "tailwindcss": "4.1.17"
+  "dependencies": {
+    "@perkyzz/emvb-provider-api": "workspace:*"
   },
   "devDependencies": {
     "daisyui": "5.7.50",
     "tailwindcss": "4.1.17"
   },
-  "dependencies": {
-    "@perkyzz/emvb-provider-api": "workspace:*"
+  "peerDependencies": {
+    "daisyui": "5.7.50",
+    "tailwindcss": "4.1.17"
   }
 }

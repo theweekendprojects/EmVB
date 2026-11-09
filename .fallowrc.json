@@ -1,12 +1,20 @@
 {
   "$schema": "https://fallow.tools/schema.json",
   "entry": ["demos/*/src/live.config.ts"],
-  "ignorePatterns": ["spikes/**", "site/**", "demos/*/public/**"],
+  "ignorePatterns": [
+    "spikes/**",
+    "site/**",
+    "demos/*/public/**",
+    "packages/emvb-daisyui/generated/**",
+    "packages/emvb-daisyui/styles/**"
+  ],
   "ignoreDependencies": [
     "@fortawesome/fontawesome-free",
     "@tabler/icons",
     "lucide-static",
-    "remixicon"
+    "remixicon",
+    "@perkyzz/emvb-daisyui",
+    "@perkyzz/emvb-provider-api"
   ],
   "boundaries": {
     "zones": [

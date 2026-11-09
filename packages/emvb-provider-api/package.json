@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "description": "Framework-neutral external component provider contracts and registry for EmVB",
   "license": "MIT",
-  "type": "module",
   "files": [
     "dist",
     "README.md",
     "src"
   ],
+  "type": "module",
   "exports": {
     ".": {
       "bun": "./src/index.ts",
