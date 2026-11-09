@@ -26,11 +26,34 @@ import { canvasCollectionSlugs } from "../core/canvas-collections.ts";
 import { TOOLS } from "../mcp/tools.ts";
 import { mcpRoutes, mcpToolConfig } from "./mcp-routes.ts";
 
+/**
+ * Import each external provider module once so its registration side effect runs on the server.
+ * Failures are logged, not thrown: a bad specifier must not take the whole plugin (and its pages)
+ * down. The dynamic specifier is validated in `emvb()` before it reaches here.
+ */
+let serverProvidersStarted = false;
+function registerServerProviders(specifiers: readonly string[]): void {
+  if (serverProvidersStarted || specifiers.length === 0) return;
+  serverProvidersStarted = true;
+  for (const specifier of specifiers) {
+    import(/* @vite-ignore */ specifier).catch((error: unknown) => {
+      console.error(`EmVB: failed to load provider "${specifier}":`, error);
+    });
+  }
+}
+
 export function createPlugin(
-  options: { canvasStyles?: unknown; canvasCollections?: unknown } = {},
+  options: { canvasStyles?: unknown; canvasCollections?: unknown; providers?: unknown } = {},
 ) {
   const canvasStyles = canvasStyleUrls(options.canvasStyles);
   const canvasCollections = canvasCollectionSlugs(options.canvasCollections);
+  const providers = Array.isArray(options.providers)
+    ? options.providers.filter((p): p is string => typeof p === "string" && p.length > 0)
+    : [];
+  // Register external providers on the SERVER so `provider` nodes render on public pages.
+  // The provider module self-registers its singleton on import (idempotent). The editor (browser)
+  // registers separately via the host's `adminEntry` wrapper — see EmVBOptions.providers.
+  void registerServerProviders(providers);
   return definePlugin({
     id: PLUGIN_ID,
     version: PLUGIN_VERSION,
@@ -82,7 +105,7 @@ export function createPlugin(
         handler: async () => ({ ok: true, plugin: PLUGIN_ID, version: PLUGIN_VERSION }),
       },
       // W-327: what the editor needs from the host's `emvb()` options.
-      "editor/config": { handler: async () => ({ canvasStyles, canvasCollections }) },
+      "editor/config": { handler: async () => ({ canvasStyles, canvasCollections, providers }) },
       design: designRoute,
       "design/draft": designDraftRoute,
       "design/save": designSaveRoute,

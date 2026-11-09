@@ -15,13 +15,17 @@
     "@emdash-cms/cloudflare": "1.4.0",
     "@emdash-cms/plugin-forms": "0.2.12",
     "@perkyzz/emvb": "workspace:*",
+    "@perkyzz/emvb-daisyui": "workspace:*",
     "astro": "7.3.5",
+    "daisyui": "5.7.50",
     "emdash": "1.4.0",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "tailwindcss": "4.1.17"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261029.1",
+    "@tailwindcss/vite": "4.1.17",
     "wrangler": "4.155.0"
   },
   "emdash": {

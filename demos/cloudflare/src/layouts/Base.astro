@@ -17,6 +17,9 @@ import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms/client";
 import { EmVBMenuRuntime } from "@perkyzz/emvb/astro/menu";
 import { EmVBTabsRuntime } from "@perkyzz/emvb/astro/tabs";
 import { resolveStarterSiteIdentity } from "../utils/site-identity";
+// Tailwind + daisyUI, compiled by @tailwindcss/vite and bundled by Astro; provider pages need
+// these classes. Imported (not a <link href>) so Astro processes and ships it.
+import "../styles/daisyui.css";
 
 interface Props {
 	title: string;
