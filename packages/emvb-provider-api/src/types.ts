@@ -4,7 +4,10 @@ export type ProviderProps = Record<string, ProviderFieldValue | undefined>;
 
 export interface ProviderVNode {
   tag: string;
-  attrs: Record<string, string>;
+  // Values are strings; a key may be absent. Conditional attrs (`...(cond ? { open: "open" } : {})`)
+  // produce optional keys, so the value type includes `undefined`. Renderers MUST skip undefined
+  // values (EmVB's serializer does) so an absent attribute never renders as `="undefined"`.
+  attrs: Record<string, string | undefined>;
   children: Array<ProviderVNode | string>;
 }
 

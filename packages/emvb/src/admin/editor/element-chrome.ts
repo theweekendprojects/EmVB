@@ -92,6 +92,7 @@ export const ELEMENT_ICONS: Record<string, Icon> = {
   loop: RepeatIcon,
   "loop-empty": SquareIcon,
   pagination: ArrowsLeftRightIcon,
+  provider: SquaresFourIcon,
 };
 
 export function elementIcon(type: string): Icon {

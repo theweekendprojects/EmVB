@@ -1,4 +1,4 @@
-import type { ComponentProvider as NeutralComponentProvider, ProviderComponent, ProviderComponentDescriptor, ProviderComponentNode, ProviderFieldKind, ProviderFieldValue, ProviderProps, ProviderVNode, ProviderRenderContext } from "@perkyzz/emvb-provider-api";
+import type { ComponentProvider as NeutralComponentProvider, ProviderComponent, ProviderComponentNode, ProviderFieldKind, ProviderFieldValue, ProviderProps, ProviderVNode, ProviderRenderContext } from "@perkyzz/emvb-provider-api";
 
 export type DaisyFieldKind = ProviderFieldKind;
 export type DaisyFieldValue = ProviderFieldValue;

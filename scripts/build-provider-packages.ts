@@ -1,4 +1,4 @@
-import { rm, mkdir, cp, writeFile, rename } from "node:fs/promises";
+import { rm, mkdir, cp, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 

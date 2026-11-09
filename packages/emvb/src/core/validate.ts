@@ -155,6 +155,12 @@ export function validateLayout(
   input: unknown,
   migrations: Readonly<Record<number, Migration>> = LAYOUT_MIGRATIONS,
 ): LayoutValidation {
+  // Depth/node limits are migration-agnostic (both only follow `children`), so enforce them on
+  // the raw input FIRST. checkSize JSON.stringifies the whole tree and the migrations recurse it;
+  // running either on absurdly deep input is slow and risks a stack overflow (W-646). This
+  // iterative guard rejects pathological nesting cheaply before any of that work.
+  const rawStructure = checkStructure((input as { root?: unknown } | null)?.root);
+  if (rawStructure) return { ok: false, issues: [rawStructure] };
   const sizeIssue = checkSize(input, MAX_LAYOUT_BYTES, "page");
   if (sizeIssue) return { ok: false, issues: [sizeIssue] };
   const upgraded = upgradeLayout(input, migrations, LAYOUT_SCHEMA_VERSION);

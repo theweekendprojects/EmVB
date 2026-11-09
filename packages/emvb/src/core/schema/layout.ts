@@ -815,7 +815,6 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
 /** One strict schema per known element type, for the MCP element catalogue (W-453). */
 export const KNOWN_NODE_SCHEMAS = KnownLayoutNode.options;
 
-export type ProviderNode = z.infer<typeof ProviderNode>;
 export type HeadingNode = z.infer<typeof HeadingNode>;
 export type TocNode = z.infer<typeof TocNode>;
 export type SpacerNode = z.infer<typeof SpacerNode>;
@@ -999,6 +998,17 @@ export type AccordionItemNode = NodeEnvelope & {
   type: "accordion-item";
   props: { summary: string; open?: boolean };
   children: LayoutNode[];
+};
+
+/** Manual recursive type (W-022 pattern): avoids `z.infer` cycling through LayoutNode. */
+export type ProviderNode = NodeEnvelope & {
+  type: "provider";
+  provider: string;
+  component: string;
+  providerVersion?: number;
+  props: Record<string, string | number | boolean>;
+  providerMeta?: Record<string, string | number | boolean>;
+  children?: LayoutNode[];
 };
 
 export type LayoutNode =

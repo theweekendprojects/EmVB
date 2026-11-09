@@ -355,7 +355,7 @@ function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
   const provider = componentProviders().find((candidate) => candidate.nodeType === node.type);
   const generated = component ? provider?.components.get(component) : undefined;
   if (!generated) return undefined;
-  return { type: "provider", name: generated.definition.label, group: "content", defaultTab: "content", fields: [
+  return { type: "provider", name: generated.descriptor.name, group: "content", defaultTab: "content", fields: [
     ...generated.descriptor.fields,
     { key: "theme", kind: "select", label: "Theme", optional: true, options: DAISY_THEMES.map((value) => ({ value, label: value ? value[0]!.toUpperCase() + value.slice(1) : "Inherit" })) },
   ] };

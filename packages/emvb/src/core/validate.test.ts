@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { container, heading, layoutOfBytes, nested, s1Page } from "../../test/fixtures/layouts.ts";
+import { LAYOUT_SCHEMA_VERSION } from "./schema/layout.ts";
 import { MAX_DEPTH, MAX_DESIGN_BYTES, MAX_LAYOUT_BYTES, MAX_NODES } from "./limits.ts";
 import { summarizeIssues, validateDesign, validateLayout } from "./validate.ts";
 
@@ -12,7 +13,7 @@ const issuesOf = (input: unknown) => {
 describe("valid layouts", () => {
   test("the S1 page parses and keeps its content", () => {
     const result = validateLayout(s1Page());
-    expect(result).toEqual({ ok: true, layout: s1Page(), upgradedFrom: 17 });
+    expect(result).toEqual({ ok: true, layout: s1Page(), upgradedFrom: LAYOUT_SCHEMA_VERSION });
   });
 
   test("an empty root container is valid", () => {
@@ -186,7 +187,7 @@ describe("size budget (N-005, K12)", () => {
 
 describe("versions", () => {
   test("a newer schema version is refused with an update message", () => {
-    expect(issuesOf({ ...s1Page(), schemaVersion: 18 })).toEqual([
+    expect(issuesOf({ ...s1Page(), schemaVersion: LAYOUT_SCHEMA_VERSION + 1 })).toEqual([
       expect.objectContaining({ path: "schemaVersion", code: "newer-version" }),
     ]);
   });

@@ -14,41 +14,38 @@
   "exports": {
     ".": {
       "bun": "./src/index.ts",
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./catalog": {
       "bun": "./src/catalog/index.ts",
-      "types": "./src/catalog/index.ts",
+      "types": "./dist/catalog.d.ts",
       "import": "./dist/catalog/index.js"
     },
     "./themes": {
       "bun": "./src/themes/index.ts",
-      "types": "./src/themes/index.ts",
+      "types": "./dist/themes.d.ts",
       "import": "./dist/themes/index.js"
     },
-    "./styles.css": {
-      "bun": "./styles/emvb-daisyui.css",
-      "default": "./dist/styles.css"
-    },
+    "./styles.css": "./dist/styles.css",
     "./recipes": {
       "bun": "./src/recipes/index.ts",
-      "types": "./src/recipes/index.ts",
+      "types": "./dist/recipes.d.ts",
       "import": "./dist/recipes/index.js"
     },
     "./validation": {
       "bun": "./src/validation/index.ts",
-      "types": "./src/validation/index.ts",
+      "types": "./dist/validation.d.ts",
       "import": "./dist/validation/index.js"
     },
     "./compatibility": {
       "bun": "./src/compatibility/index.ts",
-      "types": "./src/compatibility/index.ts",
+      "types": "./dist/compatibility.d.ts",
       "import": "./dist/compatibility/index.js"
     },
     "./conformance": {
       "bun": "./src/conformance/index.ts",
-      "types": "./src/conformance/index.ts",
+      "types": "./dist/conformance.d.ts",
       "import": "./dist/conformance/index.js"
     }
   },

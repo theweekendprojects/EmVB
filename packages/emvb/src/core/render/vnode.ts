@@ -89,6 +89,7 @@ export function serialize(node: VNode | string): string {
   if (!TAGS.has(node.tag)) throw new Error(`EmVB: tag "${node.tag}" is not allowed`);
   let attrs = "";
   for (const [name, value] of Object.entries(node.attrs)) {
+    if (value === undefined) continue; // an absent attribute must not render as `="undefined"`
     if (!ATTR_NAME.test(name)) throw new Error(`EmVB: attribute "${name}" is not allowed`);
     attrs += ` ${name}="${escapeAttr(value)}"`;
   }

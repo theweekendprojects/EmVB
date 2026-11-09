@@ -105,7 +105,7 @@ describe("elements in the wrong place are refused at save (W-225)", () => {
 
 describe("image edit records are checked at save (W-481)", () => {
   const withEdit = (edit: Record<string, unknown>) => ({
-    schemaVersion: 17,
+    schemaVersion: 18,
     root: {
       id: "root0001",
       type: "container",

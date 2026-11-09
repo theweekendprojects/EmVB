@@ -7,7 +7,8 @@ export const daisyUIProvider = createDaisyUIProvider(DAISY_COMPONENT_CATALOG);
 
 export function registerDaisyUIProvider(): () => void {
   const active = componentProvider(daisyUIProvider.id);
-  if (active === daisyUIProvider) return () => undefined;
+  // Already registered (same singleton): nothing to do, and no new unregister handle.
+  if (active && active.id === daisyUIProvider.id) return () => undefined;
   return registerComponentProvider(daisyUIProvider);
 }
 

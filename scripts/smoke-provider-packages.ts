@@ -21,6 +21,6 @@ if (!daisyModule.daisyUIProvider?.components?.has("button")) throw new Error("da
 if (!Array.isArray(catalogModule.DAISY_COMPONENT_CATALOG)) throw new Error("Catalog subpath export is invalid.");
 const button = daisyModule.daisyUIProvider.createNode("button", "smoke-button");
 const rendered = daisyModule.daisyUIProvider.render(button);
-if (!rendered.attrs.class.split(/\s+/).includes("btn")) throw new Error("Built Button does not render .btn.");
+if (!(rendered.attrs.class ?? "").split(/\s+/).includes("btn")) throw new Error("Built Button does not render .btn.");
 if (conformanceModule.DAISYUI_CONFORMANCE.daisyuiVersion !== "5.7.50") throw new Error("Built conformance version drifted.");
 console.log("Provider package export smoke test passed.");
