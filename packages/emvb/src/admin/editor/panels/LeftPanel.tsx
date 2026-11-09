@@ -1,6 +1,6 @@
 import { Tabs } from "@cloudflare/kumo";
 import * as React from "react";
-import type { ElementType, Layout } from "../../../core/index.ts";
+import type { Layout } from "../../../core/index.ts";
 import { AddPanel } from "./AddPanel.tsx";
 import { LayersPanel } from "./LayersPanel.tsx";
 import type { ClipboardActions } from "../useClipboardActions.ts";

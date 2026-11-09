@@ -65,12 +65,21 @@ const providerNodes: Migration = (doc) => {
   const walk = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(walk);
     if (!isRecord(value)) return value;
-    const next = Object.fromEntries(Object.entries(value).map(([key, child]) => [key, key === "children" ? walk(child) : child]));
+    const next = Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [key, key === "children" ? walk(child) : child]),
+    );
     if (next["type"] === "daisy") {
       const props = isRecord(next["props"]) ? { ...next["props"] } : {};
       const theme = typeof props["theme"] === "string" ? props["theme"] : undefined;
       delete props["theme"];
-      return { ...next, type: "provider", provider: "daisyui", providerVersion: 2, props, ...(theme ? { providerMeta: { theme } } : {}) };
+      return {
+        ...next,
+        type: "provider",
+        provider: "daisyui",
+        providerVersion: 2,
+        props,
+        ...(theme ? { providerMeta: { theme } } : {}),
+      };
     }
     return next;
   };

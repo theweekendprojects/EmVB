@@ -48,9 +48,10 @@
       }
     },
     {
-      "files": ["scripts/**", "e2e/**", "site/scripts/**"],
+      "files": ["scripts/**", "e2e/**", "site/scripts/**", "**/cli.ts"],
       "rules": {
-        "no-await-in-loop": "off"
+        "no-await-in-loop": "off",
+        "no-console": "off"
       }
     },
     {

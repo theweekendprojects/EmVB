@@ -732,18 +732,30 @@ export const TocNode = leafNode(
   }),
 );
 
-
 /** A component supplied by a registered external provider. */
 export const ProviderNode = z.strictObject({
   id: NodeId,
   type: z.literal("provider"),
-  provider: z.string().regex(/^[a-z][a-z0-9-]*$/).max(64),
-  component: z.string().regex(/^[a-z][a-z0-9-]*$/).max(64),
+  provider: z
+    .string()
+    .regex(/^[a-z][a-z0-9-]*$/)
+    .max(64),
+  component: z
+    .string()
+    .regex(/^[a-z][a-z0-9-]*$/)
+    .max(64),
   providerVersion: z.number().int().min(1).max(999).optional(),
-  props: z.record(z.string().max(64), z.union([z.string().max(4000), z.number().finite(), z.boolean()])),
-  providerMeta: z.record(z.string().max(64), z.union([z.string().max(4000), z.number().finite(), z.boolean()])).optional(),
+  props: z.record(
+    z.string().max(64),
+    z.union([z.string().max(4000), z.number().finite(), z.boolean()]),
+  ),
+  providerMeta: z
+    .record(z.string().max(64), z.union([z.string().max(4000), z.number().finite(), z.boolean()]))
+    .optional(),
   ...sharedNodeFields,
-  get children(): z.ZodType<LayoutNode[] | undefined> { return z.array(LayoutNode).optional(); },
+  get children(): z.ZodType<LayoutNode[] | undefined> {
+    return z.array(LayoutNode).optional();
+  },
 });
 
 const knownTypeSet = new Set<string>(KNOWN_ELEMENT_TYPES);
@@ -815,7 +827,6 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
 /** One strict schema per known element type, for the MCP element catalogue (W-453). */
 export const KNOWN_NODE_SCHEMAS = KnownLayoutNode.options;
 
-export type ProviderNode = z.infer<typeof ProviderNode>;
 export type HeadingNode = z.infer<typeof HeadingNode>;
 export type TocNode = z.infer<typeof TocNode>;
 export type SpacerNode = z.infer<typeof SpacerNode>;
@@ -999,6 +1010,17 @@ export type AccordionItemNode = NodeEnvelope & {
   type: "accordion-item";
   props: { summary: string; open?: boolean };
   children: LayoutNode[];
+};
+
+/** Manual recursive type (W-022 pattern): avoids `z.infer` cycling through LayoutNode. */
+export type ProviderNode = NodeEnvelope & {
+  type: "provider";
+  provider: string;
+  component: string;
+  providerVersion?: number;
+  props: Record<string, string | number | boolean>;
+  providerMeta?: Record<string, string | number | boolean>;
+  children?: LayoutNode[];
 };
 
 export type LayoutNode =

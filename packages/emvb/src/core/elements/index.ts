@@ -1156,16 +1156,35 @@ const toc: ElementDefinition<TocNode> = {
 const providerElement: ElementDefinition<ProviderNode> = {
   baseCss: "",
   defaults: () => ({ type: "provider", provider: "unregistered", component: "unknown", props: {} }),
-  descriptor: { type: "provider", name: "Provider component", group: "content", defaultTab: "content", fields: [] },
+  descriptor: {
+    type: "provider",
+    name: "Provider component",
+    group: "content",
+    defaultTab: "content",
+    fields: [],
+  },
   build: (node, attrs, children) => {
     try {
       const provider = componentProvider(node.provider);
       if (!provider) throw new Error(`Provider is not registered: ${node.provider}`);
       const meta = node.providerMeta ?? {};
       const theme = typeof meta.theme === "string" ? meta.theme : undefined;
-      return provider.render(node, { ...attrs, ...(theme ? { "data-theme": theme } : {}) }, children, { mode: "public" }) as VNode;
+      // EmVB's ProviderNode is a superset of the provider contract's node; their child
+      // trees differ by design (EmVB children are rendered and passed as the 3rd arg,
+      // the provider never reads node.children). Narrow to the contract node here.
+      const contractNode = node as unknown as Parameters<typeof provider.render>[0];
+      return provider.render(
+        contractNode,
+        { ...attrs, ...(theme ? { "data-theme": theme } : {}) },
+        children,
+        { mode: "public" },
+      ) as VNode;
     } catch {
-      return { tag: "div", attrs: { ...attrs, class: [attrs.class, "emvb-unknown"].filter(Boolean).join(" ") }, children: [`Unknown provider component "${node.provider}:${node.component}"`] };
+      return {
+        tag: "div",
+        attrs: { ...attrs, class: [attrs.class, "emvb-unknown"].filter(Boolean).join(" ") },
+        children: [`Unknown provider component "${node.provider}:${node.component}"`],
+      };
     }
   },
 };

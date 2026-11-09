@@ -7,6 +7,7 @@
     "VISION.md",
     "**/dist/**",
     "**/.astro/**",
+    "**/generated/**",
     "packages/emvb-icons/**"
   ]
 }

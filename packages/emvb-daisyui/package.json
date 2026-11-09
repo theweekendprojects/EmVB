@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "Generated daisyUI component provider for EmVB",
   "license": "MIT",
-  "type": "module",
   "files": [
     "dist",
     "generated",
@@ -11,33 +10,41 @@
     "licenses",
     "src"
   ],
+  "type": "module",
   "exports": {
     ".": {
+      "bun": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./catalog": {
+      "bun": "./src/catalog/index.ts",
       "types": "./dist/catalog.d.ts",
       "import": "./dist/catalog/index.js"
     },
     "./themes": {
+      "bun": "./src/themes/index.ts",
       "types": "./dist/themes.d.ts",
       "import": "./dist/themes/index.js"
     },
     "./styles.css": "./dist/styles.css",
     "./recipes": {
+      "bun": "./src/recipes/index.ts",
       "types": "./dist/recipes.d.ts",
       "import": "./dist/recipes/index.js"
     },
     "./validation": {
+      "bun": "./src/validation/index.ts",
       "types": "./dist/validation.d.ts",
       "import": "./dist/validation/index.js"
     },
     "./compatibility": {
+      "bun": "./src/compatibility/index.ts",
       "types": "./dist/compatibility.d.ts",
       "import": "./dist/compatibility/index.js"
     },
     "./conformance": {
+      "bun": "./src/conformance/index.ts",
       "types": "./dist/conformance.d.ts",
       "import": "./dist/conformance/index.js"
     }
@@ -49,15 +56,15 @@
     "build": "bun ../../scripts/build-provider-packages.ts",
     "prepack": "bun run build"
   },
-  "peerDependencies": {
-    "daisyui": "5.7.50",
-    "tailwindcss": "4.1.17"
+  "dependencies": {
+    "@perkyzz/emvb-provider-api": "workspace:*"
   },
   "devDependencies": {
     "daisyui": "5.7.50",
     "tailwindcss": "4.1.17"
   },
-  "dependencies": {
-    "@perkyzz/emvb-provider-api": "workspace:*"
+  "peerDependencies": {
+    "daisyui": "5.7.50",
+    "tailwindcss": "4.1.17"
   }
 }

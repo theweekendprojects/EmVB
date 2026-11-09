@@ -2,11 +2,7 @@ import { Button, Input } from "@cloudflare/kumo";
 import * as React from "react";
 import { elementIcon } from "../element-chrome.ts";
 import { componentProviders } from "@perkyzz/emvb-provider-api";
-import {
-  ELEMENT_DESCRIPTORS,
-  SECTION_RECIPES,
-  typeMayAddScript,
-} from "../../../core/index.ts";
+import { ELEMENT_DESCRIPTORS, SECTION_RECIPES, typeMayAddScript } from "../../../core/index.ts";
 import { NEW_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { BUTTON, FIELD } from "../../ui.ts";
 import { isCancelEscape } from "../ime.ts";
@@ -46,23 +42,49 @@ export function AddPanel({
     setQuery("");
     searchRef.current?.focus();
   };
-  const providerDescriptors = componentProviders().flatMap((provider) =>
-    [...provider.components.values()].map((generated) => ({
-      type: `provider:${provider.id}:${generated.descriptor.component}`,
-      name: generated.descriptor.support === "experimental" ? `${generated.descriptor.name} (experimental)` : generated.descriptor.name,
-      group: "daisyui" as const,
-      category: generated.descriptor.category ?? provider.label,
-      verified: generated.descriptor.support !== "experimental",
-    })),
-  ).sort((left, right) => Number(right.verified) - Number(left.verified) || left.name.localeCompare(right.name));
+  const providerDescriptors = componentProviders()
+    .flatMap((provider) =>
+      [...provider.components.values()].map((generated) => ({
+        type: `provider:${provider.id}:${generated.descriptor.component}`,
+        name:
+          generated.descriptor.support === "experimental"
+            ? `${generated.descriptor.name} (experimental)`
+            : generated.descriptor.name,
+        group: "daisyui" as const,
+        category: generated.descriptor.category ?? provider.label,
+        verified: generated.descriptor.support !== "experimental",
+      })),
+    )
+    .toSorted(
+      (left, right) =>
+        Number(right.verified) - Number(left.verified) || left.name.localeCompare(right.name),
+    );
   const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(
-    (d) => d.type !== "tab-panel" && d.type !== "daisy" && (formsAvailable || d.group !== "form") && matchesSearch(query, d.name, d.group, "category" in d ? d.category : ""),
+    (d) =>
+      d.type !== "tab-panel" &&
+      d.type !== "daisy" &&
+      (formsAvailable || d.group !== "form") &&
+      matchesSearch(query, d.name, d.group, "category" in d ? d.category : ""),
   );
   const recipes = onRecipe
     ? [
-        ...SECTION_RECIPES.map((recipe) => ({ ...recipe, insertId: `native:${recipe.id}`, provider: "EmVB" })),
-        ...componentProviders().flatMap((provider) => (provider.recipes ?? []).map((recipe) => ({ ...recipe, insertId: `provider:${provider.id}:${recipe.id}`, provider: provider.label }))),
-      ].filter((recipe) => matchesSearch(query, recipe.name, recipe.description, recipe.provider, "recipe section"))
+        ...SECTION_RECIPES.map((recipe) => ({
+          name: recipe.name,
+          description: recipe.description,
+          insertId: `native:${recipe.id}`,
+          provider: "EmVB",
+        })),
+        ...componentProviders().flatMap((provider) =>
+          (provider.recipes ?? []).map((recipe) => ({
+            name: recipe.name,
+            description: recipe.description,
+            insertId: `provider:${provider.id}:${recipe.id}`,
+            provider: provider.label,
+          })),
+        ),
+      ].filter((recipe) =>
+        matchesSearch(query, recipe.name, recipe.description, recipe.provider, "recipe section"),
+      )
     : [];
   return (
     <div className="emvb-panel-body" data-emvb-panel="add">
@@ -103,7 +125,9 @@ export function AddPanel({
               <h3 className="emvb-add-group-title">{group.label}</h3>
               <div className="emvb-add-tiles" aria-label={group.label}>
                 {tiles.map((tile) => {
-                  const Icon = elementIcon(tile.type.startsWith("daisy:") ? "container" : tile.type);
+                  const Icon = elementIcon(
+                    tile.type.startsWith("daisy:") ? "container" : tile.type,
+                  );
                   return (
                     <button
                       key={tile.type}

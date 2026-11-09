@@ -128,7 +128,7 @@ describe("clipboard envelope (W-093)", () => {
       ok: false,
       reason: CLIP_REASONS.newer,
     });
-    expect(readClip(JSON.stringify({ ...clip, schemaVersion: 18 }))).toEqual({
+    expect(readClip(JSON.stringify({ ...clip, schemaVersion: 19 }))).toEqual({
       ok: false,
       reason: CLIP_REASONS.newer,
     });

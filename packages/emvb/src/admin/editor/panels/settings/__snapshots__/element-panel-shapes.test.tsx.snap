@@ -11713,3 +11713,32 @@ exports[`element panel markup (W-021, W-086 M16) an unknown element renders its 
 ,
 }
 `;
+
+exports[`element panel markup (W-021, W-086 M16) provider renders the same content and style tabs 1`] = `
+{
+  "content": 
+"div.emvb-panel-body data-emvb-panel="element" data-emvb-element="provider"
+  h2.emvb-panel-title
+    "Unknown element"
+  p.emvb-helper
+    "Unknown element ""
+    "provider"
+    "". It can be moved or deleted, but not edited."
+  p.emvb-inline-error role="alert"
+    svg aria-hidden="true"
+    "Can't go there.""
+,
+  "style": 
+"div.emvb-panel-body data-emvb-panel="element" data-emvb-element="provider"
+  h2.emvb-panel-title
+    "Unknown element"
+  p.emvb-helper
+    "Unknown element ""
+    "provider"
+    "". It can be moved or deleted, but not edited."
+  p.emvb-inline-error role="alert"
+    svg aria-hidden="true"
+    "Can't go there.""
+,
+}
+`;

@@ -15,15 +15,17 @@ describe("official daisyUI conformance boundary", () => {
     for (const [index, id] of DAISYUI_CONFORMANCE.verifiedComponents.entries()) {
       const generated = daisyUIProvider.components.get(id);
       expect(generated, `${id} is registered`).toBeDefined();
-      expect(generated!.definition.rootClass.split(/\s+/)).toContain(
-        DAISYUI_CONFORMANCE.requiredSelectors[index]!.slice(1),
+      expect(generated?.definition.rootClass.split(/\s+/) ?? []).toContain(
+        (DAISYUI_CONFORMANCE.requiredSelectors[index] ?? "").slice(1),
       );
       expect(isVerifiedDaisyComponent(id)).toBe(true);
     }
   });
 
   test("does not silently call the rest of the catalog verified", () => {
-    expect([...daisyUIProvider.components.keys()].filter(isVerifiedDaisyComponent)).toHaveLength(10);
+    expect([...daisyUIProvider.components.keys()].filter(isVerifiedDaisyComponent)).toHaveLength(
+      10,
+    );
     expect(daisyUIProvider.components.size).toBeGreaterThan(10);
   });
 });

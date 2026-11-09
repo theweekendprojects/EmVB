@@ -35,4 +35,5 @@ export const DAISYUI_CONFORMANCE = {
 
 export type VerifiedDaisyComponentId = (typeof DAISYUI_CONFORMANCE.verifiedComponents)[number];
 const VERIFIED = new Set<string>(DAISYUI_CONFORMANCE.verifiedComponents);
-export const isVerifiedDaisyComponent = (id: string): id is VerifiedDaisyComponentId => VERIFIED.has(id);
+export const isVerifiedDaisyComponent = (id: string): id is VerifiedDaisyComponentId =>
+  VERIFIED.has(id);

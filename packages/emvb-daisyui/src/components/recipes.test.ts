@@ -1,9 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { createRecipe, DAISY_RECIPES } from "../recipes/index.ts";
 import { daisyUIProvider } from "../provider.ts";
+import type { DaisyComponentNode } from "../types.ts";
 import { validateDaisyTree } from "../validation/index.ts";
 
-const ids = () => { let value = 0; return () => `recipe${++value}`; };
+const ids = () => {
+  let value = 0;
+  return () => `recipe${++value}`;
+};
 
 describe("WP10 recipes", () => {
   test("ships ten named recipes", () => expect(DAISY_RECIPES).toHaveLength(10));
@@ -13,7 +17,7 @@ describe("WP10 recipes", () => {
       expect(nodes.length).toBeGreaterThan(0);
       expect(validateDaisyTree(nodes)).toEqual([]);
       const seen = new Set<string>();
-      const walk = (node: any) => {
+      const walk = (node: DaisyComponentNode) => {
         expect(daisyUIProvider.components.has(node.component)).toBe(true);
         expect(seen.has(node.id)).toBe(false);
         seen.add(node.id);
