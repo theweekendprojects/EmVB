@@ -13,9 +13,9 @@ describe("W-320 recipes in the Add panel and palette", () => {
     const root = await mount(<AddPanel onAdd={() => {}} onRecipe={(id) => added.push(id)} />);
     const tiles = root.querySelectorAll("[data-emvb-recipe]");
     expect(tiles.length).toBeGreaterThanOrEqual(6);
-    const hero = root.querySelector('[data-emvb-recipe="hero"]') as HTMLButtonElement;
+    const hero = root.querySelector('[data-emvb-recipe="native:hero"]') as HTMLButtonElement;
     await act(async () => hero.click());
-    expect(added).toEqual(["hero"]);
+    expect(added).toEqual(["native:hero"]);
   });
 
   test("W-320 search finds recipes by name, even with no element match", async () => {

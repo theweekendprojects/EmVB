@@ -3,13 +3,14 @@ import type { ComponentProvider, DaisyComponentDefinition, DaisyComponentNode, G
 import { isCompoundPart, renderCompoundNode } from "../compound/index.ts";
 import { nodeForRender } from "../runtime/index.ts";
 
-export function createDaisyUIProvider(definitions: readonly DaisyComponentDefinition[]): ComponentProvider {
+export function createDaisyUIProvider(definitions: readonly DaisyComponentDefinition[], recipes: ComponentProvider["recipes"] = []): ComponentProvider {
   const components = new Map<string, GeneratedDaisyComponent>(definitions.map(definition => [definition.id, generateComponent(definition)]));
   return {
     id: "daisyui",
     label: "daisyUI",
     nodeType: "daisy",
     components,
+    recipes,
     cssEntryPoints: ["@perkyzz/emvb-daisyui/styles.css"],
     createNode(component, id) {
       const generated = components.get(component);

@@ -121,7 +121,7 @@ describe("Add panel (W-018)", () => {
     await mount(
       <AddPanel onAdd={() => undefined} onRecipe={() => undefined} defaultQuery="récipe HERO" />,
     );
-    expect(document.querySelector('[data-emvb-recipe="hero"]') !== null).toBe(true);
+    expect(document.querySelector('[data-emvb-recipe="native:hero"]') !== null).toBe(true);
     expect(document.querySelectorAll("[data-emvb-recipe]").length).toBe(1);
     expect(document.querySelectorAll("[data-emvb-add-tile]").length).toBe(0);
   });

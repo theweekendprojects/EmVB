@@ -1,4 +1,3 @@
-import { daisyUIProvider } from "../provider.ts";
 import type { DaisyComponentNode, DaisyProps } from "../types.ts";
 
 export type DaisyRecipeId =
@@ -21,13 +20,23 @@ export interface DaisyRecipe {
   create: (id: () => string) => DaisyComponentNode[];
 }
 
+// A recipe builds nodes from a provider's createNode, injected at build time so this module does
+// not import the provider singleton (that would make provider.ts <-> recipes/index.ts a cycle).
+export type CreateNode = (component: string, id: string) => DaisyComponentNode;
+let createNodeImpl: CreateNode = () => {
+  throw new Error("daisyUI recipes used before the provider was built");
+};
+export const setRecipeCreateNode = (fn: CreateNode): void => {
+  createNodeImpl = fn;
+};
+
 const node = (
   component: string,
   id: () => string,
   props: DaisyProps = {},
   children: DaisyComponentNode[] = [],
 ): DaisyComponentNode => {
-  const created = daisyUIProvider.createNode(component, id());
+  const created = createNodeImpl(component, id());
   return { ...created, props: { ...created.props, ...props }, ...(children.length ? { children } : {}) };
 };
 
