@@ -8,6 +8,7 @@ import type {
 } from "../types.ts";
 import { isCompoundPart, renderCompoundNode } from "../compound/index.ts";
 import { nodeForRender } from "../runtime/index.ts";
+import { themeAttributes } from "../themes/index.ts";
 
 export function createDaisyUIProvider(
   definitions: readonly DaisyComponentDefinition[],
@@ -23,6 +24,7 @@ export function createDaisyUIProvider(
     components,
     recipes,
     cssEntryPoints: ["@perkyzz/emvb-daisyui/styles.css"],
+    rootAttributes: () => themeAttributes(undefined),
     createNode(component, id) {
       const generated = components.get(component);
       if (!generated) throw new Error(`Unknown daisyUI component: ${component}`);

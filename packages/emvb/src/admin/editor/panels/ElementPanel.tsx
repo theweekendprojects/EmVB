@@ -51,6 +51,7 @@ import {
 } from "../../../core/index.ts";
 import { applyStylePatch } from "./style-target.ts";
 import { FieldControl } from "./settings/FieldControl.tsx";
+import { ProviderMetaFields } from "./settings/ProviderMetaFields.tsx";
 import { BindingsEditor } from "./settings/BindingsEditor.tsx";
 import { VariantEditor } from "./settings/VariantEditor.tsx";
 import { AudienceEditor } from "./settings/AudienceEditor.tsx";
@@ -348,11 +349,11 @@ function fieldShown(key: string, node: LayoutNode, device: PopupDevice = "deskto
   return (props[parent] !== undefined && props[parent] !== "") || bound;
 }
 
-const DAISY_THEMES = ["", "light", "dark", "corporate", "business", "cupcake"] as const;
 function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
   if (node.type !== "provider") return undefined;
   const component = (node as LayoutNode & { component?: string }).component;
-  const provider = componentProviders().find((candidate) => candidate.nodeType === node.type);
+  const providerId = (node as LayoutNode & { provider?: string }).provider;
+  const provider = componentProviders().find((candidate) => candidate.id === providerId);
   const generated = component ? provider?.components.get(component) : undefined;
   if (!generated) return undefined;
   return {
@@ -360,19 +361,7 @@ function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
     name: generated.descriptor.name,
     group: "content",
     defaultTab: "content",
-    fields: [
-      ...generated.descriptor.fields,
-      {
-        key: "theme",
-        kind: "select",
-        label: "Theme",
-        optional: true,
-        options: DAISY_THEMES.map((value) => ({
-          value,
-          label: value ? `${value[0]?.toUpperCase() ?? ""}${value.slice(1)}` : "Inherit",
-        })),
-      },
-    ],
+    fields: [...generated.descriptor.fields],
   };
 }
 
@@ -626,6 +615,7 @@ function KnownElementPanel({
               );
             })
           )}
+          <ProviderMetaFields node={node} onChange={onChange} />
           <BindingsEditor node={node} onChange={onChange} post={SAMPLE_POST} />
           <AudienceEditor node={node} isRoot={layout?.root.id === node.id} onChange={onChange} />
           <VariantEditor

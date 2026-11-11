@@ -21,6 +21,7 @@ export interface DaisyComponentNode extends ProviderComponentNode {
   provider: "daisyui";
   component: string;
   props: DaisyProps;
+  providerMeta?: Record<string, DaisyFieldValue>;
   children?: DaisyComponentNode[];
 }
 
