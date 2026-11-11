@@ -1,0 +1,84 @@
+{
+  "name": "@perkyzz/emvb",
+  "version": "0.9.0",
+  "description": "Visual page builder plugin for EmDash CMS",
+  "keywords": [
+    "astro",
+    "cloudflare-workers",
+    "emdash",
+    "emdash-plugin",
+    "page-builder",
+    "visual-editor"
+  ],
+  "homepage": "https://emvb.dev",
+  "bugs": {
+    "url": "https://github.com/PerkyZZ999/EmVB/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PerkyZZ999/EmVB.git",
+    "directory": "packages/emvb"
+  },
+  "files": [
+    "src",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx",
+    "!src/**/__snapshots__",
+    "THIRD_PARTY_NOTICES.md",
+    "licenses"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./core": "./src/core/index.ts",
+    "./admin": "./src/admin/index.tsx",
+    "./astro": "./src/astro/index.ts",
+    "./astro/forms": "./src/astro/forms/index.ts",
+    "./astro/forms/client": "./src/astro/forms/client.ts",
+    "./astro/popups": "./src/astro/popups/index.ts",
+    "./astro/floats": "./src/astro/floats/index.ts",
+    "./astro/tabs": "./src/astro/tabs/index.ts",
+    "./astro/menu": "./src/astro/menu/index.ts",
+    "./mcp": "./src/mcp/index.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test:astro": "bun --bun vitest run"
+  },
+  "dependencies": {
+    "@perkyzz/emvb-icons": "0.9.0",
+    "@perkyzz/emvb-provider-api": "workspace:*",
+    "photocn": "0.1.2",
+    "zod": "~4.5.4"
+  },
+  "devDependencies": {
+    "@cloudflare/kumo": "2.6.0",
+    "@emdash-cms/plugin-forms": "0.2.12",
+    "@perkyzz/emvb-daisyui": "workspace:*",
+    "@phosphor-icons/react": "2.1.10",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "astro": "7.3.5",
+    "emdash": "1.4.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "vitest": "5.0.5"
+  },
+  "peerDependencies": {
+    "@cloudflare/kumo": "2.6.0",
+    "@emdash-cms/plugin-forms": "^0.2.9",
+    "@phosphor-icons/react": "^2.1.10",
+    "astro": "^7.0.0",
+    "emdash": "^1.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@emdash-cms/plugin-forms": {
+      "optional": true
+    }
+  }
+}

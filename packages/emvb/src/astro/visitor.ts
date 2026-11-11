@@ -1,0 +1,207 @@
+import {
+  AUDIENCE_SEGMENT,
+  abCookieName,
+  collectAbTests,
+  deviceFromUserAgent,
+  layoutUsesAudience,
+  layoutUsesVisitorRule,
+  pickArm,
+  type AbArm,
+  type Layout,
+  type VisitorInfo,
+} from "../core/index.ts";
+
+/** What EmVB reads from Astro to decide per-visitor content on the server (W-312, W-313). */
+export type VisitorAstro = {
+  url: URL;
+  request?: Request;
+  cookies?: {
+    get(name: string): { value: string } | undefined;
+    set(name: string, value: string, options?: Record<string, unknown>): void;
+  };
+  response?: { headers: Headers };
+  locals?: unknown;
+  /** Astro's i18n locale for this request, e.g. "fr" (W-688). */
+  currentLocale?: string | undefined;
+  /** Astro's route cache, when the host configured a provider. */
+  cache?: { enabled: boolean; set(input: false): void };
+};
+
+const AB_COOKIE_DAYS = 30;
+
+const random = (): number => {
+  const bytes = new Uint32Array(1);
+  crypto.getRandomValues(bytes);
+  return (bytes[0] ?? 0) / 2 ** 32;
+};
+
+/**
+ * The response varies per visitor: keep shared caches from serving one visitor's arm or
+ * audience to another (W-312), including Astro's route cache. A host that sets cache hints
+ * after this should skip them when `Cache-Control` is private (the demos' Base layout does).
+ */
+function markPersonalized(astro: VisitorAstro): void {
+  if (astro.cache?.enabled) astro.cache.set(false);
+  const headers = astro.response?.headers;
+  if (!headers) return;
+  headers.set("Cache-Control", "private, no-store");
+  const vary = headers.get("Vary");
+  if (!vary?.toLowerCase().includes("cookie"))
+    headers.set("Vary", vary ? `${vary}, Cookie` : "Cookie");
+}
+
+/**
+ * Picks each A/B test's arm for this visitor (W-312): the arm in their cookie, or a fresh pick
+ * that the cookie then keeps for 30 days. Without cookie access the visitor sees arm A.
+ */
+export function abArmsFor(
+  layout: Layout | null,
+  astro: VisitorAstro,
+): Record<string, AbArm> | undefined {
+  if (!layout) return undefined;
+  const tests = collectAbTests(layout);
+  if (tests.length === 0) return undefined;
+  const cookies = astro.cookies;
+  if (!cookies) return undefined;
+  const arms: Record<string, AbArm> = {};
+  for (const test of tests) {
+    const name = abCookieName(test.test);
+    const { arm, fresh } = pickArm(test, cookies.get(name)?.value, random());
+    arms[test.test] = arm;
+    if (fresh) {
+      try {
+        cookies.set(name, arm, {
+          path: "/",
+          maxAge: AB_COOKIE_DAYS * 86_400,
+          sameSite: "lax",
+          httpOnly: true,
+          secure: astro.url.protocol === "https:",
+        });
+      } catch {
+        // Headers already sent (a streamed layout): the pick holds for this response only.
+      }
+    }
+  }
+  markPersonalized(astro);
+  return arms;
+}
+
+/** Marks a visitor as seen, so their next visit counts as returning (W-313). */
+const SEEN_COOKIE = "emvb_seen";
+const SEEN_DAYS = 365;
+
+/**
+ * One cookie as the browser sent it, decoded as `Astro.cookies.get` would. Unlike that getter, it
+ * ignores a cookie set earlier in this request, so the page and its theme parts agree on a first
+ * visit.
+ */
+function requestCookie(astro: VisitorAstro, name: string): string | undefined {
+  for (const pair of astro.request?.headers.get("cookie")?.split(";") ?? []) {
+    const at = pair.indexOf("=");
+    if (at < 0 || pair.slice(0, at).trim() !== name) continue;
+    const raw = pair.slice(at + 1).trim();
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
+  }
+  return undefined;
+}
+
+const COUNTRY = /^[A-Z]{2}$/;
+/** XX is Cloudflare's "unknown" and T1 is Tor: neither is a country (W-514: host facts too). */
+const isCountry = (code: string) => COUNTRY.test(code) && code !== "XX" && code !== "T1";
+
+/**
+ * The visitor's country from the edge: Cloudflare's header or `request.cf`, or Vercel's header.
+ * Not `Astro.locals.runtime.cf`: since Astro 6 the Cloudflare adapter throws when it is read.
+ */
+function countryOf(astro: VisitorAstro): string | undefined {
+  const headers = astro.request?.headers;
+  const cf = (astro.request as { cf?: { country?: unknown } } | undefined)?.cf;
+  const candidates = [
+    headers?.get("cf-ipcountry"),
+    headers?.get("x-vercel-ip-country"),
+    cf?.country,
+  ];
+  for (const value of candidates) {
+    const code = typeof value === "string" ? value.trim().toUpperCase() : "";
+    if (isCountry(code)) return code;
+  }
+  return undefined;
+}
+
+/**
+ * What the host site knows about this visitor (W-329), passed as
+ * `resolveEmVBPage(Astro, { visitor })` or `resolveThemeParts(Astro, ctx, { visitor })`:
+ * segments (`member`, `pro`) that Visitors rules match, and facts that replace what EmVB detects.
+ */
+export type HostVisitor = {
+  segments?: readonly string[];
+  country?: string;
+  device?: VisitorInfo["device"];
+  returning?: boolean;
+};
+
+const MAX_SEGMENTS = 50;
+
+/** The host's visitor facts EmVB can use; bad values are left out (W-329). */
+export function hostVisitorFacts(host: HostVisitor | undefined): Partial<VisitorInfo> {
+  if (!host || typeof host !== "object") return {};
+  const facts: Partial<VisitorInfo> = {};
+  if (Array.isArray(host.segments)) {
+    const segments = [
+      ...new Set(
+        host.segments
+          .filter((s): s is string => typeof s === "string")
+          .map((s) => s.trim().toLowerCase())
+          .filter((s) => AUDIENCE_SEGMENT.test(s)),
+      ),
+    ].slice(0, MAX_SEGMENTS);
+    facts.segments = segments;
+  }
+  const country = typeof host.country === "string" ? host.country.trim().toUpperCase() : "";
+  if (isCountry(country)) facts.country = country;
+  if (host.device === "mobile" || host.device === "tablet" || host.device === "desktop")
+    facts.device = host.device;
+  if (typeof host.returning === "boolean") facts.returning = host.returning;
+  return facts;
+}
+
+/**
+ * What the server knows about this visitor, for visitor-aware elements (W-313): country from
+ * the edge, device from the User-Agent, new or returning from a first-party cookie, and the time.
+ * Facts the host passes (W-329) win over detected ones. Only read when the layout has a rule.
+ */
+export function visitorFor(
+  layout: Layout | null,
+  astro: VisitorAstro,
+  host?: HostVisitor,
+): VisitorInfo | undefined {
+  if (!layout || !layoutUsesAudience(layout)) return undefined;
+  const headers = astro.request?.headers;
+  const visitor: VisitorInfo = { now: Date.now() };
+  const country = countryOf(astro);
+  if (country) visitor.country = country;
+  const device = deviceFromUserAgent(headers?.get("user-agent"), headers?.get("sec-ch-ua-mobile"));
+  if (device) visitor.device = device;
+  if (astro.cookies && layoutUsesVisitorRule(layout)) {
+    visitor.returning = requestCookie(astro, SEEN_COOKIE) === "1";
+    if (!visitor.returning) {
+      try {
+        astro.cookies.set(SEEN_COOKIE, "1", {
+          path: "/",
+          maxAge: SEEN_DAYS * 86_400,
+          sameSite: "lax",
+          httpOnly: true,
+          secure: astro.url.protocol === "https:",
+        });
+      } catch {
+        // Headers already sent: they count as new again next time.
+      }
+    }
+  }
+  markPersonalized(astro);
+  return { ...visitor, ...hostVisitorFacts(host) };
+}
