@@ -8,7 +8,15 @@ import type { ComponentProvider, ProviderComponentNode } from "./types.ts";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyComponentProvider = ComponentProvider<any>;
 
-const providers = new Map<string, AnyComponentProvider>();
+// The registry lives on globalThis so EVERY bundle in a process shares ONE map. A worker/SSR build
+// can split the editor bundle, the public-render graph and the plugin module into separate copies
+// of this file; a plain module-level Map would then give each its own registry, so a provider
+// registered by one (e.g. the server import) would be invisible to another (the page render) and
+// the component would fall back to "Unknown provider". A single globalThis-keyed map fixes that.
+const REGISTRY_KEY = Symbol.for("emvb:component-providers");
+const globalRegistry = globalThis as unknown as { [REGISTRY_KEY]?: Map<string, AnyComponentProvider> };
+const providers: Map<string, AnyComponentProvider> =
+  globalRegistry[REGISTRY_KEY] ?? (globalRegistry[REGISTRY_KEY] = new Map());
 
 export function registerComponentProvider(provider: AnyComponentProvider): () => void {
   if (!/^[a-z][a-z0-9-]*$/.test(provider.id))
