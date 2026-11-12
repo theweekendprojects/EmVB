@@ -1,6 +1,6 @@
 import { Button, Input } from "@cloudflare/kumo";
 import * as React from "react";
-import { elementIcon } from "../element-chrome.ts";
+import { elementIcon, providerIcon } from "../element-chrome.ts";
 import { componentProviders } from "@perkyzz/emvb-provider-api";
 import { ELEMENT_DESCRIPTORS, SECTION_RECIPES, typeMayAddScript } from "../../../core/index.ts";
 import { NEW_ELEMENT_MIME } from "../dnd/drop-target.ts";
@@ -16,7 +16,6 @@ const GROUPS = [
   { id: "content", label: "Content" },
   { id: "dynamic", label: "Dynamic" },
   { id: "form", label: "Form" },
-  { id: "daisyui", label: "daisyUI" },
 ] as const;
 
 export function AddPanel({
@@ -53,18 +52,21 @@ export function AddPanel({
         group: "daisyui" as const,
         category: generated.descriptor.category ?? provider.label,
         verified: generated.descriptor.support !== "experimental",
+        icon: generated.descriptor.icon,
+        keywords: generated.descriptor.keywords ?? [],
+        order: generated.descriptor.order ?? 999,
       })),
     )
     .toSorted(
       (left, right) =>
-        Number(right.verified) - Number(left.verified) || left.name.localeCompare(right.name),
+        Number(right.verified) - Number(left.verified) || left.order - right.order || left.name.localeCompare(right.name),
     );
   const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(
     (d) =>
       d.type !== "tab-panel" &&
       d.type !== "daisy" &&
       (formsAvailable || d.group !== "form") &&
-      matchesSearch(query, d.name, d.group, "category" in d ? d.category : ""),
+      matchesSearch(query, d.name, d.group, "category" in d ? d.category : "", "keywords" in d ? d.keywords.join(" ") : ""),
   );
   const recipes = onRecipe
     ? [
@@ -117,17 +119,22 @@ export function AddPanel({
           </Button>
         </div>
       ) : (
-        GROUPS.map((group) => {
-          const tiles = matched.filter((d) => d.group === group.id);
+        [
+          ...GROUPS,
+          ...[...new Set(providerDescriptors.map((descriptor) => descriptor.category))].map((category) => ({ id: `daisyui:${category}`, label: `daisyUI · ${category}` })),
+        ].map((group) => {
+          const tiles = group.id.startsWith("daisyui:")
+            ? matched.filter((descriptor) => descriptor.group === "daisyui" && "category" in descriptor && descriptor.category === group.id.slice("daisyui:".length))
+            : matched.filter((descriptor) => descriptor.group === group.id);
           if (tiles.length === 0) return null;
           return (
             <div key={group.id} className="emvb-add-group">
               <h3 className="emvb-add-group-title">{group.label}</h3>
               <div className="emvb-add-tiles" aria-label={group.label}>
                 {tiles.map((tile) => {
-                  const Icon = elementIcon(
-                    tile.type.startsWith("daisy:") ? "container" : tile.type,
-                  );
+                  const Icon = tile.type.startsWith("provider:") && "icon" in tile
+                    ? providerIcon(tile.icon)
+                    : elementIcon(tile.type);
                   return (
                     <button
                       key={tile.type}

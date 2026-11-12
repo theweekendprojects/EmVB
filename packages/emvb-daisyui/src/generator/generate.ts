@@ -1,4 +1,6 @@
 import { componentClasses, mergeClasses } from "../render/classes.ts";
+import { officialDaisyComponent, OFFICIAL_DAISYUI_COMPONENTS } from "../conformance/official-inventory.ts";
+import { isVerifiedDaisyComponent } from "../conformance/manifest.ts";
 import type {
   DaisyComponentDefinition,
   DaisyComponentNode,
@@ -37,6 +39,7 @@ function textChildren(definition: DaisyComponentDefinition, node: DaisyComponent
 
 export function generateComponent(definition: DaisyComponentDefinition): GeneratedDaisyComponent {
   validateDefinition(definition);
+  const official = officialDaisyComponent(definition.id);
   return {
     definition,
     descriptor: {
@@ -46,6 +49,11 @@ export function generateComponent(definition: DaisyComponentDefinition): Generat
       name: definition.label,
       group: "content",
       defaultTab: "content",
+      category: official?.category ?? definition.category,
+      support: isVerifiedDaisyComponent(definition.id) ? "verified" : "experimental",
+      icon: official?.icon ?? "layout",
+      keywords: [definition.id, definition.label, official?.category ?? definition.category, "daisyUI"],
+      order: official ? OFFICIAL_DAISYUI_COMPONENTS.findIndex((entry) => entry.id === official.id) : 999,
       fields: definition.fields.map((field) => ({
         key: field.key,
         kind: field.kind,

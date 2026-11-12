@@ -64,6 +64,11 @@ export interface GeneratedDaisyComponent extends ProviderComponent<DaisyComponen
     name: string;
     group: "content";
     defaultTab: "content";
+    category?: string;
+    support?: "verified" | "experimental";
+    icon?: string;
+    keywords?: readonly string[];
+    order?: number;
     fields: Array<{
       key: string;
       kind: DaisyFieldKind;

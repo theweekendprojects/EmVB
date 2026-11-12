@@ -36,6 +36,9 @@ export interface ProviderComponentDescriptor {
   fields: ProviderFieldDescriptor[];
   category?: string;
   support?: "verified" | "experimental";
+  icon?: string;
+  keywords?: readonly string[];
+  order?: number;
 }
 
 export interface ProviderComponent<N extends ProviderComponentNode = ProviderComponentNode> {
