@@ -56,7 +56,8 @@
     "conformance:css": "bun src/conformance/cli.ts",
     "build": "bun ../../scripts/build-provider-packages.ts",
     "prepack": "bun run build",
-    "conformance:report": "bun src/conformance/report-cli.ts"
+    "conformance:report": "bun src/conformance/report-cli.ts",
+    "conformance:official": "bun src/conformance/compile.ts"
   },
   "dependencies": {
     "@perkyzz/emvb-provider-api": "workspace:*"
