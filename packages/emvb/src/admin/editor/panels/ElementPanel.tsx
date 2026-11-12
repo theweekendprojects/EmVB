@@ -52,6 +52,7 @@ import {
 import { applyStylePatch } from "./style-target.ts";
 import { FieldControl } from "./settings/FieldControl.tsx";
 import { ProviderMetaFields } from "./settings/ProviderMetaFields.tsx";
+import { ProviderCompoundEditor } from "./settings/ProviderCompoundEditor.tsx";
 import { BindingsEditor } from "./settings/BindingsEditor.tsx";
 import { VariantEditor } from "./settings/VariantEditor.tsx";
 import { AudienceEditor } from "./settings/AudienceEditor.tsx";
@@ -616,6 +617,7 @@ function KnownElementPanel({
             })
           )}
           <ProviderMetaFields node={node} onChange={onChange} />
+          <ProviderCompoundEditor node={node} onChange={onChange} />
           <BindingsEditor node={node} onChange={onChange} post={SAMPLE_POST} />
           <AudienceEditor node={node} isRoot={layout?.root.id === node.id} onChange={onChange} />
           <VariantEditor
