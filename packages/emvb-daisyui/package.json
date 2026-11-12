@@ -47,7 +47,8 @@
       "bun": "./src/conformance/index.ts",
       "types": "./dist/conformance.d.ts",
       "import": "./dist/conformance/index.js"
-    }
+    },
+    "./runtime": "./src/runtime/index.ts"
   },
   "scripts": {
     "generate": "bun src/generator/cli.ts",

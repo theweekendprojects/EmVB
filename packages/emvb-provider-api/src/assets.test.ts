@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { providerStyleEntries } from "./assets.ts";
+import { providerAssetEntries, providerStyleEntries } from "./assets.ts";
 import type { ComponentProvider, ProviderComponentNode } from "./types.ts";
-const provider={id:"daisyui",label:"daisyUI",nodeType:"provider",components:new Map(),createNode(){throw 0},render(){return {tag:"div",attrs:{},children:[]}},cssEntryPoints:["daisy.css"]} satisfies ComponentProvider;
-const node=(providerId:string):ProviderComponentNode & {provider:string}=>({id:"x",type:"provider",provider:providerId,component:"button",props:{}});
-describe("WP19 conditional CSS",()=>{ test("returns CSS only when provider is used",()=>{ expect(providerStyleEntries([], [provider])).toEqual([]); expect(providerStyleEntries([node("daisyui")],[provider])).toEqual(["daisy.css"]); expect(providerStyleEntries([node("other")],[provider])).toEqual([]); }); });
+const provider = { id: "daisyui", label: "daisyUI", nodeType: "provider", components: new Map(), createNode(){ throw new Error("unused"); }, render(){ return {tag:"div",attrs:{},children:[]}; }, cssEntryPoints:["daisy.css"], runtimeEntryPoints:["daisy-runtime"], needsRuntime(node){ return node.component === "modal" || node.component === "tabs"; } } satisfies ComponentProvider;
+const node=(component:string, children:ProviderComponentNode[]=[]):ProviderComponentNode & {provider:string}=>({id:`${component}-x`,type:"provider",provider:"daisyui",component,props:{},children});
+describe("generic conditional provider assets",()=>{
+  test("returns no assets when no provider node exists",()=> expect(providerAssetEntries([], [provider])).toEqual({styles:[],runtimes:[]}));
+  test("loads CSS for static provider components without runtime",()=> expect(providerAssetEntries([node("button")],[provider])).toEqual({styles:["daisy.css"],runtimes:[]}));
+  test("loads and deduplicates runtime for nested interactive components",()=> expect(providerAssetEntries([node("card",[node("modal"),node("tabs")])],[provider])).toEqual({styles:["daisy.css"],runtimes:["daisy-runtime"]}));
+  test("legacy style helper remains conditional",()=>{ expect(providerStyleEntries([], [provider])).toEqual([]); expect(providerStyleEntries([node("button")],[provider])).toEqual(["daisy.css"]); });
+});
