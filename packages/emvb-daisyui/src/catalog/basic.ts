@@ -190,6 +190,8 @@ export const PROGRESS: DaisyComponentDefinition = {
   rootClass: "progress",
   fields: [
     { key: "value", label: "Value", kind: "number", default: 40 },
+    { key: "label", label: "Accessible label", kind: "text", default: "Progress" },
+    { key: "visibleLabel", label: "Visible label", kind: "text", default: "" },
     { key: "max", label: "Maximum", kind: "number", default: 100 },
     {
       key: "tone",
@@ -208,11 +210,12 @@ export const PROGRESS: DaisyComponentDefinition = {
       attrs: {
         class: classes.join(" "),
         role: "progressbar",
+        ...(node.props.label ? { "aria-label": String(node.props.label) } : {}),
         "aria-valuemin": "0",
         "aria-valuemax": String(max),
         "aria-valuenow": String(Math.min(value, max)),
       },
-      children: [],
+      children: node.props.visibleLabel ? [{ tag: "span", attrs: { class: "progress-label" }, children: [String(node.props.visibleLabel)] }] : [],
     };
   },
 };
