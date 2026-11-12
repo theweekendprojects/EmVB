@@ -357,12 +357,16 @@ function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
   const provider = componentProviders().find((candidate) => candidate.id === providerId);
   const generated = component ? provider?.components.get(component) : undefined;
   if (!generated) return undefined;
+  const compoundHidden: Record<string, ReadonlySet<string>> = {
+    accordion: new Set(["items", "open"]), carousel: new Set(["slides", "current"]), menu: new Set(["items"]), tabs: new Set(["items", "active"]), table: new Set(["headers", "rows"]),
+  };
+  const hidden = component ? compoundHidden[component] : undefined;
   return {
     type: "provider",
     name: generated.descriptor.name,
     group: "content",
     defaultTab: "content",
-    fields: [...generated.descriptor.fields],
+    fields: generated.descriptor.fields.filter((field) => !hidden?.has(field.key)),
   };
 }
 

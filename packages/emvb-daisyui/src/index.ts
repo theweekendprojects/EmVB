@@ -11,3 +11,4 @@ export * from "./conformance/index.ts";
 export * from "./verified/primitives.ts";
 export * from "./compound/index.ts";
 export * from "./runtime/index.ts";
+export * from "./integration/editability.ts";
