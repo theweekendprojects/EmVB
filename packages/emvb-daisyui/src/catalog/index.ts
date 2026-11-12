@@ -1,3 +1,4 @@
+export * from "./missing-primitives.ts";
 export { BASIC_DAISY_COMPONENTS, BUTTON, BADGE, ALERT, CARD, PROGRESS, STATS } from "./basic.ts";
 export {
   FORM_DAISY_COMPONENTS,
@@ -61,6 +62,7 @@ import { NAVIGATION_DAISY_COMPONENTS } from "./navigation.ts";
 import { INTERACTIVE_DAISY_COMPONENTS } from "./interactive.ts";
 import { DATA_DISPLAY_DAISY_COMPONENTS } from "./data-display.ts";
 import { LAYOUT_MARKETING_DAISY_COMPONENTS } from "./layout-marketing.ts";
+import { MISSING_PRIMITIVE_COMPONENTS } from "./missing-primitives.ts";
 export const DAISY_COMPONENT_CATALOG = [
   ...BASIC_DAISY_COMPONENTS,
   ...FORM_DAISY_COMPONENTS,
@@ -68,4 +70,5 @@ export const DAISY_COMPONENT_CATALOG = [
   ...INTERACTIVE_DAISY_COMPONENTS,
   ...DATA_DISPLAY_DAISY_COMPONENTS,
   ...LAYOUT_MARKETING_DAISY_COMPONENTS,
+  ...MISSING_PRIMITIVE_COMPONENTS,
 ] as const;

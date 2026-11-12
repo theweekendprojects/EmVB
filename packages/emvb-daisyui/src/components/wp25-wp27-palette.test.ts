@@ -35,6 +35,6 @@ describe("WP27 official catalog inventory", () => {
     expect(report.implemented + report.missing).toBe(68);
     expect(report.verified).toBe(10);
     expect(report.missing).toBeGreaterThan(0);
-    expect(report.components.filter((item) => item.status === "missing").map((item) => item.id)).toContain("loading");
+    expect(report.components.filter((item) => item.status === "missing").map((item) => item.id)).toContain("aura");
   });
 });
