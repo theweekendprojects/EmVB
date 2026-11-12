@@ -17,6 +17,7 @@ export type RenderedPage = {
   needsFormsRuntime: boolean;
   needsTabsRuntime: boolean;
   needsMenuRuntime: boolean;
+  needsProviderStyles: boolean;
   /** The site's text direction when set, for the host's `<html dir>` (W-230). */
   dir?: "ltr" | "rtl" | "auto";
 };
@@ -89,6 +90,7 @@ export function renderStored(
       needsFormsRuntime: false,
       needsTabsRuntime: false,
       needsMenuRuntime: false,
+      needsProviderStyles: false,
       ...(design.direction ? { dir: design.direction } : {}),
     };
   }
@@ -103,9 +105,15 @@ export function renderStored(
       ...(lang ? { lang } : {}),
     },
   );
+  const needsProviderStyles = (() => {
+    const visit = (node: Layout["root"] | Layout["root"]["children"][number]): boolean =>
+      node.type === "provider" || ("children" in node && Array.isArray(node.children) && node.children.some(visit));
+    return visit(layout.root);
+  })();
   return {
     html,
     css,
+    needsProviderStyles,
     needsFormsRuntime,
     needsTabsRuntime,
     needsMenuRuntime,

@@ -35,3 +35,4 @@ export function serializableNode(node: DaisyComponentNode): DaisyComponentNode {
 }
 
 export const DAISY_RUNTIME_SCRIPT = `document.addEventListener('click',e=>{const b=e.target.closest('[data-daisy-command]');if(!b)return;const id=b.getAttribute('aria-controls');const el=id&&document.getElementById(id);if(!el)return;const c=b.dataset.daisyCommand;if(c==='show-modal'&&el.showModal)el.showModal();if(c==='close'&&el.close)el.close();});`;
+export * from "./browser.ts";

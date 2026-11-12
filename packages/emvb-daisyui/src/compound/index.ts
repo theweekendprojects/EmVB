@@ -154,3 +154,4 @@ export function migrateLegacyItems(node: DaisyComponentNode, id: () => string): 
   delete props.items;
   return { ...node, props, children };
 }
+export * from "./editor.ts";
