@@ -4,6 +4,7 @@ export {
   Layout,
   type LayoutNode,
   type UnknownNode,
+  type ProviderNode,
   ContainerNode,
   DivBlockNode,
   FlexboxNode,

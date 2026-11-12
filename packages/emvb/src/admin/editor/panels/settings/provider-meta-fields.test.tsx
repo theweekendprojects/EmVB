@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { ProviderMetaFields } from "./ProviderMetaFields.tsx";

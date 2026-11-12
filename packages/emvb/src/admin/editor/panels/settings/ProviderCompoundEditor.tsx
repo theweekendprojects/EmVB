@@ -4,11 +4,13 @@ import { newNodeId, type LayoutNode, type ProviderNode } from "../../../../core/
 import { BUTTON, FIELD } from "../../../ui.ts";
 
 const CONFIG: Record<string,{part:string;label:string;fields:readonly string[]}>={menu:{part:"menu-item",label:"Menu item",fields:["label","href","disabled"]},tabs:{part:"tab-item",label:"Tab",fields:["label","selected"]},accordion:{part:"accordion-item",label:"Accordion item",fields:["label","defaultOpen"]},table:{part:"table-row",label:"Row",fields:[]},carousel:{part:"carousel-item",label:"Slide",fields:["label"]}};
-const cloneNode=(node:LayoutNode):LayoutNode=>({...node,id:newNodeId(),...("children" in node&&Array.isArray(node.children)?{children:node.children.map(cloneNode)}:{})});
+const cloneNode=(node:LayoutNode):ProviderNode=>({...node,id:newNodeId(),...("children" in node&&Array.isArray(node.children)?{children:node.children.map(cloneNode)}:{})} as ProviderNode);
 
-export function ProviderCompoundEditor({node,onChange}:{node:LayoutNode;onChange:(node:LayoutNode)=>void}){
- if(node.type!=="provider"||node.provider!=="daisyui")return null; const config=CONFIG[node.component]; if(!config)return null;
- const children=node.children??[]; const change=(next:LayoutNode[])=>onChange({...node,children:next} as ProviderNode);
+export function ProviderCompoundEditor({node:rawNode,onChange}:{node:LayoutNode;onChange:(node:LayoutNode)=>void}){
+ // UnknownNode also has a string `type`, so narrow by asserting ProviderNode after the runtime check.
+ if(rawNode.type!=="provider")return null; const node=rawNode as ProviderNode;
+ if(node.provider!=="daisyui")return null; const config=CONFIG[node.component]; if(!config)return null;
+ const children=(node.children??[]) as ProviderNode[]; const change=(next:LayoutNode[])=>onChange({...node,children:next} as ProviderNode);
  const moveTo=(id:string,target:string)=>{const next=[...children];const from=next.findIndex(x=>x.id===id),to=next.findIndex(x=>x.id===target);if(from<0||to<0||from===to)return;const[item]=next.splice(from,1);next.splice(to,0,item!);change(next)};
  const update=(id:string,key:string,value:string|boolean)=>change(children.map(item=>item.id===id?{...item,props:{...item.props,[key]:value}}:item));
  if(node.component==="table")return <section data-emvb-provider-items="table"><h3>Table structure</h3><p className="emvb-helper">Rows and cells are typed provider children. Select a row or cell in Layers to edit rich content.</p><Button className={BUTTON} onClick={()=>{const rows=[...children];rows.push({id:newNodeId(),type:"provider",provider:"daisyui",component:"table-row",props:{},children:[{id:newNodeId(),type:"provider",provider:"daisyui",component:"table-cell",props:{text:"Cell"}}]});change(rows)}}><PlusIcon/> Add row</Button></section>;

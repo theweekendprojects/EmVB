@@ -616,7 +616,8 @@ export function renderPage(
   };
   const providerNodes: ProviderNode[] = [];
   const collectProviders = (node: LayoutNode): void => {
-    if (node.type === "provider") providerNodes.push(node);
+    // UnknownNode also has a string `type`; assert ProviderNode after the runtime check.
+    if (node.type === "provider") providerNodes.push(node as ProviderNode);
     if ("children" in node && Array.isArray(node.children)) for (const child of node.children) collectProviders(child);
   };
   collectProviders(layout.root);

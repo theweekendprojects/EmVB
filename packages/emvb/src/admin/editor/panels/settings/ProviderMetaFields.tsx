@@ -1,12 +1,16 @@
 import { Select } from "@cloudflare/kumo";
-import type { LayoutNode } from "../../../../core/index.ts";
+import type { LayoutNode, ProviderNode } from "../../../../core/index.ts";
 import { FIELD } from "../../../ui.ts";
 
 const THEMES = ["", "light", "dark", "corporate", "business", "cupcake"] as const;
 
 export function ProviderMetaFields({ node, onChange }: { node: LayoutNode; onChange: (node: LayoutNode) => void }) {
-  if (node.type !== "provider" || node.provider !== "daisyui") return null;
-  const current = typeof node.providerMeta?.theme === "string" ? node.providerMeta.theme : "";
+  // UnknownNode also has a string `type`, so `type !== "provider"` does not narrow the union on its
+  // own; assert ProviderNode after the runtime check so `provider`/`providerMeta` are typed.
+  if (node.type !== "provider") return null;
+  const providerNode = node as ProviderNode;
+  if (providerNode.provider !== "daisyui") return null;
+  const current = typeof providerNode.providerMeta?.theme === "string" ? providerNode.providerMeta.theme : "";
   return (
     <div data-emvb-provider-meta="theme">
       <Select
@@ -14,10 +18,10 @@ export function ProviderMetaFields({ node, onChange }: { node: LayoutNode; onCha
         className={FIELD}
         value={current}
         onValueChange={(theme) => {
-          const providerMeta = { ...(node.providerMeta ?? {}) };
+          const providerMeta = { ...(providerNode.providerMeta ?? {}) };
           if (theme) providerMeta.theme = theme;
           else delete providerMeta.theme;
-          onChange({ ...node, providerMeta: Object.keys(providerMeta).length ? providerMeta : undefined });
+          onChange({ ...providerNode, providerMeta: Object.keys(providerMeta).length ? providerMeta : undefined });
         }}
       >
         {THEMES.map((theme) => (
