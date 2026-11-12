@@ -1,0 +1,231 @@
+import {
+  CONTENT_THEME_PART_TYPES,
+  defaultConditionsFor,
+  defaultFloatSettings,
+  defaultTriggers,
+  parseThemePartType,
+  starterLayout,
+  THEME_PART_TYPE_LABELS,
+  validateLayout,
+  type ConditionsDoc,
+  type FloatSettings,
+  type Layout,
+  type ThemePartType,
+  type TriggersDoc,
+} from "../core/index.ts";
+import { THEME_PARTS_COLLECTION } from "../constants.ts";
+import { listAllItems, requestJson, type Fetcher } from "./api.ts";
+import { titleOf, type ContentItem } from "./content-item.ts";
+import { publishEntry } from "./content-api.ts";
+import { entryStatus } from "./entry-status.ts";
+
+const CONTENT = `/_emdash/api/content/${THEME_PARTS_COLLECTION}`;
+
+export type ThemePartSummary = {
+  id: string;
+  title: string;
+  partType: ThemePartType;
+  status: string;
+  updatedAt: string;
+  conditionsSummary: string;
+};
+
+export type ThemePartDraft = {
+  title: string;
+  slug: string;
+  partType: ThemePartType;
+  conditions: ConditionsDoc;
+  triggers: TriggersDoc;
+  float: FloatSettings;
+  layout: Layout | null;
+};
+
+function partTypeOf(item: ContentItem): ThemePartType {
+  return parseThemePartType(item.data?.["part_type"]) ?? "header";
+}
+
+export function partTypeLabel(type: ThemePartType): string {
+  return THEME_PART_TYPE_LABELS[type];
+}
+
+type RuleArgs = Record<string, unknown> | undefined;
+
+const arg = (args: RuleArgs, key: string) => String(args?.[key] ?? "?");
+
+/**
+ * The names the conditions editor uses for EmDash's built-in collections and taxonomies, so the
+ * list reads "Visual pages", not "emvb_pages" (W-294). Others show their slug.
+ */
+const COLLECTION_NAMES: Record<string, string> = {
+  pages: "Pages",
+  posts: "Posts",
+  emvb_pages: "Visual pages",
+};
+const TAXONOMY_NAMES: Record<string, { one: string; all: string }> = {
+  category: { one: "Category", all: "All categories" },
+  tag: { one: "Tag", all: "All tags" },
+};
+
+const collectionName = (args: RuleArgs) => {
+  const slug = arg(args, "collection");
+  return Object.hasOwn(COLLECTION_NAMES, slug) ? (COLLECTION_NAMES[slug] as string) : slug;
+};
+
+function taxonomyLabel(args: RuleArgs): string {
+  const slug = arg(args, "taxonomy");
+  const names = Object.hasOwn(TAXONOMY_NAMES, slug) ? TAXONOMY_NAMES[slug] : undefined;
+  if (args?.["slug"]) return `${names?.one ?? slug}: ${String(args["slug"])}`;
+  return names?.all ?? `All ${slug}`;
+}
+
+/** Short labels for the Theme Builder list, keyed by `group/name`. */
+const RULE_LABELS: Record<string, (args: RuleArgs) => string> = {
+  "general/entire_site": () => "Entire site",
+  "singular/front": () => "Front page",
+  "singular/not_found": () => "404 page",
+  "singular/collection": (args) => `${collectionName(args)} (all)`,
+  "singular/entry": (args) => `One entry in ${collectionName(args)}`,
+  "singular/all": () => "All singular",
+  "archive/collection": (args) => `${collectionName(args)} archive`,
+  "archive/search": () => "Search results",
+  "archive/taxonomy": taxonomyLabel,
+  "archive/all": () => "All archives",
+};
+
+/** A rule's short label, e.g. "Tag: news" (also the Display conditions menu, W-694). */
+export function conditionRuleLabel(r: unknown): string {
+  const rule = r as { group?: string; name?: string; args?: RuleArgs };
+  const key = `${rule.group ?? "?"}/${rule.name ?? "?"}`;
+  const label = Object.hasOwn(RULE_LABELS, key) ? RULE_LABELS[key] : undefined;
+  return label ? label(rule.args) : key;
+}
+
+export function summarizeConditions(raw: unknown): string {
+  let value = raw;
+  if (typeof raw === "string") {
+    try {
+      value = JSON.parse(raw) as unknown;
+    } catch {
+      return "Invalid conditions";
+    }
+  }
+  const rules = (value as { rules?: unknown } | null)?.rules;
+  if (!Array.isArray(rules) || rules.length === 0) return "No conditions";
+  const includes = rules.filter((r) => (r as { op?: string }).op === "include");
+  const excludes = rules.filter((r) => (r as { op?: string }).op === "exclude");
+  const parts: string[] = [];
+  if (includes.length) parts.push(includes.map(conditionRuleLabel).join(" · "));
+  if (excludes.length) parts.push(`Exclude: ${excludes.map(conditionRuleLabel).join(" · ")}`);
+  return parts.join(" · ") || "No conditions";
+}
+
+const ITEM_PART_USE_SHORT: Partial<Record<ThemePartType, string>> = {
+  loop_item: "Used by Loops",
+  section: "Used by Theme sections",
+  page_template: "Offered in New page",
+};
+
+export async function listThemeParts(fetcher: Fetcher): Promise<ThemePartSummary[]> {
+  const items = await listAllItems<ContentItem>(fetcher, CONTENT);
+  return items.map((item) => ({
+    id: item.id,
+    title: titleOf(item, "Untitled theme part"),
+    partType: partTypeOf(item),
+    status: entryStatus(item),
+    updatedAt: item.updatedAt ?? "",
+    // UX-061: reusable parts never match a location, so say where they're used instead.
+    conditionsSummary:
+      ITEM_PART_USE_SHORT[partTypeOf(item)] ?? summarizeConditions(item.data?.["conditions"]),
+  }));
+}
+
+/** Parts that are the page's main content (or become a page) keep the page's H1. */
+const OWNS_PAGE_HEADING: ReadonlySet<ThemePartType> = new Set([
+  ...CONTENT_THEME_PART_TYPES,
+  "page_template",
+]);
+
+/**
+ * A float, header, footer, popup, section or loop item shows on pages that have their own H1, so
+ * its starter heading is an H2: no second H1 and no skipped level (W-179).
+ */
+function starterPartLayout(title: string, partType: ThemePartType): Layout {
+  const layout = starterLayout(title);
+  if (OWNS_PAGE_HEADING.has(partType)) return layout;
+  for (const child of layout.root.children) if (child.type === "heading") child.props.level = 2;
+  return layout;
+}
+
+export async function createThemePart(
+  fetcher: Fetcher,
+  input: { title: string; slug: string; partType: ThemePartType; layout?: Layout },
+): Promise<string> {
+  const body = await requestJson<{ item: ContentItem }>(fetcher, CONTENT, {
+    method: "POST",
+    body: {
+      data: {
+        title: input.title,
+        // W-876: a synced section starts from the element it was made from.
+        layout: input.layout ?? starterPartLayout(input.title, input.partType),
+        part_type: input.partType,
+        conditions: defaultConditionsFor(input.partType),
+        triggers: defaultTriggers(),
+        float: defaultFloatSettings(),
+      },
+      slug: input.slug,
+    },
+  });
+  return body.item.id;
+}
+
+export async function saveThemePart(
+  fetcher: Fetcher,
+  id: string,
+  draft: ThemePartDraft,
+  rev: string | null,
+): Promise<string> {
+  const body = await requestJson<{ _rev: string }>(
+    fetcher,
+    `${CONTENT}/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      body: {
+        data: {
+          title: draft.title,
+          // UX-094: a part with no layout yet leaves the field alone; the server refuses null.
+          ...(draft.layout ? { layout: draft.layout } : {}),
+          part_type: draft.partType,
+          conditions: draft.conditions,
+          triggers: draft.triggers,
+          float: draft.float,
+        },
+        slug: draft.slug,
+        ...(rev ? { _rev: rev } : {}),
+      },
+    },
+  );
+  return body["_rev"];
+}
+
+export const publishThemePart = (fetcher: Fetcher, id: string, rev: string | null) =>
+  publishEntry(fetcher, CONTENT, id, rev);
+
+/** The part's layout when it is the expected type. Null when missing or unreadable. */
+export async function themePartLayout(
+  fetcher: Fetcher,
+  id: string,
+  partType: ThemePartType,
+): Promise<Layout | null> {
+  try {
+    const body = await requestJson<{ item?: { data?: Record<string, unknown> } }>(
+      fetcher,
+      `${CONTENT}/${encodeURIComponent(id)}`,
+    );
+    const data = body?.item?.data;
+    if (!data || data["part_type"] !== partType) return null;
+    const result = validateLayout(data["layout"]);
+    return result.ok ? result.layout : null;
+  } catch {
+    return null;
+  }
+}

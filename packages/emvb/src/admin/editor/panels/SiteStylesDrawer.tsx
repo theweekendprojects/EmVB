@@ -1,0 +1,738 @@
+import { Button, Loader, Select, Tabs } from "@cloudflare/kumo";
+import { deletionOf, type Deletion } from "../restore-deleted.ts";
+import { UploadSimpleIcon, XIcon } from "@phosphor-icons/react";
+import * as React from "react";
+import {
+  clearClassRefs,
+  deleteVariable,
+  designChangeLabel,
+  designChanges,
+  designFromJson,
+  designToJson,
+  findClassUsages,
+  findVariableUsages,
+  findVariableUsagesInDesign,
+  importLosses,
+  type ImportRename,
+  MAX_DESIGN_FILE_BYTES,
+  removeVariable,
+  DEFAULT_STYLE_TAGS,
+  type DefaultStyleTag,
+  type DesignSystem,
+  type Layout,
+  type StyleProps,
+  type VariableKind,
+} from "../../../core/index.ts";
+import { BUTTON, SOLID_DESTRUCTIVE } from "../../ui.ts";
+import { ClassesSection } from "./ClassesSection.tsx";
+import { stopEditorShortcuts } from "./settings/ClassChip.tsx";
+import { isCancelEscape } from "../ime.ts";
+import { StyleRow } from "./settings/StyleRow.tsx";
+import { FIELD } from "../../ui.ts";
+import { TokenScales } from "./TokenScales.tsx";
+import { InlineError } from "./inline-error.tsx";
+import { VariableSection } from "./VariableSection.tsx";
+import { useMediaQuery } from "../useMediaQuery.ts";
+import { useEditedNoun, type EditedNoun } from "../edited-noun.ts";
+
+const STYLE_NOTE = "Style changes stay unpublished until you publish styles.";
+
+type Props = {
+  design: DesignSystem;
+  layout: Layout | null;
+  onDesignChange: (design: DesignSystem) => Promise<void>;
+  unpublished?: boolean;
+  /** Published design. With `unpublished`, the drawer lists what Publish styles will change. */
+  published?: DesignSystem;
+  onPublishStyles?: () => Promise<void>;
+  onLayoutChange: (layout: Layout) => void;
+  /** W-252: called with what a delete removes, before the page loses its uses. */
+  onDeleted?: (deletion: Deletion) => void;
+  onClose: () => void;
+};
+
+function exportDesign(design: DesignSystem) {
+  const blob = new Blob([designToJson(design)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "emvb-design.json";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Site styles drawer — Variables Manager and Classes Manager (W-032 / W-071).
+ * Elementor v4–inspired workflow on EmVB tokens; saves via CAS (D-013 / D-EV4-03).
+ */
+export function SiteStylesDrawer({
+  design,
+  layout,
+  onDesignChange,
+  unpublished = false,
+  published,
+  onPublishStyles,
+  onLayoutChange,
+  onDeleted,
+  onClose,
+}: Props) {
+  const [tab, setTab] = React.useState<"variables" | "classes" | "defaults">("variables");
+  const [error, setError] = React.useState<string | null>(null);
+  const [publishing, setPublishing] = React.useState(false);
+  const publishPending = React.useRef(false);
+  // W-829: Publish styles stays focusable while publishing; once it publishes the button goes
+  // away, so focus moves on to Export instead of falling to the page body.
+  const publishRef = React.useRef<HTMLButtonElement>(null);
+  const exportRef = React.useRef<HTMLButtonElement>(null);
+  const refocusAfterPublish = React.useRef(false);
+  React.useEffect(() => {
+    if (unpublished || !refocusAfterPublish.current) return;
+    refocusAfterPublish.current = false;
+    exportRef.current?.focus();
+  }, [unpublished]);
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const [confirm, setConfirm] = React.useState<
+    | { kind: "variable"; variableKind: VariableKind; id: string; name: string }
+    | { kind: "class"; id: string; name: string }
+    | null
+  >(null);
+  const fileRef = React.useRef<HTMLInputElement>(null);
+  const [pendingImport, setPendingImport] = React.useState<{
+    name: string;
+    design: DesignSystem;
+    renamed: ImportRename[];
+  } | null>(null);
+
+  const save = async (next: DesignSystem): Promise<boolean> => {
+    setError(null);
+    try {
+      await onDesignChange(next);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't save site styles. Try again.");
+      return false;
+    }
+  };
+
+  const publish = async () => {
+    if (!onPublishStyles || publishPending.current) return;
+    publishPending.current = true;
+    refocusAfterPublish.current = document.activeElement === publishRef.current;
+    setPublishing(true);
+    setError(null);
+    try {
+      await onPublishStyles();
+    } catch (err) {
+      refocusAfterPublish.current = false;
+      setError(err instanceof Error ? err.message : "Couldn't publish site styles. Try again.");
+    } finally {
+      publishPending.current = false;
+      setPublishing(false);
+    }
+  };
+
+  // W-214: Import replaces every class and variable, so it reads a sane size and asks first.
+  const importDesign = async (file: File) => {
+    setError(null);
+    setPendingImport(null);
+    if (file.size > MAX_DESIGN_FILE_BYTES) {
+      setError("That file is too big to be an EmVB design (over 1 MB).");
+      return;
+    }
+    const text = await file.text();
+    const result = designFromJson(text);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    setPendingImport({ name: file.name, design: result.design, renamed: result.renamed });
+  };
+
+  const changes = unpublished && published ? designChanges(published, design) : [];
+  // UX-069, UX-070: Escape and Close give focus back to the button that opened the drawer.
+  const closeAndReturn = () => {
+    onClose();
+    requestAnimationFrame(() =>
+      document
+        .querySelector<HTMLElement>('[data-emvb-editor] button[aria-label="Site styles"]')
+        ?.focus(),
+    );
+  };
+  return (
+    <div
+      className="emvb-panel-body emvb-site-styles"
+      data-emvb-site-styles=""
+      onKeyDown={(event) => {
+        stopEditorShortcuts(event);
+        if (closesDrawer(event)) {
+          event.preventDefault();
+          closeAndReturn();
+        }
+      }}
+    >
+      <div className="emvb-site-styles-head">
+        <div className="emvb-site-styles-titles">
+          <h2 className="emvb-panel-title">Site styles</h2>
+          <p className="emvb-helper emvb-site-styles-subtitle" data-emvb-manager-label="">
+            {tab === "variables"
+              ? "Variables manager"
+              : tab === "classes"
+                ? "Classes manager"
+                : "Defaults"}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          shape="square"
+          className="emvb-icon-btn"
+          aria-label="Close site styles"
+          icon={<XIcon aria-hidden="true" />}
+          onClick={closeAndReturn}
+        />
+      </div>
+      {/* W-115: the actions get their own wrapping row, so the title is never squeezed. */}
+      <div
+        className="emvb-site-styles-actions"
+        role="group"
+        aria-label="Site styles actions"
+        data-emvb-site-styles-actions=""
+      >
+        {/* UX-024: the change list folds under a count, so a long draft can't push the tabs away. */}
+        {changes.length > 0 && (
+          <details className="emvb-style-diff" data-emvb-style-diff="">
+            <summary className="emvb-helper">
+              {changes.length === 1
+                ? "1 unpublished change"
+                : `${changes.length} unpublished changes`}
+            </summary>
+            <ul className="emvb-helper">
+              {changes.map((change) => (
+                <li key={`${change.kind}:${change.what}:${change.name}`}>
+                  {designChangeLabel(change)}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+        {unpublished && (
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            ref={publishRef}
+            icon={
+              publishing && !reducedMotion ? (
+                <Loader size={14} />
+              ) : (
+                <UploadSimpleIcon size={14} aria-hidden="true" />
+              )
+            }
+            aria-disabled={publishing}
+            aria-busy={publishing}
+            onClick={() => void publish()}
+          >
+            Publish styles
+          </Button>
+        )}
+        <Button
+          ref={exportRef}
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => exportDesign(design)}
+        >
+          Export
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => fileRef.current?.click()}
+        >
+          Import
+        </Button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          data-emvb-design-import=""
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (file) void importDesign(file);
+          }}
+        />
+      </div>
+      <Tabs
+        variant="underline"
+        className="emvb-tabs"
+        tabs={[
+          { value: "variables", label: "Variables" },
+          { value: "classes", label: "Classes" },
+          { value: "defaults", label: "Defaults" },
+        ]}
+        value={tab}
+        onValueChange={(value) =>
+          setTab(value === "classes" ? "classes" : value === "defaults" ? "defaults" : "variables")
+        }
+      />
+      {error && <InlineError>{error}</InlineError>}
+      {tab === "variables" && (
+        <div data-emvb-site-tab="variables" className="emvb-site-styles-body">
+          <VariableSection
+            title="Colors"
+            kind="color"
+            design={design}
+            layout={layout}
+            onSave={save}
+            onAskDelete={(id, name) =>
+              setConfirm({ kind: "variable", variableKind: "color", id, name })
+            }
+          />
+          <VariableSection
+            title="Fonts"
+            kind="font"
+            design={design}
+            layout={layout}
+            onSave={save}
+            onAskDelete={(id, name) =>
+              setConfirm({ kind: "variable", variableKind: "font", id, name })
+            }
+          />
+          <VariableSection
+            title="Font sizes"
+            kind="fontSize"
+            design={design}
+            layout={layout}
+            onSave={save}
+            onAskDelete={(id, name) =>
+              setConfirm({ kind: "variable", variableKind: "fontSize", id, name })
+            }
+          />
+          <VariableSection
+            title="Spacing"
+            kind="spacing"
+            design={design}
+            layout={layout}
+            onSave={save}
+            onAskDelete={(id, name) =>
+              setConfirm({ kind: "variable", variableKind: "spacing", id, name })
+            }
+          />
+          <TokenScales design={design} onSave={save} />
+        </div>
+      )}
+      {tab === "classes" && (
+        <div data-emvb-site-tab="classes" className="emvb-site-styles-body">
+          <ClassesSection
+            design={design}
+            layout={layout}
+            onSave={save}
+            onAskDelete={(id, name) => setConfirm({ kind: "class", id, name })}
+          />
+        </div>
+      )}
+      {tab === "defaults" && (
+        <div data-emvb-site-tab="defaults" className="emvb-site-styles-body">
+          <DirectionSelect design={design} onSave={save} />
+          <DefaultsSection design={design} onSave={save} />
+        </div>
+      )}
+      <p
+        className="emvb-helper emvb-site-styles-footer"
+        role="status"
+        aria-label="Site styles status"
+        aria-live="polite"
+      >
+        {publishing ? "Publishing site styles…" : STYLE_NOTE}
+      </p>
+      {pendingImport && (
+        <ImportConfirm
+          name={pendingImport.name}
+          renamed={pendingImport.renamed}
+          losses={importLosses(design, pendingImport.design, layout)}
+          onCancel={() => setPendingImport(null)}
+          onConfirm={async () => {
+            const next = pendingImport.design;
+            setPendingImport(null);
+            await save(next);
+          }}
+        />
+      )}
+      {confirm && (
+        <DeleteConfirm
+          confirm={confirm}
+          design={design}
+          layout={layout}
+          onCancel={() => {
+            const row = confirmRow(confirm);
+            setConfirm(null);
+            requestAnimationFrame(() =>
+              row?.querySelector<HTMLButtonElement>(".emvb-site-menu-btn")?.focus(),
+            );
+          }}
+          onConfirm={async () => {
+            const land = landingAfterDelete(confirmRow(confirm));
+            if (layout) {
+              const deletion = deletionOf(
+                design,
+                layout,
+                confirm.kind === "variable"
+                  ? { kind: "variable", id: confirm.id, variableKind: confirm.variableKind }
+                  : { kind: "class", id: confirm.id },
+              );
+              if (deletion) onDeleted?.(deletion);
+            }
+            if (confirm.kind === "variable") {
+              if (layout) {
+                const result = deleteVariable(design, layout, confirm.id, confirm.variableKind);
+                onLayoutChange(result.layout);
+                await save(result.design);
+              } else {
+                await save(removeVariable(design, confirm.id, confirm.variableKind));
+              }
+            } else {
+              const classes = (design.classes ?? []).filter((c) => c.id !== confirm.id);
+              if (layout) onLayoutChange(clearClassRefs(layout, confirm.id));
+              await save({ ...design, classes });
+            }
+            setConfirm(null);
+            requestAnimationFrame(land);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/**
+ * W-251: only this page and the design are checked; other pages and theme parts that use the
+ * class or variable lose that styling, so the dialog says so instead of implying it is unused.
+ */
+const NOT_CHECKED =
+  "Other pages and theme parts aren't checked; any that use it lose that styling.";
+
+/** "2 places on this page and 1 class", or null when nothing uses it. */
+function usedIn(pageUses: number, classUses: number, noun: EditedNoun): string | null {
+  const parts = [
+    pageUses > 0 ? `${plural(pageUses, "place", "places")} on this ${noun}` : "",
+    classUses > 0 ? plural(classUses, "class", "classes") : "",
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" and ") : null;
+}
+
+/** The list row the delete confirmation is about. */
+function confirmRow(confirm: { kind: "variable" | "class"; id: string }): HTMLElement | null {
+  const attribute = confirm.kind === "class" ? "data-emvb-class-def" : "data-emvb-var-id";
+  return document.querySelector<HTMLElement>(`[${attribute}="${CSS.escape(confirm.id)}"]`);
+}
+
+/**
+ * W-841: the deleted row and the inline confirmation both go away, and focus fell to the page
+ * body. It lands on the next row, else the previous one, else the list's New button.
+ */
+function landingAfterDelete(row: HTMLElement | null): () => void {
+  const section = row?.closest("section");
+  const neighbour = (row?.nextElementSibling ?? row?.previousElementSibling) as HTMLElement | null;
+  const key =
+    neighbour?.getAttribute("data-emvb-class-def") ?? neighbour?.getAttribute("data-emvb-var-id");
+  const attribute = neighbour?.hasAttribute("data-emvb-class-def")
+    ? "data-emvb-class-def"
+    : "data-emvb-var-id";
+  return () => {
+    const next = key
+      ? section?.querySelector<HTMLElement>(
+          `[${attribute}="${CSS.escape(key)}"] .emvb-site-item-main`,
+        )
+      : null;
+    (next ?? section?.querySelector<HTMLButtonElement>(".emvb-site-section-head button"))?.focus();
+  };
+}
+
+function DeleteConfirm({
+  confirm,
+  design,
+  layout,
+  onCancel,
+  onConfirm,
+}: {
+  confirm:
+    | { kind: "variable"; variableKind: VariableKind; id: string; name: string }
+    | { kind: "class"; id: string; name: string };
+  design: DesignSystem;
+  layout: Layout | null;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const variable = confirm.kind === "variable";
+  const pageUses = !layout
+    ? 0
+    : variable
+      ? findVariableUsages(layout, confirm.id, confirm.variableKind).length
+      : findClassUsages(layout, confirm.id).length;
+  const classUses = variable
+    ? new Set(
+        findVariableUsagesInDesign(design, confirm.id, confirm.variableKind).map((u) => u.classId),
+      ).size
+    : 0;
+  const noun = useEditedNoun();
+  const where = usedIn(pageUses, classUses, noun);
+  // W-849: the confirmation opened below the list with focus left on the closed row menu, so a
+  // keyboard or screen reader user didn't reach it. It takes focus on Cancel, the safe answer.
+  const cancelRef = React.useRef<HTMLButtonElement>(null);
+  const titleId = React.useId();
+  const bodyId = React.useId();
+  React.useEffect(() => {
+    cancelRef.current?.focus();
+  }, [confirm.kind, confirm.id]);
+  return (
+    <div
+      className="emvb-site-confirm"
+      data-emvb-site-confirm=""
+      role="alertdialog"
+      aria-labelledby={titleId}
+      aria-describedby={bodyId}
+    >
+      <p className="emvb-field-label" id={titleId}>
+        Delete {confirm.name}?
+      </p>
+      <p className="emvb-helper" id={bodyId}>
+        {where
+          ? `In use in ${where}. Deleting drops those bindings.`
+          : variable
+            ? `Not used on this ${noun} or by any class.`
+            : `Not used on this ${noun}.`}{" "}
+        {NOT_CHECKED}
+      </p>
+      <div className="emvb-dialog-actions">
+        <Button
+          ref={cancelRef}
+          type="button"
+          variant="secondary"
+          className={BUTTON}
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          className={BUTTON}
+          style={SOLID_DESTRUCTIVE}
+          onClick={onConfirm}
+        >
+          {variable ? "Delete variable" : "Delete class"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * UX-069: Escape closes the drawer from its buttons, tabs and rows. A text field, an open list or
+ * menu, or a dialog keeps its own Escape, so typing is never thrown away.
+ */
+function closesDrawer(event: React.KeyboardEvent): boolean {
+  if (!isCancelEscape(event) || event.defaultPrevented) return false;
+  const target = event.target as Element | null;
+  if (!target?.closest) return false;
+  if (target.closest('input, textarea, select, [contenteditable="true"]')) return false;
+  return !target.closest('[role="listbox"], [role="menu"], [role="dialog"], [role="alertdialog"]');
+}
+
+const DEFAULT_KEYS = ["color", "fontSize", "fontWeight", "textAlign"] as const;
+
+const TAG_NAMES: Record<DefaultStyleTag, string> = {
+  h1: "Heading 1 (h1)",
+  h2: "Heading 2 (h2)",
+  h3: "Heading 3 (h3)",
+  h4: "Heading 4 (h4)",
+  h5: "Heading 5 (h5)",
+  h6: "Heading 6 (h6)",
+  p: "Paragraph (p)",
+  a: "Link (a)",
+  button: "Button",
+};
+
+function DefaultsSection({
+  design,
+  onSave,
+}: {
+  design: DesignSystem;
+  onSave: (design: DesignSystem) => Promise<boolean | void>;
+}) {
+  const [tag, setTag] = React.useState<DefaultStyleTag>("p");
+  const style = design.defaults?.[tag];
+  const patch = (partial: Partial<StyleProps>) => {
+    const next: StyleProps = { ...style, ...partial };
+    for (const key of Object.keys(partial) as (keyof StyleProps)[]) {
+      if (partial[key] === undefined) delete next[key];
+    }
+    const defaults = {
+      ...design.defaults,
+      [tag]: Object.keys(next).length > 0 ? next : undefined,
+    };
+    void onSave({ ...design, defaults });
+  };
+  return (
+    <>
+      {/* UX-058: the note belongs to Tag, so it sits under it; tags read as names. */}
+      <Select
+        label="Tag"
+        className={FIELD}
+        value={tag}
+        description="Elements of this tag start here. A class or a local style still wins."
+        renderValue={(value: unknown) => TAG_NAMES[value as DefaultStyleTag] ?? String(value)}
+        onValueChange={(value) => setTag(value as DefaultStyleTag)}
+      >
+        {DEFAULT_STYLE_TAGS.map((item) => (
+          <Select.Option key={item} value={item}>
+            {TAG_NAMES[item]}
+          </Select.Option>
+        ))}
+      </Select>
+      {DEFAULT_KEYS.map((key) => (
+        <StyleRow
+          key={`${tag}:${key}`}
+          styleKey={key}
+          style={style}
+          design={design}
+          onPatch={patch}
+          onDesignChange={async (next) => void (await onSave(next))}
+        />
+      ))}
+    </>
+  );
+}
+
+/** W-214: confirms an Import, which replaces the whole design (there is no revision history). */
+/** W-283: how many renamed names the Import confirm lists before "and N more". */
+const MAX_RENAMES_LISTED = 5;
+
+function ImportConfirm({
+  name,
+  renamed,
+  losses,
+  onCancel,
+  onConfirm,
+}: {
+  name: string;
+  renamed: ImportRename[];
+  losses: ReturnType<typeof importLosses>;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const lost = [
+    losses.classes > 0 ? plural(losses.classes, "class", "classes") : "",
+    losses.variables > 0 ? plural(losses.variables, "variable", "variables") : "",
+  ].filter(Boolean);
+  // W-854: like the delete confirmation (W-849), it takes focus on Cancel, the safe answer, so a
+  // keyboard or screen reader user reaches it after picking the file.
+  const cancelRef = React.useRef<HTMLButtonElement>(null);
+  const titleId = React.useId();
+  const bodyId = React.useId();
+  React.useEffect(() => {
+    cancelRef.current?.focus();
+  }, [name]);
+  return (
+    <div
+      className="emvb-site-confirm"
+      data-emvb-import-confirm=""
+      role="alertdialog"
+      aria-labelledby={titleId}
+      aria-describedby={bodyId}
+    >
+      <p className="emvb-field-label" id={titleId}>
+        Replace site styles with {name}?
+      </p>
+      <p className="emvb-helper" id={bodyId}>
+        {lost.length > 0
+          ? `${lost.join(" and ")} that the file doesn't have will be removed. `
+          : "Every class and variable is replaced by the file's. "}
+        {losses.usedOnPage > 0 &&
+          `This page uses ${losses.usedOnPage} of them, so those elements lose that styling. `}
+        Export first to keep a copy.
+      </p>
+      {renamed.length > 0 && (
+        <p className="emvb-helper" data-emvb-import-renamed="">
+          {`The file repeats some names, so ${renamed.length === 1 ? "one is" : "these are"} renamed: `}
+          {renamed
+            .slice(0, MAX_RENAMES_LISTED)
+            .map((r) => `${r.from} → ${r.to}`)
+            .join(", ")}
+          {renamed.length > MAX_RENAMES_LISTED
+            ? ` and ${renamed.length - MAX_RENAMES_LISTED} more.`
+            : "."}
+        </p>
+      )}
+      <div className="emvb-dialog-actions">
+        <Button
+          ref={cancelRef}
+          type="button"
+          variant="secondary"
+          className={BUTTON}
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          className={BUTTON}
+          style={SOLID_DESTRUCTIVE}
+          onClick={onConfirm}
+        >
+          Replace site styles
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+const DIRECTIONS = [
+  { value: "ltr", label: "Left to right" },
+  { value: "rtl", label: "Right to left" },
+  { value: "auto", label: "From the content" },
+] as const;
+
+/** Site text direction (W-230): `dir` on every EmVB root and the host's `<html>`. */
+function DirectionSelect({
+  design,
+  onSave,
+}: {
+  design: DesignSystem;
+  onSave: (next: DesignSystem) => Promise<unknown> | void;
+}) {
+  return (
+    <div className="emvb-field-group" data-emvb-site-direction="">
+      <Select
+        label="Text direction"
+        className={FIELD}
+        value={design.direction ?? "ltr"}
+        renderValue={(v: unknown) =>
+          DIRECTIONS.find((item) => item.value === String(v))?.label ?? String(v)
+        }
+        onValueChange={(value) => {
+          const { direction: _old, ...rest } = design;
+          // Left to right is the default, so it is stored as no setting.
+          const next: DesignSystem =
+            value === "rtl" || value === "auto" ? { ...rest, direction: value } : rest;
+          if ((next.direction ?? "ltr") !== (design.direction ?? "ltr")) void onSave(next);
+        }}
+      >
+        {DIRECTIONS.map((item) => (
+          <Select.Option key={item.value} value={item.value}>
+            {item.label}
+          </Select.Option>
+        ))}
+      </Select>
+      <p className="emvb-helper">
+        Right to left mirrors the layout for Arabic, Hebrew and other right-to-left sites.
+      </p>
+    </div>
+  );
+}
