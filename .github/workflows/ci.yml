@@ -25,6 +25,9 @@ jobs:
       - run: bun run check:seeds
       - run: bun run test
       - run: bun run test:astro
+      - run: bun run daisy:conformance
+      - run: bun run providers:build
+      - run: bun run providers:smoke
 
   audit:
     # Separate from the offline checks: needs the advisory database (W-890).

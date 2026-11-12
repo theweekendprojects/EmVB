@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, corporate, business, cupcake;
+}
+@source "../../../packages/emvb-daisyui/conformance/safelist.html";

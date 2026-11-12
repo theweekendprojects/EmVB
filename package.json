@@ -39,7 +39,9 @@
     "daisy:generate": "bun run --cwd packages/emvb-daisyui generate",
     "daisy:test": "bun run --cwd packages/emvb-daisyui test",
     "providers:build": "bun scripts/build-provider-packages.ts",
-    "providers:smoke": "bun scripts/smoke-provider-packages.ts"
+    "providers:smoke": "bun scripts/smoke-provider-packages.ts",
+    "daisy:conformance": "bun run --cwd packages/emvb-daisyui conformance:official",
+    "daisy:qualify": "bun scripts/daisy-release-qualify.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

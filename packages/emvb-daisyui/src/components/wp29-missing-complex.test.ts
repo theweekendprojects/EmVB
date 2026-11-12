@@ -1,0 +1,17 @@
+import { describe, expect, test } from "bun:test";
+import { daisyUIProvider } from "../provider.ts";
+import { catalogSupportReport } from "../conformance/report.ts";
+const added=["aura","calendar","fab","hover-3d","hover-gallery","megamenu","otp","text-rotate"] as const;
+const walk=(node:any):any[]=>[node,...(node.children??[]).flatMap((child:any)=>typeof child==="string"?[]:walk(child))];
+describe("WP29 missing complex components",()=>{
+ test("registers every remaining official component",()=>{for(const id of added)expect(daisyUIProvider.components.has(id),id).toBe(true);});
+ test("aura uses official style and size classes",()=>{const node=daisyUIProvider.createNode("aura","aura");node.props.style="rainbow";node.props.size="lg";const classes=daisyUIProvider.render(node).attrs.class;expect(classes).toContain("aura-rainbow");expect(classes).toContain("aura-lg");});
+ test("calendar uses the official native date fallback without external runtime",()=>{const vnode=daisyUIProvider.render(daisyUIProvider.createNode("calendar","calendar"));expect(vnode.tag).toBe("input");expect(vnode.attrs.type).toBe("date");});
+ test("FAB has focusable role button and bounded actions",()=>{const node=daisyUIProvider.createNode("fab","fab");node.props.actions="A\nB\nC\nD\nE\nF\nG";const vnode=daisyUIProvider.render(node);expect((vnode.children[0] as any).attrs.role).toBe("button");expect(vnode.children).toHaveLength(7);});
+ test("hover 3D emits exactly eight official hover zones",()=>{const vnode=daisyUIProvider.render(daisyUIProvider.createNode("hover-3d","hover"));expect(vnode.children).toHaveLength(8);expect(vnode.children.every((child:any)=>child.attrs["aria-hidden"]==="true")).toBe(true);});
+ test("hover gallery sanitizes and caps images at ten",()=>{const node=daisyUIProvider.createNode("hover-gallery","gallery");node.props.images=["javascript:bad",...Array.from({length:11},(_,i)=>`/img-${i}.jpg`)].join("\n");const vnode=daisyUIProvider.render(node);expect(vnode.children).toHaveLength(10);expect((vnode.children[0] as any).attrs.src).toBe("");});
+ test("megamenu popover targets resolve to unique IDs",()=>{const vnode=daisyUIProvider.render(daisyUIProvider.createNode("megamenu","mega"));const all=walk(vnode);const ids=all.map(x=>x.attrs?.id).filter(Boolean);const targets=all.map(x=>x.attrs?.popovertarget).filter(Boolean);expect(new Set(ids).size).toBe(ids.length);for(const target of targets)expect(ids).toContain(target);});
+ test("OTP span count matches maxlength and numeric pattern",()=>{const node=daisyUIProvider.createNode("otp","otp");node.props.length="4";const vnode=daisyUIProvider.render(node);expect(vnode.children).toHaveLength(5);const input=vnode.children[4] as any;expect(input.attrs.maxlength).toBe("4");expect(input.attrs.pattern).toBe("[0-9]{4}");});
+ test("text rotate caps content at six lines",()=>{const node=daisyUIProvider.createNode("text-rotate","rotate");node.props.items="1\n2\n3\n4\n5\n6\n7";const vnode=daisyUIProvider.render(node);expect((vnode.children[0] as any).children).toHaveLength(6);});
+ test("official inventory is fully implemented but remains truthfully experimental",()=>{const report=catalogSupportReport(new Date("2026-01-01T00:00:00Z"));expect(report.officialTotal).toBe(68);expect(report.implemented).toBe(68);expect(report.missing).toBe(0);expect(report.verified).toBe(10);for(const id of added)expect(report.components.find(item=>item.id===id)?.status,id).toBe("experimental");});
+});
