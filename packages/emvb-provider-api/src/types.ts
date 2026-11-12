@@ -79,5 +79,7 @@ export interface ComponentProvider<N extends ProviderComponentNode = ProviderCom
   ): ProviderVNode;
   validate?(nodes: readonly N[]): ProviderValidationIssue[];
   cssEntryPoints: readonly string[];
+  runtimeEntryPoints?: readonly string[];
+  needsRuntime?(node: N): boolean;
   rootAttributes?(nodes: readonly N[], context?: ProviderRenderContext): Record<string, string>;
 }

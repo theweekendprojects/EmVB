@@ -10,6 +10,7 @@ import {
   type ThemeDynamicData,
 } from "../core/index.ts";
 import { PLUGIN_ID } from "../constants.ts";
+import { componentProviders, providerAssetEntries } from "@perkyzz/emvb-provider-api";
 
 export type RenderedPage = {
   html: string;
@@ -18,6 +19,9 @@ export type RenderedPage = {
   needsTabsRuntime: boolean;
   needsMenuRuntime: boolean;
   needsProviderStyles: boolean;
+  providerStyles: string[];
+  providerRuntimes: string[];
+  needsDaisyRuntime: boolean;
   /** The site's text direction when set, for the host's `<html dir>` (W-230). */
   dir?: "ltr" | "rtl" | "auto";
 };
@@ -91,6 +95,9 @@ export function renderStored(
       needsTabsRuntime: false,
       needsMenuRuntime: false,
       needsProviderStyles: false,
+      providerStyles: [],
+      providerRuntimes: [],
+      needsDaisyRuntime: false,
       ...(design.direction ? { dir: design.direction } : {}),
     };
   }
@@ -105,15 +112,18 @@ export function renderStored(
       ...(lang ? { lang } : {}),
     },
   );
-  const needsProviderStyles = (() => {
-    const visit = (node: Layout["root"] | Layout["root"]["children"][number]): boolean =>
-      node.type === "provider" || ("children" in node && Array.isArray(node.children) && node.children.some(visit));
-    return visit(layout.root);
-  })();
+  const providerAssets = providerAssetEntries([layout.root] as never, componentProviders());
+  const providerStyles = providerAssets.styles;
+  const providerRuntimes = providerAssets.runtimes;
+  const needsProviderStyles = providerStyles.length > 0;
+  const needsDaisyRuntime = providerRuntimes.includes("@perkyzz/emvb-daisyui/runtime");
   return {
     html,
     css,
     needsProviderStyles,
+    providerStyles,
+    providerRuntimes,
+    needsDaisyRuntime,
     needsFormsRuntime,
     needsTabsRuntime,
     needsMenuRuntime,

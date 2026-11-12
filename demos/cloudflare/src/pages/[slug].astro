@@ -8,6 +8,7 @@ import { EmVBMenuRuntime } from "@perkyzz/emvb/astro/menu";
 import { EmVBTabsRuntime } from "@perkyzz/emvb/astro/tabs";
 import Base from "../layouts/Base.astro";
 import DaisyStyles from "../components/DaisyStyles.astro";
+import DaisyRuntime from "../components/DaisyRuntime.astro";
 import { resolveStarterSiteIdentity } from "../utils/site-identity";
 
 const slug = decodeSlug(Astro.params.slug);
@@ -44,6 +45,7 @@ const seo = getSeoMeta(entry, {
 	emvb?.canvasMode === "blank" ? (
 		<>
 		{emvb.needsProviderStyles && <DaisyStyles />}
+		{emvb.needsDaisyRuntime && <DaisyRuntime />}
 		<EmVBPage page={emvb} standalone title={seo.title} description={seo.description} seo={seo}>
 			{emvb.needsFormsRuntime && <EmVBFormsRuntime />}
 			{emvb.needsTabsRuntime && <EmVBTabsRuntime />}
@@ -59,6 +61,7 @@ const seo = getSeoMeta(entry, {
 			content={{ collection: emvb?.collection ?? "pages", id: entry.data.id, slug }}
 			dir={emvb?.dir}
 			needsProviderStyles={emvb?.needsProviderStyles}
+			needsDaisyRuntime={emvb?.needsDaisyRuntime}
 		>
 			{emvb ? (
 				<EmVBPage page={emvb}>

@@ -24,6 +24,8 @@ export function createDaisyUIProvider(
     components,
     recipes,
     cssEntryPoints: ["@perkyzz/emvb-daisyui/styles.css"],
+    runtimeEntryPoints: ["@perkyzz/emvb-daisyui/runtime"],
+    needsRuntime: (node) => ["modal", "tabs", "drawer", "dropdown", "carousel"].includes(node.component),
     rootAttributes: () => themeAttributes(undefined),
     createNode(component, id) {
       const generated = components.get(component);
