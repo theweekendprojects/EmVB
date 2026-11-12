@@ -1,0 +1,53 @@
+import { cleanClassName, nameKey, type DesignSystem } from "../../../../core/index.ts";
+
+type StyleClass = NonNullable<DesignSystem["classes"]>[number];
+
+export type ClassOption = { kind: "class"; cls: StyleClass } | { kind: "create"; name: string };
+
+/** Site-wide class cap (design schema) and per-element cap (layout schema). */
+export const MAX_SITE_CLASSES = 100;
+export const MAX_ELEMENT_CLASSES = 20;
+
+const rank = (cls: StyleClass, q: string) => {
+  const name = nameKey(cls.name);
+  if (name === q) return 0;
+  if (name.startsWith(q) || cls.id.startsWith(q)) return 1;
+  return 2;
+};
+
+/**
+ * Suggestions for the class chip input (W-087): classes not yet on the element whose name or id
+ * contains the query, exact and prefix matches first, then "Create class" when no class has
+ * that exact name.
+ */
+export function classOptions(
+  catalog: readonly StyleClass[],
+  applied: readonly string[],
+  query: string,
+): ClassOption[] {
+  const q = nameKey(query);
+  const available = catalog.filter((cls) => !applied.includes(cls.id));
+  const found = q
+    ? available
+        .filter((cls) => nameKey(cls.name).includes(q) || cls.id.includes(q))
+        .map((cls, index) => ({ cls, index, rank: rank(cls, q) }))
+        .toSorted((a, b) => a.rank - b.rank || a.index - b.index)
+        .map(({ cls }) => cls)
+    : available;
+  const options: ClassOption[] = found.map((cls) => ({ kind: "class", cls }));
+  // The new name as it will be saved: at most 60 characters, no control characters (W-220).
+  const name = cleanClassName(query);
+  const taken = catalog.some((cls) => nameKey(cls.name) === nameKey(name));
+  if (name && !taken) options.push({ kind: "create", name });
+  return options;
+}
+
+/** The applied class whose name is exactly `query`, ignoring case, if any. */
+export const appliedByName = (
+  catalog: readonly StyleClass[],
+  applied: readonly string[],
+  query: string,
+) => {
+  const q = nameKey(query);
+  return catalog.find((cls) => applied.includes(cls.id) && nameKey(cls.name) === q);
+};

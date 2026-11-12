@@ -1,0 +1,343 @@
+/**
+ * Optional public popup runtime (S7b). Hosts load this only when
+ * `resolveThemeParts().needsPopupsRuntime` is true (R-031).
+ *
+ * Triggers: page_load, delay, scroll, click, exit_intent, inactivity (W-081).
+ * Advanced (thin): showTimes (localStorage), devices (viewport width).
+ * Gaps vs Elementor (deferred): URL/query, scheduling, A/B.
+ */
+
+import {
+  clampScrollPercent,
+  matchesPopupDevices,
+  type PopupDevice,
+  TRIGGER_LIMITS,
+  withinShowTimes,
+} from "../../core/theme/popup-rules.ts";
+
+type OpenTrigger =
+  | { type: "page_load" }
+  | { type: "delay"; ms: number }
+  | { type: "scroll"; percent: number }
+  | { type: "click"; selector: string }
+  | { type: "exit_intent" }
+  | { type: "inactivity"; ms: number };
+
+type Advanced = {
+  showTimes?: number | null;
+  devices?: PopupDevice[] | null;
+};
+
+type TriggersDoc = {
+  schemaVersion: number;
+  open: OpenTrigger[];
+  advanced?: Advanced;
+};
+
+type PopupConfig = {
+  id: string;
+  triggers: TriggersDoc;
+};
+
+const STORAGE_PREFIX = "emvb-popup-shown:";
+
+function readConfig(el: HTMLElement): PopupConfig | null {
+  const raw = el.getAttribute("data-emvb-popup-config");
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as PopupConfig;
+    if (!parsed || typeof parsed.id !== "string" || !parsed.triggers?.open) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function timesShown(id: string): number {
+  try {
+    const value = localStorage.getItem(STORAGE_PREFIX + id);
+    const n = value ? Number(value) : 0;
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function bumpTimesShown(id: string): void {
+  try {
+    localStorage.setItem(STORAGE_PREFIX + id, String(timesShown(id) + 1));
+  } catch {
+    // private mode / quota — ignore
+  }
+}
+
+/** The schema allows only safe characters, but they can still form an invalid selector. */
+function isValidSelector(selector: string): boolean {
+  try {
+    document.createDocumentFragment().querySelector(selector);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** W-846 (D-055): a click is the visitor asking, so "Show at most" neither stops nor counts it. */
+function canOpen(config: PopupConfig, byClick: boolean): boolean {
+  const advanced = config.triggers.advanced;
+  if (!matchesPopupDevices(advanced, window.innerWidth)) return false;
+  if (!byClick && !withinShowTimes(advanced, timesShown(config.id))) return false;
+  return true;
+}
+
+type Controller = {
+  root: HTMLElement;
+  dialog: HTMLElement;
+  lastFocus: HTMLElement | null;
+  open: () => void;
+  close: () => void;
+  opened: boolean;
+};
+
+/**
+ * W-282: the dialog takes its name from the first heading in the popup, given an id if it has
+ * none; without a heading it keeps the markup's aria-label.
+ */
+function labelFromHeading(dialog: HTMLElement): void {
+  if (dialog.hasAttribute("aria-labelledby")) return;
+  const heading = dialog.querySelector<HTMLElement>("h1, h2, h3, h4, h5, h6");
+  if (!heading || !heading.textContent?.trim()) return;
+  if (!heading.id) {
+    const popupId = dialog.closest("[data-emvb-popup]")?.getAttribute("data-emvb-popup") ?? "";
+    heading.id = `emvb-popup-heading-${popupId}`;
+  }
+  dialog.setAttribute("aria-labelledby", heading.id);
+}
+
+/** W-282: the page behind an open popup doesn't scroll; restored when the last one closes. */
+let savedOverflow = "";
+const anyPopupOpen = () => document.querySelector("[data-emvb-popup]:not([hidden])") !== null;
+/** Call before showing a popup. */
+function lockScroll(): void {
+  const html = document.documentElement;
+  if (!anyPopupOpen()) savedOverflow = html.style.overflow;
+  html.style.overflow = "hidden";
+}
+/** Call after hiding a popup. */
+function unlockScroll(): void {
+  if (!anyPopupOpen()) document.documentElement.style.overflow = savedOverflow;
+}
+
+function createController(root: HTMLElement): Controller | null {
+  const dialog = root.querySelector<HTMLElement>(".emvb-popup__dialog");
+  if (!dialog) return null;
+  const ctrl: Controller = {
+    root,
+    dialog,
+    lastFocus: null,
+    opened: false,
+    open() {
+      ctrl.lastFocus = document.activeElement as HTMLElement | null;
+      labelFromHeading(dialog);
+      lockScroll();
+      root.hidden = false;
+      ctrl.opened = true;
+      dialog.focus({ preventScroll: true });
+    },
+    close() {
+      if (!ctrl.opened) return;
+      root.hidden = true;
+      ctrl.opened = false;
+      unlockScroll();
+      const prev = ctrl.lastFocus;
+      if (prev && typeof prev.focus === "function") prev.focus({ preventScroll: true });
+    },
+  };
+  return ctrl;
+}
+
+function focusables(container: HTMLElement): HTMLElement[] {
+  const nodes = container.querySelectorAll<HTMLElement>(
+    // W-672: an accordion's or menu's <summary>, a video player and an editable area take focus
+    // too; one of them last in the dialog let Tab leave for the page behind.
+    'a[href], button:not([disabled]), textarea, input, select, summary, iframe, video[controls], audio[controls], [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])',
+  );
+  // W-279: a form's hidden inputs and controls hidden on this device can't take focus; counting
+  // one as the last control let Tab leave the dialog from the real last one.
+  return [...nodes].filter(
+    (el) =>
+      !el.hasAttribute("disabled") &&
+      (el.tabIndex >= 0 || (el.localName === "summary" && !el.hasAttribute("tabindex"))) &&
+      !(el instanceof HTMLInputElement && el.type === "hidden") &&
+      !el.closest("[hidden], [inert]") &&
+      (typeof el.checkVisibility !== "function" || el.checkVisibility()),
+  );
+}
+
+function bindA11y(ctrl: Controller): void {
+  ctrl.root.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest?.("[data-emvb-popup-dismiss]")) {
+      ctrl.close();
+    }
+  });
+  // W-406: when the focused control disappears (a form swapped for its thank-you message), focus
+  // falls to <body>; Escape and Tab then never reached the dialog, so the popup couldn't be closed
+  // from the keyboard and Tab walked the page behind it.
+  document.addEventListener("keydown", (event) => {
+    if (!ctrl.opened || event.defaultPrevented || !ctrl.root.isConnected) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== document.documentElement) return;
+    if (event.key === "Tab") {
+      event.preventDefault();
+      (focusables(ctrl.dialog)[0] ?? ctrl.dialog).focus();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      ctrl.close();
+    }
+  });
+  ctrl.dialog.addEventListener("keydown", (event) => {
+    // W-676: while an input method is composing (Japanese, Chinese, Korean), Escape cancels the
+    // word being typed; it closed the whole popup and lost what was in the form.
+    if (event.key === "Escape" && (event.isComposing || event.keyCode === 229)) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      // W-580: Escape in an open menu dropdown inside the popup closes that dropdown first (the
+      // menu runtime saw the event already handled, so the whole popup closed instead).
+      const active = document.activeElement;
+      const menu =
+        active instanceof Element
+          ? active.closest<HTMLDetailsElement>("details.emvb-menu-item__disclosure[open]")
+          : null;
+      if (menu && ctrl.dialog.contains(menu)) {
+        menu.open = false;
+        menu.querySelector<HTMLElement>(":scope > summary")?.focus({ preventScroll: true });
+        return;
+      }
+      ctrl.close();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const items = focusables(ctrl.dialog);
+    if (items.length === 0) {
+      event.preventDefault();
+      ctrl.dialog.focus();
+      return;
+    }
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (!first || !last) return;
+    // W-553: opening focuses the dialog itself; Shift+Tab from there left for the page behind.
+    if (
+      event.shiftKey &&
+      (document.activeElement === first || document.activeElement === ctrl.dialog)
+    ) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+}
+
+/** Opens a closed popup and counts the show; a trigger while it's open does neither (W-092). */
+function openOnce(ctrl: Controller, config: PopupConfig, byClick: boolean): void {
+  if (ctrl.opened || !canOpen(config, byClick)) return;
+  ctrl.open();
+  if (!byClick) bumpTimesShown(config.id);
+}
+
+const IDLE_EVENTS = ["mousemove", "mousedown", "keydown", "touchstart", "scroll"] as const;
+
+type Arm<T extends OpenTrigger["type"]> = (
+  open: () => void,
+  trigger: Extract<OpenTrigger, { type: T }>,
+) => void;
+
+/** How each open trigger waits before calling `open`; unknown types never open. */
+const ARM: { [T in OpenTrigger["type"]]: Arm<T> } = {
+  page_load: (open) => open(),
+  delay: (open, trigger) => {
+    window.setTimeout(open, Math.max(0, Number(trigger.ms) || 0));
+  },
+  scroll: (open, trigger) => {
+    const threshold = clampScrollPercent(trigger.percent) / 100;
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const progress = max <= 0 ? 1 : window.scrollY / max;
+      if (progress >= threshold) {
+        window.removeEventListener("scroll", onScroll);
+        open();
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  },
+  click: (open, trigger) => {
+    const selector = String(trigger.selector ?? "").trim();
+    if (!selector || !isValidSelector(selector)) return;
+    document.addEventListener("click", (event) => {
+      const target = event.target as Element | null;
+      if (!target?.closest?.(selector)) return;
+      // W-285: a trigger link with the URL "#" (a common way to make one) would also jump the
+      // page to the top behind the popup.
+      if (target.closest("a[href]")?.getAttribute("href") === "#") event.preventDefault();
+      open();
+    });
+  },
+  exit_intent: (open) => {
+    // Desktop: pointer leaves the document toward the top chrome (common exit-intent heuristic).
+    const onLeave = (event: MouseEvent) => {
+      if (event.clientY > 0) return;
+      document.documentElement.removeEventListener("mouseleave", onLeave);
+      open();
+    };
+    document.documentElement.addEventListener("mouseleave", onLeave);
+  },
+  inactivity: (open, trigger) => {
+    const ms = Math.max(TRIGGER_LIMITS.minIdleMs, Number(trigger.ms) || 30_000);
+    // W-279: opens once per visit, like scroll and exit intent; closing it doesn't re-arm the wait.
+    const fire = () => {
+      for (const eventName of IDLE_EVENTS) window.removeEventListener(eventName, reset);
+      open();
+    };
+    let timer = window.setTimeout(fire, ms);
+    const reset = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(fire, ms);
+    };
+    for (const eventName of IDLE_EVENTS) {
+      window.addEventListener(eventName, reset, { passive: true });
+    }
+  },
+};
+
+function registerTrigger(ctrl: Controller, config: PopupConfig, trigger: OpenTrigger): void {
+  const arm = (ARM as Record<string, Arm<OpenTrigger["type"]> | undefined>)[trigger.type];
+  const byClick = trigger.type === "click";
+  arm?.(() => openOnce(ctrl, config, byClick), trigger as never);
+}
+
+/**
+ * W-757: as W-407 for floats, a second call (a host loading the script twice, or calling it again
+ * for new markup) gave a popup a second controller: it opened twice, counted two shows against
+ * "Show at most", and Escape closed it twice, handing focus to the hidden dialog.
+ */
+const started = new WeakSet<HTMLElement>();
+
+export function initPopups(root: ParentNode = document): void {
+  const nodes = root.querySelectorAll<HTMLElement>("[data-emvb-popup]");
+  for (const node of nodes) {
+    if (started.has(node)) continue;
+    started.add(node);
+    const config = readConfig(node);
+    if (!config) continue;
+    const ctrl = createController(node);
+    if (!ctrl) continue;
+    bindA11y(ctrl);
+    for (const trigger of config.triggers.open) {
+      registerTrigger(ctrl, config, trigger);
+    }
+  }
+}
