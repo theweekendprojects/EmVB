@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { createRecipe, DAISY_RECIPES } from "../recipes/index.ts";
 import { daisyUIProvider } from "../provider.ts";
 import type { DaisyComponentNode } from "../types.ts";
+import { isCompoundPart } from "../compound/index.ts";
 import { validateDaisyTree } from "../validation/index.ts";
 
 const ids = () => {
@@ -18,7 +19,7 @@ describe("WP10 recipes", () => {
       expect(validateDaisyTree(nodes)).toEqual([]);
       const seen = new Set<string>();
       const walk = (node: DaisyComponentNode) => {
-        expect(daisyUIProvider.components.has(node.component)).toBe(true);
+        expect(daisyUIProvider.components.has(node.component) || isCompoundPart(node.component)).toBe(true);
         expect(seen.has(node.id)).toBe(false);
         seen.add(node.id);
         node.children?.forEach(walk);

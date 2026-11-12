@@ -66,8 +66,8 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     category: "Content",
     create: (id) => [
       node("accordion", id, {}, [
-        node("collapse", id, { title: "How does it work?", content: "Choose a plan and publish." }),
-        node("collapse", id, { title: "Can I cancel?", content: "Yes, at any time." }),
+        { id: id(), type: "provider", provider: "daisyui", component: "accordion-item", props: { label: "How does it work?" }, children: [node("card", id, { body: "Choose a plan and publish." })] },
+        { id: id(), type: "provider", provider: "daisyui", component: "accordion-item", props: { label: "Can I cancel?" }, children: [node("card", id, { body: "Yes, at any time." })] },
       ]),
     ],
   },
