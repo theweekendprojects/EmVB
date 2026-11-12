@@ -37,6 +37,9 @@ function registerServerProviders(specifiers: readonly string[]): void {
   serverProvidersStarted = true;
   for (const specifier of specifiers) {
     import(/* @vite-ignore */ specifier).catch((error: unknown) => {
+      // A bad provider specifier must surface (it shows as "Unknown provider" on the page) but
+      // never throw and take the plugin down. Logging the cause is the only diagnostic here.
+      // eslint-disable-next-line no-console
       console.error(`EmVB: failed to load provider "${specifier}":`, error);
     });
   }

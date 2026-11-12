@@ -17,6 +17,10 @@ import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms/client";
 import { EmVBMenuRuntime } from "@perkyzz/emvb/astro/menu";
 import { EmVBTabsRuntime } from "@perkyzz/emvb/astro/tabs";
 import { resolveStarterSiteIdentity } from "../utils/site-identity";
+// Tailwind + daisyUI, compiled by @tailwindcss/vite and bundled by Astro; provider pages need
+// these classes. Imported (not a <link href>) so Astro processes and ships it.
+import DaisyStyles from "../components/DaisyStyles.astro";
+import DaisyRuntime from "../components/DaisyRuntime.astro";
 
 interface Props {
 	title: string;
@@ -32,13 +36,16 @@ interface Props {
 	isFront?: boolean;
 	/** When true, theme conditions treat this as the search results route. */
 	isSearch?: boolean;
+	/** Load provider CSS only for a page that contains provider nodes. */
+	needsProviderStyles?: boolean;
+	needsDaisyRuntime?: boolean;
 	/** Theme parts the route already resolved (numbered archive pages, W-223). */
 	theme?: ResolvedThemeParts;
 	/** The EmVB page's text direction (W-230); else the theme's. */
 	dir?: "ltr" | "rtl" | "auto";
 }
 
-const { title, pageTitle, description, image, content, is404, isFront, isSearch } = Astro.props;
+const { title, pageTitle, description, image, content, is404, isFront, isSearch, needsProviderStyles = false, needsDaisyRuntime = false } = Astro.props;
 const [settingsResult, menuResult] = await Promise.all([
 	getSiteSettingsWithCacheHint(),
 	getMenuWithCacheHint("primary"),
@@ -92,6 +99,7 @@ const pageCtx = createPublicPageContext({
 <!doctype html>
 <html lang="en" dir={Astro.props.dir ?? theme.dir}>
 	<head>
+		{needsProviderStyles && <DaisyStyles />}
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{fullTitle}</title>
@@ -102,6 +110,7 @@ const pageCtx = createPublicPageContext({
 	</head>
 	<body>
 		<EmDashBodyStart page={pageCtx} />
+		{needsDaisyRuntime && <DaisyRuntime />}
 
 		{
 			theme.header ? (

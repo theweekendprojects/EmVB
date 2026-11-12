@@ -52,10 +52,16 @@
         "@astrojs/react": "^7.1.2",
         "@emdash-cms/plugin-forms": "0.2.12",
         "@perkyzz/emvb": "workspace:*",
+        "@perkyzz/emvb-daisyui": "workspace:*",
         "astro": "7.3.5",
+        "daisyui": "5.7.50",
         "emdash": "1.4.0",
         "react": "19.3.1",
         "react-dom": "19.3.1",
+        "tailwindcss": "4.1.17",
+      },
+      "devDependencies": {
+        "@tailwindcss/vite": "4.1.17",
       },
     },
     "packages/emvb": {

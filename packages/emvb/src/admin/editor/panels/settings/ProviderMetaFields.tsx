@@ -18,7 +18,7 @@ export function ProviderMetaFields({ node, onChange }: { node: LayoutNode; onCha
         className={FIELD}
         value={current}
         onValueChange={(theme) => {
-          const providerMeta = { ...(providerNode.providerMeta ?? {}) };
+          const providerMeta: Record<string, string | number | boolean> = { ...providerNode.providerMeta };
           if (theme) providerMeta.theme = theme;
           else delete providerMeta.theme;
           onChange({ ...providerNode, providerMeta: Object.keys(providerMeta).length ? providerMeta : undefined });

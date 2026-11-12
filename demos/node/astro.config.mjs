@@ -5,12 +5,14 @@ import { formsPlugin } from "@emdash-cms/plugin-forms";
 import { emvb } from "@perkyzz/emvb";
 import emdash, { local } from "emdash/astro";
 import { sqlite } from "emdash/db";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   output: "server",
   adapter: node({
     mode: "standalone",
   }),
+  vite: { plugins: [tailwindcss()] },
   image: {
     layout: "constrained",
     responsiveStyles: true,
@@ -28,7 +30,17 @@ export default defineConfig({
         directory: "./uploads",
         baseUrl: "/_emdash/api/media/file",
       }),
-      plugins: [formsPlugin(), emvb({ canvasStyles: ["/site.css"], canvasCollections: ["pages"] })],
+      plugins: [
+        formsPlugin(),
+        emvb({
+          canvasStyles: ["/site.css"],
+          canvasCollections: ["pages"],
+          // Register the daisyUI provider: on the server (render) via `providers`, and in the
+          // browser editor via the `adminEntry` wrapper that imports it.
+          providers: ["@perkyzz/emvb-daisyui"],
+          adminEntry: "/src/emvb-admin.ts",
+        }),
+      ],
     }),
   ],
   devToolbar: { enabled: false },
