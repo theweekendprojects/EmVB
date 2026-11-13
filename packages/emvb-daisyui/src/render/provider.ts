@@ -26,7 +26,17 @@ export function createDaisyUIProvider(
     cssEntryPoints: ["@perkyzz/emvb-daisyui/styles.css"],
     runtimeEntryPoints: ["@perkyzz/emvb-daisyui/runtime"],
     needsRuntime: (node) => ["modal", "tabs", "drawer", "dropdown", "carousel"].includes(node.component),
-    rootAttributes: () => themeAttributes(undefined),
+    // Do NOT force a page-level data-theme: that pinned daisyUI's `light` base (white) over the
+    // host's own light/dark, so a dark site got a white EmVB region. Set data-theme on the wrapper
+    // ONLY if a node explicitly asked for one via providerMeta.theme (handled per-node in core's
+    // providerElement.build); otherwise inherit the document's theme (the host sets data-theme on
+    // <html> to mirror the EmDash light/dark choice).
+    rootAttributes: (nodes) => {
+      const chosen = nodes
+        .map((node) => (node.providerMeta && typeof node.providerMeta.theme === "string" ? node.providerMeta.theme : ""))
+        .find((theme) => theme);
+      return chosen ? themeAttributes(chosen) : {};
+    },
     createNode(component, id) {
       const generated = components.get(component);
       if (!generated) throw new Error(`Unknown daisyUI component: ${component}`);
