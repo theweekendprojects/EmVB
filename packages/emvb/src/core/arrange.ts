@@ -1,4 +1,11 @@
-import { MAX_DEPTH, MAX_NODES, MAX_TABS } from "./limits.ts";
+import {
+  MAX_CAROUSEL_SLIDES,
+  MAX_DEPTH,
+  MAX_GALLERY_IMAGES,
+  MAX_NODES,
+  MAX_SOCIAL_LINKS,
+  MAX_TABS,
+} from "./limits.ts";
 import {
   isContainerNode,
   isFormFieldType,
@@ -64,6 +71,15 @@ export const REASONS = {
   onlyAccordionItems: "An accordion can only hold accordion items.",
   itemOutsideMenu: "Menu items can only go inside a Menu.",
   onlyMenuItems: "A menu can only hold menu items.",
+  linkOutsideSocial: "Social links can only go inside Social icons.",
+  onlySocialLinks: "Social icons can only hold social links.",
+  tooManySocialLinks: `Social icons can hold up to ${MAX_SOCIAL_LINKS} links.`,
+  imageOutsideGallery: "Gallery images can only go inside a Gallery.",
+  onlyGalleryImages: "A gallery can only hold gallery images.",
+  tooManyGalleryImages: `A gallery can hold up to ${MAX_GALLERY_IMAGES} pictures.`,
+  slideOutsideCarousel: "Slides can only go inside a Carousel.",
+  onlySlides: "A carousel can only hold slides.",
+  tooManySlides: `A carousel can hold up to ${MAX_CAROUSEL_SLIDES} slides.`,
   emptyOutsideLoop: "An Empty state can only go inside a Loop.",
 } as const;
 
@@ -143,6 +159,22 @@ export function parentChildRefusal(
     return REASONS.itemOutsideMenu;
   }
   if (parent.type === "menu" && child.type !== "menu-item") return REASONS.onlyMenuItems;
+  if (child.type === "social-link" && parent.type !== "social-icons") {
+    return REASONS.linkOutsideSocial;
+  }
+  if (parent.type === "social-icons" && child.type !== "social-link") {
+    return REASONS.onlySocialLinks;
+  }
+  if (child.type === "gallery-image" && parent.type !== "gallery") {
+    return REASONS.imageOutsideGallery;
+  }
+  if (parent.type === "gallery" && child.type !== "gallery-image") {
+    return REASONS.onlyGalleryImages;
+  }
+  if (child.type === "carousel-slide" && parent.type !== "carousel") {
+    return REASONS.slideOutsideCarousel;
+  }
+  if (parent.type === "carousel" && child.type !== "carousel-slide") return REASONS.onlySlides;
   if (isFormNode(child) && inForm) return REASONS.nestedForm;
   if (isFormFieldType(child.type) && !inForm) return REASONS.fieldOutsideForm;
   return undefined;
@@ -158,6 +190,30 @@ const DROP_RULES: [breaks: (drop: Drop) => boolean, reason: string][] = [
       !nodeChildren(into.node).some((child) => child.id === node.id) &&
       nodeChildren(into.node).length >= MAX_TABS,
     REASONS.tooManyTabs,
+  ],
+  // W-1024: as Tabs, a full Social icons takes no new link; moving within it is fine.
+  [
+    ({ node, into }) =>
+      into.node.type === "social-icons" &&
+      !nodeChildren(into.node).some((child) => child.id === node.id) &&
+      nodeChildren(into.node).length >= MAX_SOCIAL_LINKS,
+    REASONS.tooManySocialLinks,
+  ],
+  // W-1019: a full Gallery takes no new picture; moving within it is fine.
+  [
+    ({ node, into }) =>
+      into.node.type === "gallery" &&
+      !nodeChildren(into.node).some((child) => child.id === node.id) &&
+      nodeChildren(into.node).length >= MAX_GALLERY_IMAGES,
+    REASONS.tooManyGalleryImages,
+  ],
+  // W-1018: a full Carousel takes no new slide; moving within it is fine.
+  [
+    ({ node, into }) =>
+      into.node.type === "carousel" &&
+      !nodeChildren(into.node).some((child) => child.id === node.id) &&
+      nodeChildren(into.node).length >= MAX_CAROUSEL_SLIDES,
+    REASONS.tooManySlides,
   ],
   [({ node, into }) => into.depth + height(node) > MAX_DEPTH, REASONS.tooDeep],
   [
@@ -336,7 +392,11 @@ export const wrapInThemeSection = (
   partId: string,
   random: () => number = Math.random,
 ): Arranged =>
-  wrapWith(layout, id, { id: newNodeId(random), type: "section", props: { partId } } as LayoutNode);
+  wrapWith(layout, id, {
+    id: newNodeId(random),
+    type: "part-ref",
+    props: { partId },
+  } as LayoutNode);
 
 function wrapWith(layout: Layout, id: string, shell: LayoutNode): Arranged {
   const found = locate(layout, id);

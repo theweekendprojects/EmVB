@@ -203,6 +203,7 @@ function refsInStyle(style: StyleProps | undefined): Ref[] {
 const refsOf = (owner: CopiedStyle): Ref[] => [
   ...refsInStyle(owner.style),
   ...STYLE_STATES.flatMap((state) => refsInStyle(owner.states?.[state])),
+  ...refsInStyle(owner.devices?.laptop),
   ...refsInStyle(owner.devices?.tablet),
   ...refsInStyle(owner.devices?.mobile),
   // W-643: a container-query override (W-346) can use a variable too.
@@ -376,6 +377,14 @@ function withoutIconKeys(style: object | undefined): object | undefined {
       delete next[key];
       removed = true;
     }
+  }
+  // W-925: the Icon animation is `motion.icon` since schema 18.
+  const motion = next["motion"];
+  if (isRecord(motion) && "icon" in motion) {
+    const { icon: _icon, ...rest } = motion;
+    if (Object.keys(rest).length > 0) next["motion"] = rest;
+    else delete next["motion"];
+    removed = true;
   }
   if (!removed) return style;
   return Object.keys(next).length > 0 ? next : undefined;

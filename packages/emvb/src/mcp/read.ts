@@ -15,6 +15,7 @@ import {
   type ElementType,
   type Layout,
   type LayoutNode,
+  hiddenOnEveryDevice,
 } from "../core/index.ts";
 import { parentChildRefusal } from "../core/arrange.ts";
 import { clipText } from "../core/limits.ts";
@@ -26,7 +27,7 @@ import { McpToolError } from "./errors.ts";
 import type { EmvbPorts, PageRecord } from "./ports.ts";
 
 /** A stored layout the tools can work on, or a NOT_FOUND / INVALID_LAYOUT error the agent can read. */
-async function loadPage(
+export async function loadPage(
   ports: EmvbPorts,
   pageId: string,
 ): Promise<{
@@ -46,16 +47,16 @@ async function loadPage(
   return { page, layout: result.layout };
 }
 
-type OutlineNode = { id: string; type: string; label?: string; children?: OutlineNode[] };
+export type OutlineNode = { id: string; type: string; label?: string; children?: OutlineNode[] };
 
 /** The tree without props or styles: cheap orientation for an agent (plan § 3 get_layout). */
-function outlineOf(node: LayoutNode): OutlineNode {
+export function outlineOf(node: LayoutNode): OutlineNode {
   const kids = nodeChildren(node);
   const text = summaryText(node);
   return {
     id: node.id,
     type: node.type,
-    ...(node.label || text ? { label: node.label ?? text } : {}),
+    ...(node.editorLabel || text ? { label: node.editorLabel ?? text } : {}),
     ...(kids.length > 0 ? { children: kids.map(outlineOf) } : {}),
   };
 }
@@ -67,7 +68,7 @@ function summaryText(node: LayoutNode): string | undefined {
   return text.length > 60 ? `${clipText(text, 57)}…` : text;
 }
 
-function stats(layout: Layout) {
+export function stats(layout: Layout) {
   let nodes = 0;
   let depth = 0;
   const walk = (node: LayoutNode, d: number) => {
@@ -312,18 +313,17 @@ function imagesOf(root: LayoutNode) {
   return found;
 }
 
-/** W-500: elements hidden on desktop, tablet and mobile never show; the agent should know. */
+/** W-500: elements hidden on every device (W-956: laptop too) never show; the agent should know. */
 function hiddenEverywhere(root: LayoutNode) {
   const warnings: { nodeId: string; message: string }[] = [];
   const walk = (node: LayoutNode) => {
-    const hidden = new Set((node as { hiddenOn?: string[] }).hiddenOn ?? []);
-    if (hidden.has("desktop") && hidden.has("tablet") && hidden.has("mobile")) {
+    if (hiddenOnEveryDevice(node)) {
       warnings.push({
         nodeId: node.id,
         message:
           node.id === root.id
             ? "The whole page is hidden on every device, so visitors see an empty page. Unset hiddenOn on the root."
-            : `${node.label ?? node.type} ${node.id} is hidden on every device, so it and everything inside it never show. Unset hiddenOn, or remove it.`,
+            : `${node.editorLabel ?? node.type} ${node.id} is hidden on every device, so it and everything inside it never show. Unset hiddenOn, or remove it.`,
       });
       return;
     }
@@ -395,7 +395,7 @@ export async function describePage(ports: EmvbPorts, input: z.infer<typeof Descr
       excerpt: clip(part.text.join(" "), 240),
       media: part.media,
     };
-    if (node.label) section.label = node.label;
+    if (node.editorLabel) section.label = node.editorLabel;
     return section;
   });
   const wordCount = all.text.join(" ").split(/\s+/).filter(Boolean).length;

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import * as React from "react";
 import { act } from "react";
-import { emptyDesign, type StyleProps } from "../../../../core/index.ts";
+import { emptyDesign, type FlatStyleProps } from "../../../../core/index.ts";
 import { cleanup, mount, settle } from "../../../../../test/dom/mount.ts";
 import { switchFillRemembered, type FillMemory } from "./background-mode.ts";
 import { StyleRow } from "./StyleRow.tsx";
@@ -13,9 +13,9 @@ afterEach(async () => {
   await cleanup();
 });
 
-const patches: Partial<StyleProps>[] = [];
+const patches: Partial<FlatStyleProps>[] = [];
 
-const row = (styleKey: StyleKey, style: StyleProps = {}) =>
+const row = (styleKey: StyleKey, style: FlatStyleProps = {}) =>
   mount(
     <StyleRow
       styleKey={styleKey}
@@ -74,6 +74,57 @@ describe("background controls (W-094)", () => {
     expect(patches.at(-1)).toEqual({ overlay: { color: "#000000", opacity: 0.4 } });
   });
 
+  test("W-949: an overlay switches to a gradient scrim and back, keeping its opacity", async () => {
+    patches.length = 0;
+    const image = { backgroundImage: "https://cdn.example/a.png" };
+    const host = await row("backgroundColor", {
+      ...image,
+      overlay: { color: "#000000", opacity: 0.6 },
+    });
+    expect(
+      host.querySelector('[data-emvb-overlay-type="color"]')?.getAttribute("aria-checked"),
+    ).toBe("true");
+    await act(async () =>
+      host.querySelector<HTMLElement>('[data-emvb-overlay-type="gradient"]')?.click(),
+    );
+    expect(patches.at(-1)).toEqual({
+      overlay: {
+        gradient: {
+          type: "linear",
+          angle: 90,
+          stops: [
+            { color: "#000000cc", at: 0 },
+            { color: "#00000000", at: 100 },
+          ],
+        },
+        opacity: 0.6,
+      },
+    });
+    await cleanup();
+    patches.length = 0;
+    const gradientHost = await row("backgroundColor", {
+      ...image,
+      overlay: {
+        gradient: {
+          type: "linear",
+          angle: 90,
+          stops: [
+            { color: "#000000", at: 0 },
+            { color: "#ffffff", at: 100 },
+          ],
+        },
+      },
+    });
+    // The gradient overlay is edited with the gradient rows.
+    expect(
+      gradientHost.querySelector('[data-emvb-style="overlay"] [data-emvb-gradient]'),
+    ).not.toBeNull();
+    await act(async () =>
+      gradientHost.querySelector<HTMLElement>('[data-emvb-overlay-type="color"]')?.click(),
+    );
+    expect(patches.at(-1)).toEqual({ overlay: { color: "#000000", opacity: 0.4 } });
+  });
+
   test("an Image fill with no image yet says the element has no background (W-174)", async () => {
     patches.length = 0;
     const host = await row("backgroundColor", { backgroundColor: "#ff0000" });
@@ -124,17 +175,17 @@ describe("background controls (W-094)", () => {
   });
 
   test("switching fill type and back restores what the type last held (W-184)", async () => {
-    const GRADIENT: StyleProps["gradient"] = {
+    const GRADIENT: FlatStyleProps["gradient"] = {
       type: "radial",
       stops: [
         { color: "#ff0000", at: 0 },
         { color: "#0000ff", at: 100 },
       ],
     };
-    let device: (scope: string, style: StyleProps) => void = () => undefined;
-    let current: StyleProps = {};
+    let device: (scope: string, style: FlatStyleProps) => void = () => undefined;
+    let current: FlatStyleProps = {};
     function Live() {
-      const [style, setStyle] = React.useState<StyleProps>({ gradient: GRADIENT });
+      const [style, setStyle] = React.useState<FlatStyleProps>({ gradient: GRADIENT });
       const [scope, setScope] = React.useState("local:desktop");
       device = (next, nextStyle) => {
         setScope(next);
@@ -172,7 +223,7 @@ describe("background controls (W-094)", () => {
 
   test("the fill memory only fills an empty type and keeps image settings together (W-184)", () => {
     const memory: FillMemory = {};
-    const image: StyleProps = {
+    const image: FlatStyleProps = {
       backgroundImage: "https://cdn.example/a.png",
       backgroundSize: "contain",
       overlay: { color: "#000000", opacity: 0.4 },

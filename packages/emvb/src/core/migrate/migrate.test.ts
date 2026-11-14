@@ -116,7 +116,7 @@ describe("upgradeLayout", () => {
             id: "icon0001",
             type: "icon",
             props: { iconId: "star", title: "Star" },
-            style: { iconAnimation: { type: "spin", duration: 1000, loop: true } },
+            style: { motion: { icon: { type: "spin", duration: 1000, loop: true } } },
           },
         ],
       },
@@ -131,7 +131,7 @@ describe("upgradeLayout", () => {
     expect(upgradeLayout(design, {}, 15)).toEqual({
       ok: false,
       reason: "newer-version",
-      version: 16,
+      version: 17,
     });
   });
 });
@@ -141,12 +141,12 @@ describe("schema versions (D-031, D-032)", () => {
     (version: number) =>
     <T extends object>(doc: T) => ({ ...doc, schemaVersion: version });
 
-  test("layout is at version 18 and design at version 16", () => {
+  test("layout is at version 18 and design at version 17", () => {
     expect(LAYOUT_SCHEMA_VERSION).toBe(18);
-    expect(DESIGN_SCHEMA_VERSION).toBe(16);
+    expect(DESIGN_SCHEMA_VERSION).toBe(17);
   });
 
-  test.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])(
+  test.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])(
     "a v%i layout upgrades to v8 with every value kept",
     (version) => {
       for (const layout of randomLayouts(50, 7)) {
@@ -157,11 +157,11 @@ describe("schema versions (D-031, D-032)", () => {
     },
   );
 
-  test.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])(
+  test.each([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])(
     "a v%i design document upgrades to v8 with its variables and classes kept",
     (version) => {
       const design = {
-        schemaVersion: 16,
+        schemaVersion: 17,
         variables: { colors: [{ id: "ink", name: "Ink", value: "#112233" }] },
         classes: [{ id: "card", name: "Card", style: { opacity: 0.5, zIndex: 2 } }],
       };

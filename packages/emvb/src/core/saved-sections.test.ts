@@ -203,7 +203,7 @@ describe("synced sections (W-876, W-098)", () => {
     const linked = wrapInThemeSection(layout, "box00001", "PART01", counter);
     if (!linked.ok) throw new Error(linked.reason);
     const shell = findNode(linked.layout, linked.selected);
-    expect(shell?.type).toBe("section");
+    expect(shell?.type).toBe("part-ref");
     expect(shell?.props).toEqual({ partId: "PART01" });
     expect(nodeChildren(shell as LayoutNode).map((n) => n.id)).toEqual(["box00001"]);
     expect(validateLayout(linked.layout).ok).toBe(true);

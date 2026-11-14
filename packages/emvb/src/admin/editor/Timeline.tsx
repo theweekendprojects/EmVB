@@ -375,7 +375,8 @@ export function TimelineDialog({
                           title={v.agent.summary}
                         >
                           <RobotIcon aria-hidden="true" size={12} />
-                          Agent
+                          {/* W-930: a person's save of changes accepted from a proposal. */}
+                          {v.agent.tool === "accept_proposal" ? "Via agent" : "Agent"}
                         </span>
                       )}
                     </button>
@@ -417,6 +418,7 @@ export function TimelineDialog({
                           <span className="emvb-timeline-kind">{KIND_LABELS[change.kind]}</span>{" "}
                           {change.label || ELEMENT_NAMES[change.type] || change.type}
                           {change.kind === "changed" &&
+                            !change.page &&
                             ` · ${change.edits} element${change.edits === 1 ? "" : "s"}`}
                           {(change.kind === "changed" || change.kind === "removed") && (
                             <button
@@ -432,10 +434,13 @@ export function TimelineDialog({
                                 }
                                 setError(null);
                                 refocusAfterRestore.current = true;
-                                onApply(result.layout, "Section restored");
+                                onApply(
+                                  result.layout,
+                                  change.page ? "Page styles restored" : "Section restored",
+                                );
                               }}
                             >
-                              Restore this section
+                              {change.page ? "Restore page styles" : "Restore this section"}
                             </button>
                           )}
                         </li>

@@ -40,7 +40,10 @@ const heading = (id = "head0001"): LayoutNode => ({
   id,
   type: "heading",
   props: { text: "Hello", level: 2 },
-  style: { color: "#ff0000", transition: { duration: 200, easing: "ease", property: "colors" } },
+  style: {
+    color: "#ff0000",
+    motion: { transition: { duration: 200, easing: "ease", property: "colors" } },
+  },
   states: { hover: { color: "#00ff00" } },
   classes: ["card"],
 });
@@ -82,7 +85,7 @@ describe("clipboard envelope (W-093)", () => {
       style: {
         style: {
           color: "#ff0000",
-          transition: { duration: 200, easing: "ease", property: "colors" },
+          motion: { transition: { duration: 200, easing: "ease", property: "colors" } },
         },
         states: { hover: { color: "#00ff00" } },
       },
@@ -94,7 +97,7 @@ describe("clipboard envelope (W-093)", () => {
     expect(clipStyle(clip)).toEqual({
       style: {
         color: "#ff0000",
-        transition: { duration: 200, easing: "ease", property: "colors" },
+        motion: { transition: { duration: 200, easing: "ease", property: "colors" } },
       },
       states: { hover: { color: "#00ff00" } },
     });
@@ -148,7 +151,9 @@ describe("clipboard envelope (W-093)", () => {
     expect(readClip(JSON.stringify(badState)).ok).toBe(false);
     const transitionInState = {
       ...styleClip(heading()),
-      states: { hover: { transition: { duration: 1, easing: "ease", property: "all" } } },
+      states: {
+        hover: { motion: { transition: { duration: 1, easing: "ease", property: "all" } } },
+      },
     };
     expect(readClip(JSON.stringify(transitionInState)).ok).toBe(false);
   });
@@ -455,7 +460,7 @@ describe("pasting an Icon's style elsewhere (W-292)", () => {
   const iconStyle = {
     style: { color: "#ff0000", iconRotate: 45, iconShadow: { x: 0, y: 2, blur: 4 } },
     states: { hover: { iconScale: 1.2 }, focus: { color: "#00ff00", iconFlip: "both" as const } },
-    devices: { mobile: { iconAnimation: { type: "spin" as const, duration: 1000 } } },
+    devices: { mobile: { motion: { icon: { type: "spin" as const, duration: 1000 } } } },
   };
 
   test("a Heading gets the colour but not the Icon glyph keys", () => {

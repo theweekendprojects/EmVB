@@ -1,9 +1,10 @@
-import type {
-  ConditionsDoc,
-  FloatSettings,
-  Layout,
-  ThemePartType,
-  TriggersDoc,
+import {
+  layoutSearchText,
+  type ConditionsDoc,
+  type FloatSettings,
+  type Layout,
+  type ThemePartType,
+  type TriggersDoc,
 } from "../core/index.ts";
 import { PAGES_COLLECTION } from "../constants.ts";
 import { listAllItems, requestJson, type Fetcher } from "./api.ts";
@@ -20,6 +21,8 @@ export type PageSummary = {
   slug: string;
   status: string;
   updatedAt: string;
+  /** W-978: the layout's words, for searching by content. */
+  text?: string;
 };
 
 export async function listPages(fetcher: Fetcher): Promise<PageSummary[]> {
@@ -30,6 +33,7 @@ export async function listPages(fetcher: Fetcher): Promise<PageSummary[]> {
     slug: item.slug ?? "",
     status: entryStatus(item),
     updatedAt: item.updatedAt ?? "",
+    text: layoutSearchText(item.data?.["layout"]),
   }));
 }
 
@@ -141,6 +145,35 @@ export async function publishEntry(
     { method: "POST", body: rev ? { _rev: rev } : {} },
   );
   return { rev: body["_rev"], slug: body.item.slug ?? "" };
+}
+
+/**
+ * W-1027: has EmDash publish the saved draft of entry `id` by itself at `at` (sent as ISO with
+ * its offset), or with `at` null cancels that. `rev` makes a stale draft fail with 409.
+ */
+export async function scheduleEntry(
+  fetcher: Fetcher,
+  contentPath: string,
+  id: string,
+  at: Date | null,
+  rev: string | null,
+): Promise<{ rev: string; status: string; scheduledAt: string | null }> {
+  const path = `${contentPath}/${encodeURIComponent(id)}/schedule`;
+  const body = await requestJson<{
+    _rev: string;
+    item: { status?: string; scheduledAt?: string | null; draftRevisionId?: string | null };
+  }>(
+    fetcher,
+    path,
+    at
+      ? { method: "POST", body: { scheduledAt: at.toISOString(), ...(rev ? { _rev: rev } : {}) } }
+      : { method: "DELETE" },
+  );
+  return {
+    rev: body["_rev"],
+    status: entryStatus(body.item),
+    scheduledAt: body.item.scheduledAt ?? null,
+  };
 }
 
 /**

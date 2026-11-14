@@ -214,7 +214,7 @@ describe("Force single colour and Shape (W-238)", () => {
     expect(trigger()).toContain("None");
     expect(trigger()).not.toContain("none");
     await cleanup();
-    await panel({ ...star, style: { iconAnimation: { type: "pulse", duration: 900 } } });
+    await panel({ ...star, style: { motion: { icon: { type: "pulse", duration: 900 } } } });
     expect(trigger()).toContain("Pulse");
   });
 

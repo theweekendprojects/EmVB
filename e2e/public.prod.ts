@@ -1,3 +1,4 @@
+import { editorAttributesIn } from "../packages/emvb/src/core/public-attributes.ts";
 import { expect, request as requestFactory, test, type APIRequestContext } from "@playwright/test";
 import { api, createPage, ensureEmvbSetup, getPage, publishPage } from "./support/api.ts";
 import { setClass, setColor, setSpacing } from "./support/design.ts";
@@ -94,7 +95,8 @@ test("a published page renders from the production build with its content and CS
   const html = await publishedHtml(request, "Public check", layoutWith(text), slug);
   expect(html).toContain(`<h1 class="emvb-heading">${text}</h1>`);
   expect(html).toMatch(/<style>[^<]*\.emvb-root\{[^<]*gap:24px/);
-  expect(html).not.toContain("data-emvb");
+  // Only the documented public hooks (docs/system/layout-format.md, "Rendered output").
+  expect(editorAttributesIn(html)).toEqual([]);
 
   // The site's own layout may bring scripts; EmVB adds none. Compare with a plain layout page.
   const baseline = await (await request.get("/this-page-does-not-exist-" + unique())).text();
@@ -248,7 +250,7 @@ test("a published page with an unknown node still renders its other elements wit
         { id: "head0001", type: "heading", props: { text, level: 1 } },
         {
           id: "car00001",
-          type: "carousel",
+          type: "future-widget",
           props: { slides: 2 },
           children: [{ id: "head0002", type: "heading", props: { text: "Hidden", level: 2 } }],
         },
@@ -257,7 +259,7 @@ test("a published page with an unknown node still renders its other elements wit
   };
   const html = await publishedHtml(request, "Unknown check", layout, slug);
   expect(html).toContain(`<h1 class="emvb-heading">${text}</h1>`);
-  expect(html).not.toContain("carousel");
+  expect(html).not.toContain("future-widget");
   expect(html).not.toContain("Unknown element");
   expect(html).not.toContain("Hidden");
 });
@@ -408,7 +410,8 @@ test("hover, focus and active states from local styles and a class work on the p
     expect(html).toContain(".emvb-e-btn00001:active{");
     expect(html).toContain(`.emvb-k-${classId}:hover{`);
     expect(html).toContain("@media (prefers-reduced-motion: reduce)");
-    expect(html).not.toContain("data-emvb");
+    // Only the documented public hooks (docs/system/layout-format.md, "Rendered output").
+    expect(editorAttributesIn(html)).toEqual([]);
 
     await page.goto(`/${slug}`);
     const live = page.locator(".emvb-e-btn00001");

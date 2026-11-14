@@ -1,5 +1,6 @@
 import {
   ALIGN_ITEMS,
+  ALIGN_SELF,
   BACKGROUND_POSITIONS,
   BACKGROUND_REPEATS,
   BACKGROUND_SIZES,
@@ -7,22 +8,26 @@ import {
   CURSORS,
   FLEX_DIRECTIONS as FLEX_DIRECTION_VALUES,
   FLEX_WRAPS as FLEX_WRAP_VALUES,
+  FONT_STYLES,
   FONT_WEIGHTS,
   HEX_COLOR,
   JUSTIFY_CONTENT,
   LENGTH_UNITS,
   OBJECT_FITS,
+  OVERFLOW_WRAPS,
   OVERFLOWS,
   POSITIONS,
   TEXT_ALIGNS,
   TEXT_DECORATIONS,
   TEXT_TRANSFORMS,
+  WHITE_SPACES,
   TRANSITION_EASINGS as TRANSITION_EASING_VALUES,
 } from "../css-keywords.ts";
 import { STYLE_STATES, type StyleStateName } from "../schema/state-names.ts";
-import type { StyleProps } from "../schema/style.ts";
+import type { FlatStyleProps } from "../schema/style.ts";
+import { fluidClamp } from "../design/tokens.ts";
 import { sanitizeMediaUrl } from "./media-url.ts";
-import { motionDeclarations, withMotion } from "./motion.ts";
+import { loopDeclarations, motionDeclarations, withLoop, withMotion } from "./motion.ts";
 import { isRecord } from "../record.ts";
 import { iconAnimationRuns } from "../icons/animation-runs.ts";
 
@@ -38,6 +43,10 @@ const TEXT_DECORATION = setOf(TEXT_DECORATIONS);
 const BORDER_STYLE = setOf(BORDER_STYLES);
 const OVERFLOW = setOf(OVERFLOWS);
 const OBJECT_FIT = setOf(OBJECT_FITS);
+const ALIGN_SELF_SET = setOf(ALIGN_SELF);
+const FONT_STYLE = setOf(FONT_STYLES);
+const WHITE_SPACE = setOf(WHITE_SPACES);
+const OVERFLOW_WRAP = setOf(OVERFLOW_WRAPS);
 const POSITION = setOf(POSITIONS);
 const CURSOR = setOf(CURSORS);
 const ASPECT_RATIO = /^([1-9]\d{0,3})\/([1-9]\d{0,3})$/;
@@ -132,6 +141,7 @@ function cssFontFamily(value: unknown): string | undefined {
 
 export function cssLength(value: unknown): string | undefined {
   if (typeof value !== "object" || value === null) return undefined;
+  if ("fluid" in value) return cssFluid((value as { fluid: unknown }).fluid);
   const ref = refOf(value);
   if (ref) {
     if (ref.from === "fontSize") {
@@ -150,6 +160,19 @@ export function cssLength(value: unknown): string | undefined {
   return `${n}${unit}`;
 }
 
+/**
+ * W-955: `{ min, max }` px as a `clamp()` that grows between 360 and 1280 px wide screens. Both
+ * are checked here as well as by the schema, so a stored page can't emit anything else.
+ */
+function cssFluid(fluid: unknown): string | undefined {
+  if (!isRecord(fluid)) return undefined;
+  const { min, max } = fluid;
+  return fluidPx(min) && fluidPx(max) ? fluidClamp(min, max) : undefined;
+}
+
+const fluidPx = (n: unknown): n is number =>
+  typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 10_000;
+
 /** A length, or `auto` where the property allows it (W-088). */
 const cssLengthOrAuto = (value: unknown): string | undefined =>
   value === "auto" ? "auto" : cssLength(value);
@@ -157,7 +180,8 @@ const cssLengthOrAuto = (value: unknown): string | undefined =>
 /** An offset: `auto`, a variable, or a length from -10000 to 10000 (W-088). */
 function cssOffset(value: unknown): string | undefined {
   if (value === "auto") return "auto";
-  if (typeof value !== "object" || value === null || "var" in value) return cssLength(value);
+  if (typeof value !== "object" || value === null || "var" in value || "fluid" in value)
+    return cssLength(value);
   const { value: n, unit } = value as { value?: unknown; unit?: unknown };
   if (typeof n !== "number" || !Number.isFinite(n) || n < -10_000 || n > 10_000) return undefined;
   if (typeof unit !== "string" || !UNITS.has(unit)) return undefined;
@@ -166,6 +190,17 @@ function cssOffset(value: unknown): string | undefined {
 
 const cssZIndex = (value: unknown): string | undefined =>
   Number.isInteger(value) && (value as number) >= -9999 && (value as number) <= 9999
+    ? String(value)
+    : undefined;
+
+/** W-954: a grow or shrink factor, 0–100. */
+const cssFlexFactor = (value: unknown): string | undefined =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100
+    ? String(value)
+    : undefined;
+
+const cssOrder = (value: unknown): string | undefined =>
+  Number.isInteger(value) && (value as number) >= -99 && (value as number) <= 99
     ? String(value)
     : undefined;
 
@@ -317,6 +352,7 @@ const TRANSITION_PROPERTIES: Readonly<Record<string, readonly string[]>> = {
   opacity: ["opacity"],
   shadow: ["box-shadow"],
   filter: ["filter"],
+  transform: ["translate", "scale", "rotate"],
 };
 const TRANSITION_KEYS = new Set(["duration", "delay", "easing", "property"]);
 
@@ -440,7 +476,11 @@ function cssAngle(value: unknown, fallback: number): number | undefined {
   return angle as number;
 }
 
-function cssGradient(value: unknown): string | undefined {
+function cssGradient(
+  value: unknown,
+  /** W-949: a gradient overlay fades every stop by its opacity. */
+  paint: (color: string) => string | undefined = (color) => color,
+): string | undefined {
   if (!isRecord(value)) return undefined;
   if (
     Object.keys(value).some(
@@ -455,7 +495,8 @@ function cssGradient(value: unknown): string | undefined {
   for (const stop of stops) {
     if (!isRecord(stop) || Object.keys(stop).some((key) => key !== "color" && key !== "at"))
       return undefined;
-    const color = cssColor(stop["color"]);
+    const base = cssColor(stop["color"]);
+    const color = base ? paint(base) : undefined;
     const at = stop["at"];
     if (!color || !Number.isInteger(at) || (at as number) < 0 || (at as number) > 100)
       return undefined;
@@ -502,6 +543,14 @@ function overlayPaint(color: string, opacity: number): string | undefined {
 
 function cssOverlay(value: unknown): string | undefined {
   if (!isRecord(value)) return undefined;
+  if ("gradient" in value) {
+    // W-949: a gradient overlay; `opacity` (default 1) fades each stop.
+    if (Object.keys(value).some((key) => key !== "gradient" && key !== "opacity")) return undefined;
+    const opacity = value["opacity"] === undefined ? 1 : value["opacity"];
+    if (typeof opacity !== "number" || !Number.isFinite(opacity) || opacity < 0 || opacity > 1)
+      return undefined;
+    return cssGradient(value["gradient"], (color) => overlayPaint(color, opacity));
+  }
   if (Object.keys(value).some((key) => key !== "color" && key !== "opacity")) return undefined;
   const color = cssColor(value["color"]);
   const opacity = value["opacity"];
@@ -590,7 +639,10 @@ function composeBackground(style: Record<string, unknown>): {
 }
 
 const PROPERTY_MAP: {
-  [K in keyof Required<StyleProps>]: { css: string; toValue: (v: unknown) => string | undefined };
+  [K in keyof Required<FlatStyleProps>]: {
+    css: string;
+    toValue: (v: unknown) => string | undefined;
+  };
 } = {
   flexDirection: { css: "flex-direction", toValue: cssFlexDirection },
   flexWrap: { css: "flex-wrap", toValue: keyword(FLEX_WRAPS) },
@@ -609,8 +661,11 @@ const PROPERTY_MAP: {
   minHeight: { css: "min-height", toValue: cssLength },
   maxHeight: { css: "max-height", toValue: cssLength },
   overflow: { css: "overflow", toValue: keyword(OVERFLOW) },
+  overflowX: { css: "overflow-x", toValue: keyword(OVERFLOW) },
+  overflowY: { css: "overflow-y", toValue: keyword(OVERFLOW) },
   aspectRatio: { css: "aspect-ratio", toValue: cssAspectRatio },
   objectFit: { css: "object-fit", toValue: keyword(OBJECT_FIT) },
+  objectPosition: { css: "object-position", toValue: keyword(BACKGROUND_POSITION) },
   paddingTop: { css: "padding-top", toValue: cssLength },
   paddingRight: { css: "padding-inline-end", toValue: cssLength },
   paddingBottom: { css: "padding-bottom", toValue: cssLength },
@@ -625,6 +680,11 @@ const PROPERTY_MAP: {
   bottom: { css: "bottom", toValue: cssOffset },
   left: { css: "inset-inline-start", toValue: cssOffset },
   zIndex: { css: "z-index", toValue: cssZIndex },
+  flexGrow: { css: "flex-grow", toValue: cssFlexFactor },
+  flexShrink: { css: "flex-shrink", toValue: cssFlexFactor },
+  flexBasis: { css: "flex-basis", toValue: cssLengthOrAuto },
+  alignSelf: { css: "align-self", toValue: keyword(ALIGN_SELF_SET) },
+  order: { css: "order", toValue: cssOrder },
   fontFamily: { css: "font-family", toValue: cssFontFamily },
   fontSize: { css: "font-size", toValue: cssLength },
   fontWeight: { css: "font-weight", toValue: cssFontWeight },
@@ -633,6 +693,12 @@ const PROPERTY_MAP: {
   textAlign: { css: "text-align", toValue: cssTextAlign },
   textTransform: { css: "text-transform", toValue: keyword(TEXT_TRANSFORM) },
   textDecoration: { css: "text-decoration", toValue: keyword(TEXT_DECORATION) },
+  // W-952: read by the list marker rules (sent only when a page uses them).
+  markerColor: { css: "--emvb-marker-color", toValue: cssColor },
+  markerSize: { css: "--emvb-marker-size", toValue: cssLength },
+  fontStyle: { css: "font-style", toValue: keyword(FONT_STYLE) },
+  whiteSpace: { css: "white-space", toValue: keyword(WHITE_SPACE) },
+  overflowWrap: { css: "overflow-wrap", toValue: keyword(OVERFLOW_WRAP) },
   color: { css: "color", toValue: cssColor },
   backgroundColor: { css: "background-color", toValue: cssColor },
   backgroundImage: { css: "background-image", toValue: cssBackgroundImage },
@@ -657,16 +723,23 @@ const PROPERTY_MAP: {
   opacity: { css: "opacity", toValue: cssOpacity },
   boxShadow: { css: "box-shadow", toValue: cssBoxShadow },
   filter: { css: "filter", toValue: cssFilter },
+  backdropFilter: { css: "backdrop-filter", toValue: cssFilter },
+  // Written by `transformDeclarations` (three properties); never a declaration of its own.
+  transform: { css: "translate", toValue: () => undefined },
   cursor: { css: "cursor", toValue: keyword(CURSOR) },
   transition: { css: "transition", toValue: cssTransition },
   entrance: { css: "animation", toValue: cssEntrance },
   // W-319: written by `motionDeclarations` in `styleDeclarations`; this entry only names it.
   scrollMotion: { css: "animation", toValue: () => undefined },
+  // W-938: written by `loopDeclarations` in `styleDeclarations`; this entry only names it.
+  loopMotion: { css: "animation", toValue: () => undefined },
   iconRotate: { css: "--emvb-icon-rotate", toValue: cssIconRotate },
   iconFlip: { css: "--emvb-icon-flip", toValue: cssIconFlip },
   iconScale: { css: "scale", toValue: cssIconScale },
   iconStrokeWidth: { css: "--emvb-icon-stroke", toValue: cssIconStroke },
   iconShadow: { css: "--emvb-icon-shadow", toValue: cssIconShadow },
+  // W-974: applied by `withViewportUnits` to the record's lengths; never a declaration of its own.
+  viewportUnits: { css: "--emvb-viewport-units", toValue: () => undefined },
   iconAnimation: { css: "--emvb-icon-animation", toValue: cssIconAnimation },
 };
 
@@ -686,6 +759,58 @@ const shorthandsFirst = (record: Record<string, unknown>): [string, unknown][] =
 };
 
 /** Converts style props into safe declarations; anything that fails validation is dropped and reported. */
+const TRANSFORM_KEYS = new Set(["x", "y", "scale", "rotate"]);
+const int = (v: unknown, min: number, max: number) =>
+  typeof v === "number" && Number.isInteger(v) && v >= min && v <= max;
+
+/** W-953: `{ x?, y?, scale?, rotate? }` → `translate`, `scale`, `rotate` (only those set). */
+function transformDeclarations(value: unknown): Declaration[] | undefined {
+  if (!isRecord(value) || Object.keys(value).some((key) => !TRANSFORM_KEYS.has(key)))
+    return undefined;
+  const { x, y, scale, rotate } = value;
+  if ([x, y, scale, rotate].every((v) => v === undefined)) return undefined;
+  const out: Declaration[] = [];
+  if (x !== undefined || y !== undefined) {
+    if ((x !== undefined && !int(x, -2000, 2000)) || (y !== undefined && !int(y, -2000, 2000)))
+      return undefined;
+    out.push({
+      property: "translate",
+      value: `${(x as number | undefined) ?? 0}px ${(y as number | undefined) ?? 0}px`,
+    });
+  }
+  if (scale !== undefined) {
+    if (!int(scale, 10, 400)) return undefined;
+    out.push({ property: "scale", value: String((scale as number) / 100) });
+  }
+  if (rotate !== undefined) {
+    if (!int(rotate, -360, 360)) return undefined;
+    out.push({ property: "rotate", value: `${rotate as number}deg` });
+  }
+  return out;
+}
+
+const VH_LENGTH = /^(-?\d+(?:\.\d+)?)vh$/;
+
+/**
+ * W-974: a `vh` length the record marks as `dvh` or `svh` is written in that unit. Only a plain
+ * number with `vh` changes; a variable, `clamp()` or `auto` is left alone.
+ */
+function withViewportUnits(declarations: Declaration[], units: unknown): void {
+  if (!isRecord(units)) return;
+  for (const [key, unit] of Object.entries(units)) {
+    if (unit !== "dvh" && unit !== "svh") continue;
+    const entry = Object.hasOwn(PROPERTY_MAP, key)
+      ? PROPERTY_MAP[key as keyof FlatStyleProps]
+      : undefined;
+    if (!entry) continue;
+    for (const declaration of declarations) {
+      if (declaration.property !== entry.css) continue;
+      const match = VH_LENGTH.exec(declaration.value);
+      if (match) declaration.value = `${match[1]}${unit}`;
+    }
+  }
+}
+
 export function styleDeclarations(style: unknown): {
   declarations: Declaration[];
   rejected: string[];
@@ -695,6 +820,7 @@ export function styleDeclarations(style: unknown): {
   if (typeof style !== "object" || style === null) return { declarations, rejected };
   const record = style as Record<string, unknown>;
   let motion: Declaration[] = [];
+  let loop: Declaration[] = [];
   for (const [key, raw] of shorthandsFirst(record)) {
     if (BACKGROUND_KEYS.has(key)) continue;
     if (
@@ -705,6 +831,19 @@ export function styleDeclarations(style: unknown): {
     ) {
       continue;
     }
+    if (key === "viewportUnits") continue;
+    if (key === "loopMotion") {
+      const found = loopDeclarations(raw);
+      if (found && found.every((d) => isSafeCssValue(d.value))) loop = found;
+      else rejected.push(key);
+      continue;
+    }
+    if (key === "transform") {
+      const found = transformDeclarations(raw);
+      if (found) declarations.push(...found);
+      else rejected.push(key);
+      continue;
+    }
     if (key === "scrollMotion") {
       const found = motionDeclarations(raw);
       if (found && found.every((d) => isSafeCssValue(d.value))) motion = found;
@@ -712,7 +851,7 @@ export function styleDeclarations(style: unknown): {
       continue;
     }
     const entry = Object.hasOwn(PROPERTY_MAP, key)
-      ? PROPERTY_MAP[key as keyof StyleProps]
+      ? PROPERTY_MAP[key as keyof FlatStyleProps]
       : undefined;
     const value = entry?.toValue(raw);
     const safe =
@@ -733,6 +872,7 @@ export function styleDeclarations(style: unknown): {
       rejected.push(key);
     }
   }
+  withViewportUnits(declarations, record["viewportUnits"]);
   const background = composeBackground(record);
   declarations.push(...background.declarations);
   rejected.push(...background.rejected);
@@ -748,11 +888,11 @@ export function styleDeclarations(style: unknown): {
   if (column.badSpan) rejected.push("gridColumnSpan");
   if (row.badStart) rejected.push("gridRowStart");
   if (row.badSpan) rejected.push("gridRowSpan");
-  return { declarations: withMotion(declarations, motion), rejected };
+  return { declarations: withLoop(withMotion(declarations, motion), loop), rejected };
 }
 
 /** Normal only (W-089, W-237): a state's `transition` and `iconAnimation` are dropped and reported. */
-const NORMAL_ONLY = ["transition", "iconAnimation", "scrollMotion"] as const;
+const NORMAL_ONLY = ["transition", "iconAnimation", "scrollMotion", "loopMotion"] as const;
 const withoutTransition = (style: unknown): unknown => {
   if (typeof style !== "object" || style === null) return style;
   if (!NORMAL_ONLY.some((key) => key in style)) return style;
@@ -760,6 +900,7 @@ const withoutTransition = (style: unknown): unknown => {
     transition: _drop,
     iconAnimation: _loop,
     scrollMotion: _scroll,
+    loopMotion: _loopMotion,
     ...rest
   } = style as Record<string, unknown>;
   return rest;
@@ -810,7 +951,7 @@ const BACKGROUND_LAYER_KEYS = [
  * gradient) are filled in from `inherited` here. Otherwise they vanish on that device.
  */
 /** Both write `animation` (W-319), so one set alone would drop the other it inherits. */
-const ANIMATION_KEYS = ["entrance", "scrollMotion"] as const;
+const ANIMATION_KEYS = ["entrance", "scrollMotion", "loopMotion"] as const;
 
 /**
  * A style that sets an entrance or scroll motion keeps the other one it inherits from a wider

@@ -54,7 +54,7 @@ test("the Desktop canvas uses desktop styles even in a window narrower than a de
   const heading = layout.root.children[0] as { style?: object; devices?: object } | undefined;
   if (heading) {
     heading.style = { color: "#333333" };
-    heading.devices = { tablet: { color: "#111111" } };
+    heading.devices = { laptop: { color: "#555555" }, tablet: { color: "#111111" } };
   }
   const id = await createPage(request, text, layout, `wide-${unique()}`);
   await openEditor(page, id, text);
@@ -69,6 +69,11 @@ test("the Desktop canvas uses desktop styles even in a window narrower than a de
   );
   const color = () => title.evaluate((el) => getComputedStyle(el).color);
   await expect.poll(color).toBe("rgb(51, 51, 51)");
+
+  // W-956: Laptop shows its own styles; Tablet's win over them.
+  await page.getByRole("tab", { name: "Laptop" }).click();
+  await expect(page.locator("[data-emvb-device]")).toHaveAttribute("data-emvb-device", "laptop");
+  await expect.poll(color).toBe("rgb(85, 85, 85)");
 
   await page.getByRole("tab", { name: "Tablet" }).click();
   await expect(page.locator("[data-emvb-device]")).toHaveAttribute("data-emvb-device", "tablet");
@@ -86,7 +91,7 @@ test("the device switcher hugs its options, each with an icon and its name (W-12
   const id = await createPage(request, text, layoutFor(text), `switcher-${unique()}`);
   await openEditor(page, id, text);
   const list = page.getByRole("tablist", { name: "Device" });
-  for (const name of ["Desktop", "Tablet", "Mobile"]) {
+  for (const name of ["Desktop", "Laptop", "Tablet", "Mobile"]) {
     const tab = list.getByRole("tab", { name, exact: true });
     await expect(tab).toBeVisible();
     await expect(tab.locator('svg[aria-hidden="true"]')).toHaveCount(1);
@@ -159,4 +164,89 @@ test("the active device tab follows a light/dark switch at once (W-905)", async 
   await page.locator(".emvb-device-bar").screenshot({
     path: `${homedir()}/agent-tools/emvb-ui/device-tabs-${test.info().project.name}-dark.png`,
   });
+});
+
+test("W-956: a published page uses its laptop styles and Hide on Laptop only on laptops", async ({
+  page,
+  request,
+}) => {
+  const text = `Laptop ${unique()}`;
+  const slug = `laptop-${unique()}`;
+  const layout = {
+    ...layoutFor(text),
+    schemaVersion: 18,
+  } as ReturnType<typeof layoutFor> & { schemaVersion: number };
+  const heading = layout.root.children[0] as Record<string, unknown> | undefined;
+  if (heading) {
+    heading["style"] = { color: "#333333" };
+    heading["devices"] = { laptop: { color: "#555555" } };
+  }
+  layout.root.children.push({
+    id: "head0002",
+    type: "heading",
+    props: { text: `${text} desk`, level: 2 },
+    hiddenOn: ["laptop"],
+  } as never);
+  const id = await createPage(request, text, layout, slug);
+  await publishPage(request, id);
+  const colorAt = async (width: number) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/${slug}`);
+    return page
+      .getByRole("heading", { name: text, exact: true, level: 1 })
+      .evaluate((el) => getComputedStyle(el).color);
+  };
+  expect(await colorAt(1440)).toBe("rgb(51, 51, 51)");
+  await expect(page.getByRole("heading", { name: `${text} desk` })).toBeVisible();
+  expect(await colorAt(1200)).toBe("rgb(85, 85, 85)");
+  await expect(page.getByRole("heading", { name: `${text} desk` })).toBeHidden();
+  expect(await colorAt(800)).toBe("rgb(85, 85, 85)");
+  await expect(page.getByRole("heading", { name: `${text} desk` })).toBeVisible();
+});
+
+test("W-959: Hide on Desktop also hides on wide screens; Wide screen has its own styles and hide", async ({
+  page,
+  request,
+}) => {
+  const text = `Wide ${unique()}`;
+  const slug = `wide-${unique()}`;
+  const id = await createPage(request, text, layoutFor(text), slug);
+  await openEditor(page, id, text);
+  await canvas(page).getByRole("heading", { name: text }).click();
+  // Hide on Desktop: Wide screen follows it.
+  await page.getByRole("tab", { name: "Desktop" }).click();
+  await page.getByRole("checkbox", { name: "Hide on desktop" }).check();
+  await page.getByRole("tab", { name: "Wide screen" }).click();
+  await expect(page.locator("[data-emvb-device]")).toHaveAttribute("data-emvb-device", "wide");
+  await expect(page.getByRole("checkbox", { name: /Hide on wide screen/ })).toBeChecked();
+  await expect(page.locator("[data-emvb-hide-inherited]")).toBeVisible();
+  await saveDraft(page);
+  await publishPage(request, id);
+  const shown = async (width: number) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/${slug}`);
+    return page.getByRole("heading", { name: text, exact: true }).isVisible();
+  };
+  expect(await shown(1440)).toBe(false);
+  expect(await shown(2560)).toBe(false);
+  expect(await shown(1200)).toBe(true);
+
+  // Show it again on Wide screen only: its own choice.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openEditor(page, id);
+  // Hidden on Desktop and Wide screen: select it where it shows, then switch.
+  await page.getByRole("tab", { name: "Laptop" }).click();
+  await canvas(page).getByRole("heading", { name: text }).click();
+  await page.getByRole("tab", { name: "Wide screen" }).click();
+  await page.getByRole("checkbox", { name: /Hide on wide screen/ }).uncheck();
+  await expect(page.locator("[data-emvb-hide-inherited]")).toHaveCount(0);
+  await saveDraft(page);
+  const stored = await storedLayout<{
+    root: { children?: { hiddenOn?: string[]; style?: { wide?: { hidden?: boolean } } }[] };
+  }>(request, id);
+  expect(stored.root.children?.[0]?.hiddenOn).toEqual(["desktop"]);
+  expect(stored.root.children?.[0]?.style?.wide).toEqual({ hidden: false });
+  await publishPage(request, id);
+  expect(await shown(2560)).toBe(true);
+  expect(await shown(1440)).toBe(false);
 });

@@ -5,7 +5,7 @@ import type { StyleProps } from "../schema/style.ts";
 import { nodeChildren, newNodeId } from "../tree-ops.ts";
 
 type Color = NonNullable<StyleProps["color"]>;
-type Size = NonNullable<StyleProps["fontSize"]>;
+type Size = NonNullable<StyleProps["borderRadius"]>;
 
 /** What a recipe takes from Site styles (W-320); unset parts fall back to plain values. */
 export type RecipeTokens = {
@@ -430,5 +430,5 @@ export function recipeNode(
   if (!recipe) return undefined;
   const topLevel = layout && hasH1(layout.root) ? 2 : 1;
   const node = withIds(recipe.build(siteTokens(design), { topLevel }), random);
-  return { ...node, label: recipe.name } as LayoutNode;
+  return { ...node, editorLabel: recipe.name } as LayoutNode;
 }

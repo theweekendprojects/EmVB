@@ -1,14 +1,16 @@
+import { boundedArray } from "../bounded-array.ts";
 import { z } from "zod";
 import { HEX_COLOR } from "../css-keywords.ts";
-import { DeviceStyles, HiddenOn, StyleProps, StyleStates } from "./style.ts";
+import { DeviceStyles, HiddenOn, OwnStyle, StyleProps, StyleStates } from "./style.ts";
 
 /**
+ * 17 since W-925 (contract 1.0): the motion style keys sit under one `motion` record.
  * 15 since W-341, in step with layouts (optional fields only; the design document itself is unchanged).
  * 14 since W-329, in step with layouts (optional fields only: `ch` lengths, negative margins).
  * 13 since W-307, in step with layouts (the W-307 batch only adds optional fields).
  * 12 since W-160: class gradients use the same stops as layouts. v11 `{ angle, from, to }` upgrades on read.
  */
-export const DESIGN_SCHEMA_VERSION = 16;
+export const DESIGN_SCHEMA_VERSION = 17;
 
 /** Tags a site can give a starting style. Classes and local styles still win. */
 export const DEFAULT_STYLE_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6", "p", "a", "button"] as const;
@@ -64,7 +66,7 @@ export type FluidRange = z.infer<typeof FluidRange>;
 const StyleClass = z.strictObject({
   id: VariableId,
   name: z.string().min(1).max(60),
-  style: StyleProps,
+  style: OwnStyle,
   states: StyleStates.optional(),
   devices: DeviceStyles.optional(),
   hiddenOn: HiddenOn.optional(),
@@ -74,12 +76,12 @@ const StyleClass = z.strictObject({
 export const DesignSystem = z.strictObject({
   schemaVersion: z.literal(DESIGN_SCHEMA_VERSION),
   variables: z.strictObject({
-    colors: z.array(ColorVariable).max(200),
-    fonts: z.array(FontVariable).max(50).optional(),
-    fontSizes: z.array(LengthVariable).max(50).optional(),
-    spacings: z.array(LengthVariable).max(100).optional(),
+    colors: boundedArray(ColorVariable, 200),
+    fonts: boundedArray(FontVariable, 50).optional(),
+    fontSizes: boundedArray(LengthVariable, 50).optional(),
+    spacings: boundedArray(LengthVariable, 100).optional(),
   }),
-  classes: z.array(StyleClass).max(100).optional(),
+  classes: boundedArray(StyleClass, 100).optional(),
   fluidRange: FluidRange.optional(),
   /**
    * Site text direction (W-230). Unset is left to right. Rendered as `dir` on every EmVB root

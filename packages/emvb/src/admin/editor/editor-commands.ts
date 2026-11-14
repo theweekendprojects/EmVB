@@ -1,4 +1,4 @@
-import type { PasteMode, PopupDevice, WrapType } from "../../core/index.ts";
+import type { PasteMode, EditorDevice, WrapType } from "../../core/index.ts";
 
 /** Where an editor command is offered. Shortcuts call `runCommand` for the same ids. */
 export type CommandSurface = "palette" | "layers" | "overlay" | "device";
@@ -39,7 +39,7 @@ export type CommandRunners = {
   openTimeline?: () => void;
   openShare?: () => void;
   openWeight?: () => void;
-  setDevice?: (device: PopupDevice) => void;
+  setDevice?: (device: EditorDevice) => void;
   openShortcuts?: () => void;
   rename?: () => void;
   /** Opens Save as section for an element (W-876). */
@@ -53,7 +53,7 @@ export type CommandInput = {
   targetId: string | null;
   isRoot: boolean;
   isParent: boolean;
-  device: PopupDevice;
+  device: EditorDevice;
   /** Duplicate and wrap. False on the root and when nothing is selected. */
   canDuplicate: boolean;
   /** Delete and the sibling moves. False on the root. */
@@ -184,7 +184,9 @@ const SPECS: readonly Spec[] = [
     keywords: "performance budget size speed",
     surfaces: ["palette"],
   },
+  { id: "device-wide", labels: { palette: "View on wide screen" }, surfaces: ["palette"] },
   { id: "device-desktop", labels: { palette: "View on desktop" }, surfaces: ["palette"] },
+  { id: "device-laptop", labels: { palette: "View on laptop" }, surfaces: ["palette"] },
   { id: "device-tablet", labels: { palette: "View on tablet" }, surfaces: ["palette"] },
   { id: "device-mobile", labels: { palette: "View on mobile" }, surfaces: ["palette"] },
   {
@@ -231,7 +233,9 @@ const ORDER: Record<CommandSurface, readonly string[]> = {
     "timeline",
     "share",
     "weight",
+    "device-wide",
     "device-desktop",
+    "device-laptop",
     "device-tablet",
     "device-mobile",
     "shortcuts",
@@ -265,7 +269,8 @@ function blocked(id: string, input: CommandInput): boolean {
 }
 
 function labelFor(spec: Spec, input: CommandInput): string {
-  if (spec.id === "hide-on-device") return `Hide on ${input.device}`;
+  if (spec.id === "hide-on-device")
+    return `Hide on ${input.device === "wide" ? "wide screen" : input.device}`;
   return spec.labels[input.surface] ?? spec.id;
 }
 
@@ -367,8 +372,14 @@ export function runCommand(runners: CommandRunners, id: string, targetId: string
     case "weight":
       runners.openWeight?.();
       return;
+    case "device-wide":
+      runners.setDevice?.("wide");
+      return;
     case "device-desktop":
       runners.setDevice?.("desktop");
+      return;
+    case "device-laptop":
+      runners.setDevice?.("laptop");
       return;
     case "device-tablet":
       runners.setDevice?.("tablet");

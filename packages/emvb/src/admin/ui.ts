@@ -82,6 +82,11 @@ export const UI_CSS = `
 .emvb-list-loading .skeleton-line { background: var(--color-kumo-tint); }
 .emvb-list-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .emvb-list-search { max-width: 320px; margin: 12px 0; }
+.emvb-bulk-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.emvb-bulk-count { font-weight: 600; margin-inline-end: 4px; }
+.emvb-bulk-bar [data-emvb-bulk-status] { flex-basis: 100%; margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.emvb-surface-card[data-emvb-list] .emvb-row-select { width: 48px; padding-inline-end: 0; }
+.emvb-row-found { margin-top: 2px; font-size: 12px; color: var(--text-color-kumo-subtle, inherit); overflow-wrap: anywhere; }
 .emvb-page-title { margin: 0; font-size: 24px; line-height: 1.25; font-weight: 600; color: var(--text-color-kumo-default); }
 .emvb-row-title { color: var(--text-color-kumo-default); font-size: 14px; line-height: 20px; font-weight: 600; text-decoration: none; }
 .emvb-row-title:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -91,8 +96,9 @@ export const UI_CSS = `
 .emvb-row-title, .emvb-row-slug { overflow-wrap: anywhere; }
 /* UX-018: on narrow admin widths the short columns keep one line and the title keeps a readable
    width; the card scrolls sideways before anything breaks mid-word or mid-date. */
-.emvb-surface-card[data-emvb-list] :is(th, td):not(:first-child) { white-space: nowrap; }
-.emvb-surface-card[data-emvb-list] td:first-child { min-width: 180px; }
+/* W-978: the title column wraps and keeps a minimum width; it follows the tick-box column. */
+.emvb-surface-card[data-emvb-list] :is(th, td):not(:first-child):not(:has(> .emvb-row-title)) { white-space: nowrap; }
+.emvb-surface-card[data-emvb-list] td:has(> .emvb-row-title) { min-width: 180px; }
 .emvb-tabular { font-variant-numeric: tabular-nums; color: var(--text-color-kumo-subtle); font-size: 13px; }
 
 /* Elevated EmVB-owned card chrome (lists, empty/setup shells) — not host sidebar/header */
@@ -123,6 +129,12 @@ export const UI_CSS = `
 .emvb-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .emvb-agents-section h3 { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; line-height: 20px; font-weight: 600; color: var(--text-color-kumo-default); }
 .emvb-agents-section p { margin: 0; font-size: 14px; line-height: 20px; color: var(--text-color-kumo-subtle); }
+/* W-932: setup checklist */
+.emvb-agents-steps { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.emvb-agents-steps li { display: flex; align-items: flex-start; gap: 10px; }
+.emvb-agents-step-icon { display: inline-flex; flex: none; margin-block-start: 1px; color: var(--text-color-kumo-subtle); }
+.emvb-agents-steps li[data-state="done"] .emvb-agents-step-icon { color: var(--text-color-kumo-success, var(--color-kumo-brand)); }
+.emvb-agents-steps li[data-state="todo"] .emvb-agents-step-icon { color: var(--text-color-kumo-warning, var(--text-color-kumo-default)); }
 .emvb-agents-section code { padding: 1px 5px; border-radius: 4px; background: var(--color-kumo-tint); font-family: var(--font-mono); font-size: 12px; }
 .emvb-agents-option { display: grid; gap: 4px; padding-top: 16px; border-top: 1px solid var(--color-kumo-line); }
 .emvb-agents-option > p { padding-inline-start: 44px; font-size: 13px; }
@@ -147,6 +159,8 @@ export const UI_CSS = `
 .emvb-surface-card[data-emvb-list] tbody tr:hover { background: var(--color-kumo-tint); }
 .emvb-surface-card[data-emvb-list] tbody tr:hover .emvb-row-title { text-decoration: underline; text-underline-offset: 2px; }
 .emvb-surface-card[data-emvb-list] .emvb-row-title::after { content: ""; position: absolute; inset: 0; }
+/* W-978: the row's tick box sits above the stretched title link, so it can be clicked. */
+.emvb-surface-card[data-emvb-list] .emvb-row-select > * { position: relative; z-index: 1; }
 .emvb-surface-card .emvb-empty-shell,
 .emvb-empty-shell {
   display: flex;
@@ -224,12 +238,44 @@ export const UI_CSS = `
 }
 
 /* EmVB-owned dialog body (Kumo Dialog keeps host radius/shadow) */
-.emvb-dialog { display: flex; flex-direction: column; gap: 10px; }
-.emvb-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+/* A long dialog (Import from Elementor with its report and options) scrolls inside the screen,
+   with its actions kept in view at the bottom. */
+.emvb-dialog { display: flex; flex-direction: column; gap: 10px; max-height: calc(100dvh - 96px); overflow-y: auto; overscroll-behavior: contain; margin: -4px; padding: 4px; }
+.emvb-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; position: sticky; bottom: 0; padding-top: 8px; background: var(--color-kumo-base); }
 /* UX-023: selects in EmVB dialogs line up with the full-width fields under them. */
 .emvb-dialog .emvb-field { width: 100%; }
 .emvb-create-fields { display: flex; flex-direction: column; gap: 10px; min-width: 0; margin: 0; padding: 0; border: 0; }
 .emvb-create-status { min-height: 18px; }
+/* W-945: Import from Elementor. The JSON box keeps its rows; the report scrolls on its own. */
+.emvb-export-fields { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.emvb-import-source { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.emvb-import-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.emvb-import-label { font-size: 14px; font-weight: 500; color: var(--text-color-kumo-default); }
+.emvb-marks { display: grid; gap: 6px; min-width: 0; }
+.emvb-marks-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.emvb-marks-color { display: inline-flex; align-items: center; gap: 6px; }
+.emvb-marks-color input { inline-size: 32px; block-size: 32px; padding: 0; border: 1px solid var(--color-kumo-line); border-radius: 6px; background: transparent; }
+.emvb-marks-link { display: grid; gap: 6px; }
+.emvb-marks-list { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.emvb-marks-list li { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+.emvb-import-links { display: grid; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.emvb-import-links > legend { padding: 0; margin-bottom: 4px; }
+.emvb-dialog .emvb-field.emvb-import-json {
+  height: auto; min-height: 84px; padding: 8px; resize: vertical;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.4;
+}
+.emvb-import-report {
+  max-height: 220px; overflow: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px 10px; border-radius: 6px; box-shadow: var(--emvb-elevation-s);
+  font-size: 13px; line-height: 1.35; color: var(--text-color-kumo-default);
+}
+.emvb-import-report:focus-visible { outline: 2px solid var(--color-kumo-brand, currentColor); outline-offset: 2px; }
+.emvb-import-report summary { cursor: pointer; font-weight: 600; }
+.emvb-import-report ul { margin: 4px 0 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 2px; }
+.emvb-import-report li { overflow-wrap: anywhere; }
+.emvb-import-summary { font-weight: 600; }
+.emvb-list-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 /* UX-090: 16 px so the title stands above the 14 px field labels under it. */
 .emvb-dialog :is(h2, [data-slot="title"]) {
   margin: 0;

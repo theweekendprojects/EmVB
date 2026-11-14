@@ -13,6 +13,7 @@ import { IconPicker } from "./IconPicker.tsx";
 import { ImageSourcesField } from "./ImageSourcesField.tsx";
 import { MediaPicker } from "./MediaPicker.tsx";
 import { propsOf, withProp } from "./node-props.ts";
+import { TextMarksControl } from "./TextMarksControl.tsx";
 
 /** Content-tab control driven by a FieldDescriptor (W-021 / W-024). */
 export function FieldControl({
@@ -52,18 +53,18 @@ export function FieldControl({
     );
   }
 
-  if (field.key === "itemPartId" && fetcher) {
+  if (field.key === "partId" && node.type === "loop" && fetcher) {
     return (
       <LoopItemBindControl
         key={field.key}
         value={typeof raw === "string" ? raw : ""}
         fetcher={fetcher}
-        onChange={(itemPartId) => onChange(withProp(node, "itemPartId", itemPartId || undefined))}
+        onChange={(partId) => onChange(withProp(node, "partId", partId || undefined))}
       />
     );
   }
 
-  if (field.key === "partId" && node.type === "section" && fetcher) {
+  if (field.key === "partId" && node.type === "part-ref" && fetcher) {
     return (
       <LoopItemBindControl
         key={field.key}
@@ -102,7 +103,19 @@ export function FieldControl({
   }
 
   if (field.kind === "icon") {
-    return <IconPicker key={field.key} node={node} fetcher={fetcher} onChange={onChange} />;
+    return (
+      <IconPicker
+        key={field.key}
+        node={node}
+        fetcher={fetcher}
+        onChange={onChange}
+        optional={field.optional === true}
+      />
+    );
+  }
+
+  if (field.kind === "marks") {
+    return <TextMarksControl key={field.key} node={node} onChange={onChange} />;
   }
 
   if (field.kind === "image-sources") {
@@ -289,6 +302,7 @@ export const IMPLEMENTED_FIELD_KINDS = [
   "textarea",
   "number",
   "int",
+  "decimal",
   "select",
   "boolean",
   "href",
@@ -296,4 +310,5 @@ export const IMPLEMENTED_FIELD_KINDS = [
   "icon",
   "list-items",
   "image-sources",
+  "marks",
 ] as const;

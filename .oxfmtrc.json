@@ -8,6 +8,7 @@
     "**/dist/**",
     "**/.astro/**",
     "**/generated/**",
-    "packages/emvb-icons/**"
+    "packages/emvb-icons/**",
+    "**/*.generated.ts"
   ]
 }

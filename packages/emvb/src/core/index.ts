@@ -1,6 +1,8 @@
 export * from "./limits.ts";
 export {
   LAYOUT_SCHEMA_VERSION,
+  CONTRACT_VERSION,
+  cssTypeName,
   Layout,
   type LayoutNode,
   type UnknownNode,
@@ -11,6 +13,8 @@ export {
   SvgNode,
   TabPanelNode,
   HeadingNode,
+  MAX_TEXT_MARKS,
+  type TextMark,
   SpacerNode,
   DividerNode,
   TextNode,
@@ -90,10 +94,16 @@ export {
   plainTextOf,
   withPlainText,
 } from "./elements/plain-text.ts";
+export { layoutSearchText } from "./search-text.ts";
 export {
   StyleProps,
+  FlatStyleProps,
+  Motion,
+  type StylePatch,
   StyleStates,
   DeviceStyles,
+  OwnStyle,
+  WideStyle,
   HiddenOn,
   ColorValue,
   Length,
@@ -101,6 +111,15 @@ export {
   VariableRef,
 } from "./schema/style.ts";
 export { STYLE_STATES, type StyleStateName } from "./schema/state-names.ts";
+export {
+  flattenMotion,
+  nestMotion,
+  patchNestedStyle,
+  upgradeLegacyNode,
+  FLAT_MOTION_KEYS,
+  isFlatMotionKey,
+} from "./migrate/v18.ts";
+export { renderableDesign, renderableLayout, renderableNode, renderableStyle } from "./contract.ts";
 export {
   upgradeLayout,
   isNewerThanSupported,
@@ -202,13 +221,20 @@ export {
   type ImportLosses,
 } from "./design/transfer.ts";
 export {
+  hiddenOnDevice,
+  hiddenOnEveryDevice,
   patchClassDevices,
+  patchClassWide,
   patchDeviceStyle,
+  patchWideStyle,
   toggleHidden,
+  toggleHiddenOn,
+  wideHideIsOwn,
   type ResponsiveDevice,
 } from "./design/devices.ts";
 export {
   renderPage,
+  sharedPartCss,
   type RenderMode,
   type RenderResult,
   type RenderWarning,
@@ -362,6 +388,14 @@ export {
   clampScrollPercent,
   deviceForWidth,
   POPUP_DEVICES,
+  DEVICES,
+  type Device,
+  EDITOR_DEVICES,
+  type EditorDevice,
+  WIDE_MIN_PX,
+  WIDE_PREVIEW_PX,
+  STYLE_DEVICES,
+  type StyleDevice,
   DEVICE_MEDIA,
   DEVICE_PREVIEW_PX,
   matchesPopupDevices,
@@ -535,6 +569,7 @@ export {
   insertSavedSection,
   MAX_SAVED_SECTIONS,
   mergeSectionClasses,
+  remapClassIds,
   prepareSavedSection,
   readSavedSection,
   SAVED_SECTION_NAME_MAX,
@@ -550,3 +585,64 @@ export {
   syncedPartLayout,
 } from "./saved-sections.ts";
 export { portableTextToLayout } from "./portable-text.ts";
+export {
+  type ElementorImport,
+  type ImportNote,
+  type ImportOptions,
+  importElementor,
+  MAX_IMPORT_CHARS,
+} from "./import/elementor/index.ts";
+
+export {
+  EXTENSION_API_VERSION,
+  EXTENSION_PLACEHOLDER_TEXT,
+  EXTENSION_PLACEHOLDER_CSS,
+  defineExtension,
+  rememberExtensions,
+  listedExtensionManifests,
+  liveExtension,
+  liveElement,
+  clearExtensions,
+  manifestsFromOptions,
+  isExtensionType,
+  parseExtensionType,
+  extensionType,
+  extensionNamespaceIssue,
+  extensionIdIssue,
+  extensionNameIssue,
+  validateExtensionProps,
+  schemaDefaults,
+  safeExtensionOutput,
+  renderExtensionNode,
+  syncSourceValues,
+  extensionPlaceholderLabel,
+  extensionPlaceholderVNode,
+  normalizeExtension,
+  type EmVBExtension,
+  type ExtensionManifest,
+  type ExtensionElement,
+  type ExtensionPanel,
+  type ExtensionSource,
+  type ExtensionPropSchema,
+  type ExtensionField,
+  type ExtensionElementManifest,
+  type ExtensionPanelManifest,
+  type ExtensionSourceManifest,
+  type ExtensionRenderContext,
+} from "./extensions/index.ts";
+export {
+  ProposalTarget,
+  readProposal,
+  applyProposal,
+  type Proposal,
+  type ProposalBase,
+  type ProposalRecord,
+  type ProposalRefusal,
+} from "./proposals.ts";
+export {
+  hasFormat,
+  type MarkFormat,
+  setFormat,
+  unsetFormat,
+  withShiftedMarks,
+} from "./text-marks.ts";

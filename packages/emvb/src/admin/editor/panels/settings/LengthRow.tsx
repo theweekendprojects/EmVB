@@ -1,14 +1,19 @@
 import { DropdownMenu, InputGroup } from "@cloudflare/kumo";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import * as React from "react";
-import type { DesignSystem, StyleProps } from "../../../../core/index.ts";
+import type { DesignSystem, FlatStyleProps } from "../../../../core/index.ts";
 import { FIELD } from "../../../ui.ts";
 import {
+  fluidDraft,
+  isFluid,
   parseLengthDraft,
+  takesFluid,
   unitsFor,
+  type FluidLiteral,
   type LengthLiteral,
   type LengthUnit,
   type UnitChoice,
+  isViewportUnit,
 } from "./length-units.ts";
 import type { StyleKey } from "./style-sections.ts";
 import { bindKind, boundRef, lengthRef, VariableButton, VariableChip } from "./VariableBinding.tsx";
@@ -21,7 +26,9 @@ const isLiteral = (value: unknown): value is LengthLiteral =>
   typeof (value as { unit?: unknown }).unit === "string";
 
 const same = (a: unknown, b: unknown) =>
-  a === b || (isLiteral(a) && isLiteral(b) && a.value === b.value && a.unit === b.unit);
+  a === b ||
+  (isLiteral(a) && isLiteral(b) && a.value === b.value && a.unit === b.unit) ||
+  (isFluid(a) && isFluid(b) && a.fluid.min === b.fluid.min && a.fluid.max === b.fluid.max);
 
 type NumericUnit = LengthUnit | "x";
 
@@ -39,6 +46,7 @@ export function LengthRow({
   slider = false,
   onPatch,
   reset,
+  viewportUnits,
 }: {
   styleKey: StyleKey;
   label: string;
@@ -49,31 +57,65 @@ export function LengthRow({
   placeholder?: string;
   /** Gap: a slider for the common range. The number field still accepts the full length. */
   slider?: boolean;
-  onPatch: (patch: Partial<StyleProps>) => void;
+  onPatch: (patch: Partial<FlatStyleProps>) => void;
   reset: React.ReactNode;
+  /** W-974: the record's dvh/svh marks; a marked `vh` length shows as that unit. */
+  viewportUnits?: FlatStyleProps["viewportUnits"];
 }) {
   const units = unitsFor(styleKey);
   // W-213: a plain number is a unitless line height, shown with the `x` unit.
   // W-603: memoized, so a plain number doesn't make a new object each render; the effect below
   // would reset the draft on every keystroke and nothing typed over a unitless value would stick.
+  const marked = viewportUnits?.[styleKey as keyof NonNullable<typeof viewportUnits>];
   const literal = React.useMemo<{ value: number; unit: NumericUnit } | undefined>(
-    () => (isLiteral(value) ? value : typeof value === "number" ? { value, unit: "x" } : undefined),
-    [value],
+    () =>
+      isLiteral(value)
+        ? value.unit === "vh" && marked
+          ? { value: value.value, unit: marked }
+          : value
+        : typeof value === "number"
+          ? { value, unit: "x" }
+          : undefined,
+    [value, marked],
   );
-  const numericUnit = literal?.unit ?? firstNumeric(units);
-  const [draft, setDraft] = React.useState(literal ? String(literal.value) : "");
+  // W-955: a fluid size shows as "32–56" in px.
+  const fluid = isFluid(value) ? value : undefined;
+  const textOf = (): string => (fluid ? fluidDraft(fluid) : literal ? String(literal.value) : "");
+  const numericUnit = literal?.unit ?? (fluid ? "px" : firstNumeric(units));
+  const [draft, setDraft] = React.useState(textOf);
   const [unit, setUnit] = React.useState<UnitChoice>(value === "auto" ? "auto" : numericUnit);
   const lastNumeric = React.useRef<NumericUnit>(numericUnit);
   const [error, setError] = React.useState<string | null>(null);
   React.useEffect(() => {
-    setDraft(literal ? String(literal.value) : "");
-    setUnit(value === "auto" ? "auto" : (literal?.unit ?? lastNumeric.current));
+    setDraft(textOf());
+    setUnit(value === "auto" ? "auto" : (literal?.unit ?? (fluid ? "px" : lastNumeric.current)));
     if (literal) lastNumeric.current = literal.unit;
     setError(null);
   }, [value, literal]);
 
-  const send = (next: LengthLiteral | "auto" | number | undefined) => {
-    if (!same(next, value)) onPatch({ [styleKey]: next });
+  const send = (next: LengthLiteral | FluidLiteral | "auto" | number | undefined) => {
+    // W-974: dvh and svh are stored as vh plus the record's mark, so 1.0 still draws vh.
+    const nextUnit = isLiteral(next) ? next.unit : undefined;
+    const stored =
+      isLiteral(next) && isViewportUnit(nextUnit)
+        ? { value: next.value, unit: "vh" as const }
+        : next;
+    const marks = { ...viewportUnits } as Record<string, string>;
+    if (isViewportUnit(nextUnit)) marks[styleKey] = nextUnit;
+    else delete marks[styleKey];
+    const marksChanged = (marks[styleKey] ?? null) !== (marked ?? null);
+    if (same(stored, value) && !marksChanged) return;
+    onPatch({
+      [styleKey]: stored,
+      ...(marksChanged
+        ? {
+            viewportUnits:
+              Object.keys(marks).length > 0
+                ? (marks as FlatStyleProps["viewportUnits"])
+                : undefined,
+          }
+        : {}),
+    });
   };
 
   const commit = () => {
@@ -97,13 +139,15 @@ export function LengthRow({
     }
     lastNumeric.current = next;
     const parsed = parseLengthDraft(draft, styleKey, next);
-    if (parsed.ok && parsed.value !== undefined && parsed.value !== "auto") {
-      const n = typeof parsed.value === "number" ? parsed.value : parsed.value.value;
-      if (next === "x") {
-        if (n <= 100) send(n);
-        else setError("Line height without a unit can be from 0 to 100.");
-      } else send({ value: n, unit: next });
-    }
+    if (!parsed.ok) return;
+    const typed = parsed.value;
+    // A fluid range is always px; the unit menu leaves it as it is.
+    if (typed === undefined || typed === "auto" || isFluid(typed)) return;
+    const n = typeof typed === "number" ? typed : typed.value;
+    if (next === "x") {
+      if (n <= 100) send(n);
+      else setError("Line height without a unit can be from 0 to 100.");
+    } else send({ value: n, unit: next });
   };
 
   const kind = bindKind(styleKey);
@@ -140,7 +184,7 @@ export function LengthRow({
               placeholder={unit === "auto" ? "auto" : placeholder}
               title={`A number in ${unit === "auto" ? lastNumeric.current : unit}, or with its own unit (2rem, 50%)${
                 units.includes("auto") ? ", or auto" : ""
-              }`}
+              }${takesFluid(styleKey) ? ". A range such as 32–56 grows from phones to large screens (px)" : ""}`}
               aria-invalid={error ? true : undefined}
               onChange={(event) => {
                 if (unit === "auto") setUnit(lastNumeric.current);

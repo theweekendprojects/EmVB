@@ -7,6 +7,9 @@ import type { Fetcher } from "../api.ts";
 import { listThemeParts, partTypeLabel } from "../theme-api.ts";
 import { editorUrl } from "../editor/exit.ts";
 import { matchesSearch } from "../search.ts";
+import { BulkBar, SelectAll, SelectRow, useSelection } from "./bulk.tsx";
+import { partsInUse } from "../bulk-api.ts";
+import { FoundIn } from "./PageList.tsx";
 import {
   EditedTime,
   ListError,
@@ -17,6 +20,8 @@ import {
   StatusBadge,
   useList,
 } from "./list-kit.tsx";
+import { ImportButton } from "./ImportButton.tsx";
+import { ImportElementorDialog } from "./ImportElementorDialog.tsx";
 import { NewThemePartDialog } from "./NewThemePartDialog.tsx";
 
 type Filter = "all" | ThemePartType;
@@ -122,11 +127,17 @@ function FilterTabs({
 export function ThemePartList({ fetcher }: { fetcher: Fetcher }) {
   const list = useList(fetcher, listThemeParts);
   const [creating, setCreating] = React.useState(false);
+  const [importing, setImporting] = React.useState(false);
   const [filter, setFilter] = React.useState<Filter>("all");
   const [query, setQuery] = React.useState("");
   const searchRef = React.useRef<HTMLInputElement>(null);
 
-  const newPart = <NewButton label="New theme part" onClick={() => setCreating(true)} />;
+  const newPart = (
+    <div className="emvb-list-actions">
+      <ImportButton onClick={() => setImporting(true)} />
+      <NewButton label="New theme part" onClick={() => setCreating(true)} />
+    </div>
+  );
 
   const visible =
     list.state === "ready"
@@ -135,8 +146,11 @@ export function ThemePartList({ fetcher }: { fetcher: Fetcher }) {
         : list.items.filter((p) => p.partType === filter)
       : [];
   const shown = visible.filter((p) =>
-    matchesSearch(query, p.title, partTypeLabel(p.partType), p.conditionsSummary),
+    // W-978: and the words in the part.
+    matchesSearch(query, p.title, partTypeLabel(p.partType), p.conditionsSummary, p.text ?? ""),
   );
+  const selection = useSelection(list.state === "ready" ? list.items.map((p) => p.id) : []);
+  const titles = new Map(list.state === "ready" ? list.items.map((p) => [p.id, p.title]) : []);
 
   const emptyFilterLabel =
     filter === "all" ? "theme parts" : FILTERS.find((f) => f.value === filter)?.label.toLowerCase();
@@ -158,6 +172,17 @@ export function ThemePartList({ fetcher }: { fetcher: Fetcher }) {
           />
         </>
       )}
+      <BulkBar
+        fetcher={fetcher}
+        collection={THEME_PARTS_COLLECTION}
+        selection={selection}
+        titles={titles}
+        noun="theme part"
+        nouns="theme parts"
+        onChanged={list.retry}
+        deleteNote="Pages that use a deleted synced section or loop item show nothing in its place until you restore it."
+        usage={(ids) => partsInUse(fetcher, ids)}
+      />
       {list.state === "loading" && <ListLoading label="Loading theme parts…" />}
       {list.state === "error" && (
         <ListError title="Couldn't load theme parts" message={list.message} onRetry={list.retry} />
@@ -196,6 +221,13 @@ export function ThemePartList({ fetcher }: { fetcher: Fetcher }) {
               <Table data-emvb-list="theme-parts">
                 <Table.Header>
                   <Table.Row>
+                    <Table.Head className="emvb-row-select">
+                      <SelectAll
+                        shown={shown.map((p) => p.id)}
+                        selection={selection}
+                        noun="theme parts"
+                      />
+                    </Table.Head>
                     <Table.Head>Title</Table.Head>
                     <Table.Head>Type</Table.Head>
                     <Table.Head>Conditions</Table.Head>
@@ -206,6 +238,9 @@ export function ThemePartList({ fetcher }: { fetcher: Fetcher }) {
                 <Table.Body>
                   {shown.map((part) => (
                     <Table.Row key={part.id} data-emvb-row={part.id}>
+                      <Table.Cell className="emvb-row-select">
+                        <SelectRow id={part.id} title={part.title} selection={selection} />
+                      </Table.Cell>
                       <Table.Cell>
                         <a
                           className="emvb-row-title"
@@ -213,6 +248,15 @@ export function ThemePartList({ fetcher }: { fetcher: Fetcher }) {
                         >
                           {part.title}
                         </a>
+                        <FoundIn
+                          query={query}
+                          text={part.text}
+                          fields={[
+                            part.title,
+                            partTypeLabel(part.partType),
+                            part.conditionsSummary,
+                          ]}
+                        />
                       </Table.Cell>
                       <Table.Cell>{partTypeLabel(part.partType)}</Table.Cell>
                       <Table.Cell>
@@ -232,6 +276,12 @@ export function ThemePartList({ fetcher }: { fetcher: Fetcher }) {
           )}
         </div>
       )}
+      <ImportElementorDialog
+        fetcher={fetcher}
+        open={importing}
+        onOpenChange={setImporting}
+        target="part"
+      />
       <NewThemePartDialog
         fetcher={fetcher}
         open={creating}

@@ -20,7 +20,7 @@ const layout: Layout = {
         id: "head0001",
         type: "heading",
         props: { text: "Welcome home", level: 1 },
-        label: "Hero title",
+        editorLabel: "Hero title",
       },
       { id: "text0001", type: "text", props: { text: "Pricing details" } },
     ],

@@ -16,6 +16,7 @@ import { EmVBPopupsRuntime } from "@perkyzz/emvb/astro/popups";
 import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms/client";
 import { EmVBMenuRuntime } from "@perkyzz/emvb/astro/menu";
 import { EmVBTabsRuntime } from "@perkyzz/emvb/astro/tabs";
+import { EmVBWidgetRuntimes } from "@perkyzz/emvb/astro/widgets";
 import { resolveStarterSiteIdentity } from "../utils/site-identity";
 // Tailwind + daisyUI, compiled by @tailwindcss/vite and bundled by Astro; provider pages need
 // these classes. Imported (not a <link href>) so Astro processes and ships it.
@@ -43,6 +44,10 @@ interface Props {
 	theme?: ResolvedThemeParts;
 	/** The EmVB page's text direction (W-230); else the theme's. */
 	dir?: "ltr" | "rtl" | "auto";
+	/** The page's language (W-935): an EmVB fallback page keeps its own; else Astro's locale. */
+	lang?: string;
+	/** The page's published languages (W-937), for a Language switcher in the header or footer. */
+	translations?: { locale: string; href: string; current: boolean }[];
 }
 
 const { title, pageTitle, description, image, content, is404, isFront, isSearch, needsProviderStyles = false, needsDaisyRuntime = false } = Astro.props;
@@ -69,7 +74,12 @@ const themeCtx = is404
 		: isFront
 			? themeContextFront()
 			: themeContextFrom(Astro.url, { content: content ?? null });
-const theme = Astro.props.theme ?? (await resolveThemeParts(Astro, themeCtx, { pageCount: true }));
+const theme =
+	Astro.props.theme ??
+	(await resolveThemeParts(Astro, themeCtx, {
+		pageCount: true,
+		...(Astro.props.translations ? { translations: Astro.props.translations } : {}),
+	}));
 // A/B tests and visitor rules (W-312, W-313) mark the response private: never route-cache it.
 const personalized = /\bprivate\b/.test(Astro.response.headers.get("Cache-Control") ?? "");
 if (Astro.cache?.enabled && !personalized) {
@@ -97,7 +107,7 @@ const pageCtx = createPublicPageContext({
 ---
 
 <!doctype html>
-<html lang="en" dir={Astro.props.dir ?? theme.dir}>
+<html lang={Astro.props.lang ?? Astro.currentLocale ?? "en"} dir={Astro.props.dir ?? theme.dir}>
 	<head>
 		{needsProviderStyles && <DaisyStyles />}
 		<meta charset="UTF-8" />
@@ -175,6 +185,7 @@ const pageCtx = createPublicPageContext({
 		{theme.needsTabsRuntime && <EmVBTabsRuntime />}
 		{theme.needsFormsRuntime && <EmVBFormsRuntime />}
 		{theme.needsMenuRuntime && <EmVBMenuRuntime />}
+		<EmVBWidgetRuntimes names={theme.runtimes} />
 
 		<EmDashBodyEnd page={pageCtx} />
 	</body>

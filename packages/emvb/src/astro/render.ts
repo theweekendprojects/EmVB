@@ -9,6 +9,7 @@ import {
   type Layout,
   type ThemeDynamicData,
 } from "../core/index.ts";
+import type { WidgetRuntime } from "../core/elements/widgets.ts";
 import { PLUGIN_ID } from "../constants.ts";
 import { componentProviders, providerAssetEntries } from "@perkyzz/emvb-provider-api";
 
@@ -22,8 +23,15 @@ export type RenderedPage = {
   providerStyles: string[];
   providerRuntimes: string[];
   needsDaisyRuntime: boolean;
+  /**
+   * W-1025: the opt-in widget scripts this page needs (a dismissible Alert…). `EmVBPage` loads
+   * them itself; set only when there is one.
+   */
+  runtimes?: WidgetRuntime[];
   /** The site's text direction when set, for the host's `<html dir>` (W-230). */
   dir?: "ltr" | "rtl" | "auto";
+  /** W-971: the element types whose base rules `css` holds, for `sharedPartCss`. */
+  baseTypes?: string[];
 };
 
 /** The design document through the in-process public route (no HTTP round trip, D-013). */
@@ -80,39 +88,55 @@ export function renderStored(
   /** The page's language, e.g. "fr-CA", for Post Dates (W-688). */
   lang?: string,
 ): RenderedPage {
-  const { layout, problem } = inspectLayout(raw);
-  if (!layout) {
-    if (raw !== null && raw !== undefined && raw !== "") {
-      // Public renders have no plugin logger. The page id and where the layout first fails
-      // (a structural path and an issue code), never layout content or issue messages (W-182).
-      // oxlint-disable-next-line no-console
-      console.error("emvb: stored layout is unreadable", { pageId, ...problem });
+  const empty: RenderedPage = {
+    html: "",
+    css: "",
+    needsFormsRuntime: false,
+    needsTabsRuntime: false,
+    needsMenuRuntime: false,
+    needsProviderStyles: false,
+    providerStyles: [],
+    providerRuntimes: [],
+    needsDaisyRuntime: false,
+    ...(design.direction ? { dir: design.direction } : {}),
+  };
+  let result: ReturnType<typeof renderPage>;
+  let providerAssets: ReturnType<typeof providerAssetEntries> = { styles: [], runtimes: [] };
+  try {
+    const { layout, problem } = inspectLayout(raw);
+    if (!layout) {
+      if (raw !== null && raw !== undefined && raw !== "") {
+        // Public renders have no plugin logger. The page id and where the layout first fails
+        // (a structural path and an issue code), never layout content or issue messages (W-182).
+        // oxlint-disable-next-line no-console
+        console.error("emvb: stored layout is unreadable", { pageId, ...problem });
+      }
+      return empty;
     }
-    return {
-      html: "",
-      css: "",
-      needsFormsRuntime: false,
-      needsTabsRuntime: false,
-      needsMenuRuntime: false,
-      needsProviderStyles: false,
-      providerStyles: [],
-      providerRuntimes: [],
-      needsDaisyRuntime: false,
-      ...(design.direction ? { dir: design.direction } : {}),
-    };
-  }
-  const { html, css, needsFormsRuntime, needsTabsRuntime, needsMenuRuntime } = renderPage(
-    layout,
-    design,
-    {
+    result = renderPage(layout, design, {
       formDefinitions,
       dynamic,
       scope: pageId,
       ...(partIds ? { partIds } : {}),
       ...(lang ? { lang } : {}),
-    },
-  );
-  const providerAssets = providerAssetEntries([layout.root] as never, componentProviders());
+    });
+    providerAssets = providerAssetEntries([layout.root] as never, componentProviders());
+  } catch (error) {
+    // S-02: a layout that can't render leaves the page empty instead of failing the request.
+    // oxlint-disable-next-line no-console
+    console.error("emvb: stored layout failed to render", {
+      pageId,
+      error: error instanceof Error ? error.name : "unknown",
+    });
+    return empty;
+  }
+  const { html, css, needsFormsRuntime, needsTabsRuntime, needsMenuRuntime, baseTypes, runtimes } =
+    result;
+  for (const warning of result.warnings) {
+    if (warning.code !== "refused-markup") continue;
+    // oxlint-disable-next-line no-console
+    console.error("emvb: an element could not render", { pageId, nodeId: warning.nodeId });
+  }
   const providerStyles = providerAssets.styles;
   const providerRuntimes = providerAssets.runtimes;
   const needsProviderStyles = providerStyles.length > 0;
@@ -127,6 +151,8 @@ export function renderStored(
     needsFormsRuntime,
     needsTabsRuntime,
     needsMenuRuntime,
+    ...(runtimes.length > 0 ? { runtimes } : {}),
     ...(design.direction ? { dir: design.direction } : {}),
+    baseTypes,
   };
 }

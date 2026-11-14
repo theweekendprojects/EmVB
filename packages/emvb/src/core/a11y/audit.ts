@@ -1,9 +1,14 @@
+import { flattenMotion } from "../migrate/v18.ts";
 import { clipText } from "../limits.ts";
 import type { DesignSystem } from "../schema/design.ts";
 import { isParentNode, type Layout, type LayoutNode } from "../schema/layout.ts";
 import { boxBecomesLink } from "../render/extras.ts";
 import { ICON_ANIMATION_LIMIT_MS, iconAnimationRuns } from "../icons/animation-runs.ts";
 import { updateNode } from "../tree-ops.ts";
+import { DEVICES } from "../theme/popup-rules.ts";
+import { hiddenOnEveryDevice } from "../design/devices.ts";
+import { sanitizeHref } from "../sanitize/href.ts";
+import { SOCIAL_COLORS, SOCIAL_NAMES } from "../elements/widgets.ts";
 
 /**
  * W-572: text as a screen reader says it: invisible format characters (zero-width space, word
@@ -39,7 +44,8 @@ export type A11yIssue = {
     | "control-name"
     | "empty-heading"
     | "landmark-name"
-    | "motion";
+    | "motion"
+    | "empty-alert";
   severity: "error" | "warning";
   message: string;
   /** The one-click fix, when there is a safe one. */
@@ -161,13 +167,19 @@ function effectiveStyle(
   const tagDefaults =
     level === undefined
       ? undefined
-      : (design.defaults?.[`h${level}` as "h1"] as Record<string, unknown> | undefined);
+      : (flattenMotion(design.defaults?.[`h${level}` as "h1"]) as
+          | Record<string, unknown>
+          | undefined);
   const classIds = new Set(node.classes ?? []);
-  if (classIds.size === 0 && !tagDefaults) return node.style as Record<string, unknown> | undefined;
+  // W-925: read by the flat motion keys (`iconAnimation`), as the renderer does.
+  const own = flattenMotion(node.style) as Record<string, unknown> | undefined;
+  if (classIds.size === 0 && !tagDefaults) return own;
   const fromClasses = (design.classes ?? [])
     .filter((c) => classIds.has(c.id))
-    .reduce<Record<string, unknown>>((acc, c) => Object.assign(acc, c.style), { ...tagDefaults });
-  return { ...fromClasses, ...(node.style as Record<string, unknown> | undefined) };
+    .reduce<Record<string, unknown>>((acc, c) => Object.assign(acc, flattenMotion(c.style)), {
+      ...tagDefaults,
+    });
+  return { ...fromClasses, ...own };
 }
 
 /** Each device's style with the node's classes under the node's own (W-882). */
@@ -180,7 +192,7 @@ function deviceStyles(node: LayoutNode, design: DesignSystem): Record<string, un
   ];
   for (const devices of layers) {
     for (const [key, st] of Object.entries(devices ?? {})) {
-      merged[key] = { ...merged[key], ...(st as Record<string, unknown>) };
+      merged[key] = { ...merged[key], ...(flattenMotion(st) as Record<string, unknown>) };
     }
   }
   return Object.values(merged);
@@ -210,7 +222,12 @@ function largeText(node: LayoutNode, design: DesignSystem): boolean {
  * its text isn't known here.
  */
 function boxHasName(node: LayoutNode): boolean {
-  if (node.bind || node.type.startsWith("post-") || node.type === "loop" || node.type === "section")
+  if (
+    node.bind ||
+    node.type.startsWith("post-") ||
+    node.type === "loop" ||
+    node.type === "part-ref"
+  )
     return true;
   const props = node.props as Record<string, unknown>;
   const decorative = props["decorative"] === true;
@@ -228,9 +245,9 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     issues.push({ ...issue, id: `${issue.rule}:${issue.nodeId}` });
   let lastLevel = 0;
   // W-444: H1s counted per device, so a desktop H1 and a mobile H1 that swap places aren't two.
-  const DEVICES = ["desktop", "tablet", "mobile"] as const;
-  let h1s = [0, 0, 0];
-  let shownOn = [true, true, true];
+  // W-956: Laptop counts as its own device.
+  let h1s = DEVICES.map(() => 0);
+  let shownOn = DEVICES.map(() => true);
   // W-446: aria-hidden on a box hides everything inside it from screen readers, links included.
   let ariaHiddenAbove = false;
   // W-312 variants are alternatives: B is judged as if it stood where A does, so a page whose
@@ -239,13 +256,10 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
   const afterA = new Map<string, [number[], number]>();
   let fade = 1;
   // W-445: per device, like H1s, so a desktop menu and a mobile menu may share a name.
-  const menuNames = [new Set<string>(), new Set<string>(), new Set<string>()];
+  const menuNames = DEVICES.map(() => new Set<string>());
   const walk = (node: LayoutNode, bg: string | undefined, color: string | undefined): void => {
     // W-413: an element hidden on every device (and what's inside it) is never shown or read.
-    if (
-      node !== layout.root &&
-      (["desktop", "tablet", "mobile"] as const).every((d) => node.hiddenOn?.includes(d))
-    ) {
+    if (node !== layout.root && hiddenOnEveryDevice(node)) {
       return;
     }
     const variant = node.variant;
@@ -292,7 +306,12 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
         severity: "error",
         message: "This image is a link but is marked decorative, so the link has no name.",
       });
-    } else if (node.type === "image" && props["decorative"] !== true) {
+    } else if (
+      // W-1021: an image box's picture needs real alt text as an Image does, once it has one.
+      (node.type === "image" ||
+        ((node.type === "image-box" || node.type === "gallery-image") && spoken(props["src"]))) &&
+      props["decorative"] !== true
+    ) {
       const alt = typeof props["alt"] === "string" ? spoken(props["alt"]) : "";
       if (USELESS_ALT.test(alt)) {
         add({
@@ -346,6 +365,26 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
         severity: "warning",
         message:
           "This icon animates for more than 5 seconds and visitors can't pause it. Shorten the duration, or keep it only if the motion is essential.",
+      });
+    }
+    // W-938: an element's loop is held to the same rule: it stops after about 5 s unless it loops
+    // forever, so only Loop forever or a single run longer than 5 s is flagged.
+    const loopsTooLong = [effectiveStyle(node, design), ...deviceStyles(node, design)].some(
+      (st) => {
+        const loop = (st as { loopMotion?: { duration?: unknown; loop?: unknown } } | undefined)
+          ?.loopMotion;
+        if (!loop || !("duration" in loop)) return false;
+        if (loop.loop === true) return true;
+        return typeof loop.duration === "number" && loop.duration > ICON_ANIMATION_LIMIT_MS;
+      },
+    );
+    if (loopsTooLong) {
+      add({
+        nodeId: node.id,
+        rule: "motion",
+        severity: "warning",
+        message:
+          "This element's loop keeps moving for more than 5 seconds and visitors can't pause it. Turn off Loop forever, or keep it only if the motion is essential.",
       });
     }
     // W-403: with extra sizes but no Width, the main image is left out of srcset, so wide screens
@@ -426,6 +465,97 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       }
       menuNames.forEach((names, i) => {
         if (shownOn[i]) names.add(key);
+      });
+    }
+    // W-1023: a Rating is an image of stars; its screen-reader text is the only way to hear the
+    // rating, so a custom one has to say it ({value}, or the number written out).
+    if (node.type === "rating") {
+      const label = spoken(props["label"]);
+      if (label && !label.includes("{value}") && !/\d/.test(label)) {
+        add({
+          nodeId: node.id,
+          rule: "image-alt",
+          severity: "warning",
+          message:
+            "This rating's text for screen readers doesn't say the rating. Add {value}, such as \"Rated {value} out of {max}\".",
+        });
+      }
+    }
+    // W-1020: a box's link is its title; with no title the link is left out of the page.
+    if (
+      (node.type === "icon-box" || node.type === "image-box") &&
+      spoken(props["href"]) &&
+      !spoken(props["title"]) &&
+      !node.bind
+    ) {
+      add({
+        nodeId: node.id,
+        rule: "link-name",
+        severity: "warning",
+        message:
+          "This box has a link but no title. The title is the link, so the link is left out.",
+      });
+    }
+    // W-1022: a testimonial without words is an empty quotation.
+    if (node.type === "testimonial" && !spoken(props["quote"]) && !node.bind) {
+      add({
+        nodeId: node.id,
+        rule: "empty-alert",
+        severity: "warning",
+        message: "This testimonial has no quote, so screen readers find an empty quotation.",
+      });
+    }
+    // W-1024: a Social link without a usable address shows a dimmed icon that goes nowhere.
+    if (node.type === "social-link" && !node.bind) {
+      const href = typeof props["href"] === "string" ? props["href"].trim() : "";
+      if (!href || !sanitizeHref(href)) {
+        add({
+          nodeId: node.id,
+          rule: "link-name",
+          severity: "warning",
+          message:
+            "This social link has no address it can use, so it shows a dimmed icon and links nowhere.",
+        });
+      }
+    }
+    // W-1024: some networks' own colours are too faint on white for an icon (under 3:1).
+    if (node.type === "social-icons" && props["brandColors"] === true && isParentNode(node)) {
+      const faint = node.children
+        .map((child) => (child.props as { network?: string }).network)
+        .filter(
+          (network): network is keyof typeof SOCIAL_COLORS =>
+            typeof network === "string" &&
+            network in SOCIAL_COLORS &&
+            contrastRatio(SOCIAL_COLORS[network as keyof typeof SOCIAL_COLORS], "#ffffff") < 3,
+        );
+      if (faint.length > 0) {
+        add({
+          nodeId: node.id,
+          rule: "contrast",
+          severity: "warning",
+          message: `On a light background, ${[...new Set(faint)].map((n) => SOCIAL_NAMES[n]).join(", ")} in brand colours is under 3:1, as an icon or as a badge behind a white icon. Turn Brand colours off or put the icons on a dark background.`,
+        });
+      }
+    }
+    // W-1018: slides that move on by themselves faster than about 5 seconds are hard to read.
+    if (node.type === "carousel" && props["autoplay"] === true) {
+      const seconds = typeof props["interval"] === "number" ? props["interval"] : 6;
+      if (seconds < 5) {
+        add({
+          nodeId: node.id,
+          rule: "motion",
+          severity: "warning",
+          message: `Slides change every ${seconds} seconds; many people need longer to read them. Use 5 seconds or more.`,
+        });
+      }
+    }
+    // W-1025: a notice with neither title nor text is a coloured box screen readers call a note.
+    if (node.type === "alert" && !spoken(props["title"]) && !spoken(props["text"]) && !node.bind) {
+      add({
+        nodeId: node.id,
+        rule: "empty-alert",
+        severity: "warning",
+        message: "This alert has no title or text, so it shows an empty box and says nothing.",
       });
     }
     // W-419: an empty heading still shows up in screen readers' heading list, with nothing to say.

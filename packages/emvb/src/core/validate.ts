@@ -1,4 +1,6 @@
+import { capIssues } from "./issue-cap.ts";
 import type { z } from "zod";
+import { restoreExtras, splitDesignExtras, splitLayoutExtras } from "./contract.ts";
 import { MAX_DEPTH, MAX_DESIGN_BYTES, MAX_LAYOUT_BYTES, MAX_NODES } from "./limits.ts";
 import {
   upgradeLayout,
@@ -142,9 +144,16 @@ export function validateDesign(
   if (sizeIssue) return { ok: false, issues: [sizeIssue] };
   const upgraded = upgradeLayout(input, migrations, DESIGN_SCHEMA_VERSION);
   if (!upgraded.ok) return { ok: false, issues: [upgradeIssue(upgraded)] };
+  // D-065: keys a newer 1.x wrote are set aside, checked, and put back after the strict parse.
+  const extras = splitDesignExtras(upgraded.doc);
+  if (extras.issues.length > 0) return { ok: false, issues: extras.issues };
   const parsed = DesignSystem.safeParse(upgraded.doc);
-  if (!parsed.success) return { ok: false, issues: parsed.error.issues.map(toIssue) };
-  return { ok: true, design: parsed.data, upgradedFrom: upgraded.from };
+  if (!parsed.success) return { ok: false, issues: capIssues(parsed.error.issues, toIssue, "") };
+  return {
+    ok: true,
+    design: restoreExtras(parsed.data, extras.extras),
+    upgradedFrom: upgraded.from,
+  };
 }
 
 /**
@@ -167,16 +176,20 @@ export function validateLayout(
   if (!upgraded.ok) return { ok: false, issues: [upgradeIssue(upgraded)] };
   const structure = checkStructure(upgraded.doc["root"]);
   if (structure) return { ok: false, issues: [structure] };
+  // D-065: keys a newer 1.x wrote are set aside, checked, and put back after the strict parse.
+  const extras = splitLayoutExtras(upgraded.doc);
+  if (extras.issues.length > 0) return { ok: false, issues: extras.issues };
   const parsed = Layout.safeParse(upgraded.doc);
   if (!parsed.success) {
     return {
       ok: false,
-      issues: parsed.error.issues.map((issue: z.core.$ZodIssue) => toIssue(issue)),
+      issues: capIssues(parsed.error.issues, toIssue, ""),
     };
   }
   const layout = parsed.data as Layout;
   const dupes = duplicateIds(layout);
   if (dupes.length > 0) return { ok: false, issues: dupes };
+  restoreExtras(layout, extras.extras);
   return { ok: true, layout, upgradedFrom: upgraded.from };
 }
 

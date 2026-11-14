@@ -4,17 +4,25 @@ import { defaultElement, type Layout, type LayoutNode } from "../core/index.ts";
 import type { ContentPort } from "./content-port.ts";
 import { resolveEmVBPageWith } from "./resolve.ts";
 
-type Found = { entry: { id: string; data: Record<string, unknown> } | null; isPreview?: boolean };
-let lookup: (collection: string, slug: string) => Promise<Found> = async () => ({ entry: null });
+type Found = {
+  entry: { id: string; data: Record<string, unknown> } | null;
+  isPreview?: boolean;
+  fallbackLocale?: string;
+};
+let lookup: (
+  collection: string,
+  slug: string,
+  options?: { locale?: string },
+) => Promise<Found> = async () => ({ entry: null });
 const lookups: string[] = [];
 type Call = { plugin: string; method: string; path: string; body: string };
 const handlerCalls: Call[] = [];
 
 const content = {
   decodeSlug,
-  getEntry: async (collection: string, key: string) => {
-    lookups.push(`${collection}/${key}`);
-    return lookup(collection, key);
+  getEntry: async (collection: string, key: string, options?: { locale?: string }) => {
+    lookups.push(`${collection}/${key}${options?.locale ? `@${options.locale}` : ""}`);
+    return lookup(collection, key, options);
   },
   getCollection: async () => ({ entries: [] }),
   getTerm: async () => null,
@@ -201,7 +209,7 @@ describe("Loop Item parts on a page (W-666)", () => {
       const loop = {
         id: "loop0001",
         type: "loop",
-        props: { collection: "team", itemPartId: "LIPART1" },
+        props: { collection: "team", partId: "LIPART1" },
         children: [],
       } as unknown as LayoutNode;
       lookup = async () => page({ title: "Team", layout: layout(loop) });
@@ -238,5 +246,82 @@ describe("resolveEmVBPage(Astro, { collection, field }) (W-901)", () => {
       (await resolveEmVBPage(astro({ slug: "about" }), { collection: "pages", field: "body" }))
         ?.html,
     ).toContain("Hello");
+  });
+});
+
+describe("per-language pages (W-935, D-068)", () => {
+  const astroIn = (currentLocale?: string) => ({
+    ...astro({ slug: "about" }),
+    ...(currentLocale ? { currentLocale } : {}),
+  });
+
+  test("Astro's locale picks the translation; the page says which", async () => {
+    lookup = async (_c, _k, options) =>
+      page({ layout: layout({ ...heading, props: { text: `Hi ${options?.locale}`, level: 1 } }) });
+    const fr = await resolveEmVBPage(astroIn("fr"));
+    expect(lookups).toEqual(["emvb_pages/about@fr"]);
+    expect(fr?.html).toContain("Hi fr");
+    expect(fr?.locale).toBe("fr");
+    expect(fr?.fallbackLocale).toBeUndefined();
+  });
+
+  test("an explicit locale wins over Astro's; a site without locales asks for none", async () => {
+    lookup = async () => page({ layout: layout(heading) });
+    await resolveEmVBPage(astroIn("fr"), { locale: "de" });
+    const plain = await resolveEmVBPage(astroIn());
+    expect(lookups).toEqual(["emvb_pages/about@de", "emvb_pages/about"]);
+    expect(plain && "locale" in plain).toBe(false);
+  });
+
+  test("a missing translation served from the fallback chain is reported", async () => {
+    lookup = async () => ({ ...page({ layout: layout(heading) }), fallbackLocale: "en" });
+    const fr = await resolveEmVBPage(astroIn("fr"));
+    expect(fr?.locale).toBe("fr");
+    expect(fr?.fallbackLocale).toBe("en");
+  });
+});
+
+describe("Language switcher links (W-937)", () => {
+  type T = { id: string; locale: string; slug: string | null; status: string };
+  const withTranslations = (translations: T[], defaultLocale = "en") =>
+    ({
+      ...content,
+      getTranslations: async () => ({ translationGroup: "g", translations }),
+      getI18nConfig: () => ({ defaultLocale, locales: ["en", "fr", "de"] }),
+    }) as unknown as ContentPort;
+  const switcher: LayoutNode = { id: "lang0001", type: "language-switcher", props: {} };
+
+  test("published translations only, the shown page current, default locale without a prefix", async () => {
+    lookup = async () => page({ layout: layout(switcher) });
+    const resolved = await resolveEmVBPageWith(
+      withTranslations([
+        { id: "p1", locale: "en", slug: "about", status: "published" },
+        { id: "p2", locale: "fr", slug: "a-propos", status: "published" },
+        { id: "p3", locale: "de", slug: "uber", status: "draft" },
+      ]),
+      astro({ slug: "about" }),
+    );
+    expect(resolved?.translations).toEqual([
+      { locale: "en", href: "/about", current: true },
+      { locale: "fr", href: "/fr/a-propos", current: false },
+    ]);
+    expect(resolved?.html).toContain('href="/fr/a-propos"');
+    expect(resolved?.html).not.toContain("/de/uber");
+  });
+
+  test("a host decides where translations live", async () => {
+    lookup = async () => page({ layout: layout(switcher) });
+    const resolved = await resolveEmVBPageWith(
+      withTranslations([
+        { id: "p1", locale: "en", slug: "about", status: "published" },
+        { id: "p2", locale: "fr", slug: "a-propos", status: "published" },
+      ]),
+      astro({ slug: "about" }),
+      { translationHref: (t) => `https://${t.locale}.example.com/${t.slug}` },
+    );
+    expect(resolved?.translations?.map((t) => t.href)).toEqual([
+      "https://en.example.com/about",
+      "https://fr.example.com/a-propos",
+    ]);
   });
 });

@@ -1,17 +1,68 @@
 import * as React from "react";
 import { Button, Select } from "@cloudflare/kumo";
-import { PlusIcon } from "@phosphor-icons/react";
-import type { DesignSystem, StyleProps } from "../../../../core/index.ts";
+import { PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react";
+import type { DesignSystem, FlatStyleProps } from "../../../../core/index.ts";
 import { BUTTON, FIELD } from "../../../ui.ts";
 import { ColorControl } from "../ColorControl.tsx";
 import { NumberField, NumberRow, type NumberSpec } from "./NumberRow.tsx";
 
-type Shadow = NonNullable<StyleProps["boxShadow"]>;
-type Filter = NonNullable<StyleProps["filter"]>;
-type Transition = NonNullable<StyleProps["transition"]>;
-type Entrance = NonNullable<StyleProps["entrance"]>;
+type Shadow = NonNullable<FlatStyleProps["boxShadow"]>;
+type Filter = NonNullable<FlatStyleProps["filter"]>;
+type Transition = NonNullable<FlatStyleProps["transition"]>;
+type Entrance = NonNullable<FlatStyleProps["entrance"]>;
 
 /** DESIGN.md: Add shadow starts at 0 4 12 0, 18 % black. */
+/**
+ * W-969: a composite style (shadow, entrance, transition, drop shadow) that is unset here but
+ * inherited (from a wider device, the Normal state, a class or the Site styles default) says what
+ * it inherits, and Edit here starts from that value instead of the default.
+ */
+export function InheritedStart({
+  summary,
+  label,
+  onEdit,
+}: {
+  summary: string;
+  label: string;
+  onEdit: () => void;
+}) {
+  return (
+    <>
+      <p className="emvb-helper" data-emvb-inherited-note="">
+        Inherited: {summary}.
+      </p>
+      <Button
+        type="button"
+        variant="secondary"
+        className={`${BUTTON} emvb-add-shadow`}
+        icon={<PencilSimpleIcon aria-hidden="true" />}
+        onClick={onEdit}
+        aria-label={`Edit ${label} here`}
+      >
+        Edit here
+      </Button>
+    </>
+  );
+}
+
+const hexOf = (color: unknown) =>
+  typeof color === "string"
+    ? color
+    : color && typeof color === "object" && "var" in color
+      ? `variable ${String((color as { var: unknown }).var)}`
+      : "";
+
+export const shadowSummary = (s: {
+  x: number;
+  y: number;
+  blur: number;
+  spread?: number;
+  color?: unknown;
+}) =>
+  [`${s.x} ${s.y} ${s.blur}${s.spread !== undefined ? ` ${s.spread}` : ""} px`, hexOf(s.color)]
+    .filter(Boolean)
+    .join(", ");
+
 const NEW_SHADOW: Shadow = { x: 0, y: 4, blur: 12, spread: 0, color: "#0000002e" };
 
 const OFFSET: NumberSpec = { min: -1000, max: 1000, example: "4" };
@@ -27,12 +78,14 @@ const SHADOW_FIELDS: ReadonlyArray<
 /** One box shadow: Add shadow when unset; X, Y, blur, spread, colour and inset when set. */
 export function ShadowControl({
   value,
+  inherited,
   design,
   onChange,
   onDesignChange,
   reset,
 }: {
   value: Shadow | undefined;
+  inherited?: Shadow | undefined;
   design: DesignSystem;
   onChange: (next: Shadow | undefined) => void;
   onDesignChange: (design: DesignSystem) => Promise<void>;
@@ -49,6 +102,7 @@ export function ShadowControl({
       className="emvb-style-row"
       data-emvb-style="boxShadow"
       data-set={value ? "true" : undefined}
+      data-inherited={!value && inherited ? "true" : undefined}
     >
       <div className="emvb-field-group emvb-shadow">
         <span className="emvb-var-field-label">Box shadow</span>
@@ -88,6 +142,12 @@ export function ShadowControl({
               ))}
             </div>
           </>
+        ) : inherited ? (
+          <InheritedStart
+            summary={shadowSummary(inherited)}
+            label="box shadow"
+            onEdit={() => onChange({ ...inherited })}
+          />
         ) : (
           <Button
             type="button"
@@ -121,15 +181,108 @@ const FILTER_ROWS: ReadonlyArray<[key: keyof Filter, label: string, NumberSpec]>
   ["hueRotate", "Hue rotation", { min: 0, max: 360, example: "90", suffix: "°", placeholder: "0" }],
 ];
 
+type Transform = NonNullable<FlatStyleProps["transform"]>;
+
+/** One full turn, in degrees. */
+const TURN = 360;
+
+const TRANSFORM_ROWS: ReadonlyArray<[key: keyof Transform, label: string, NumberSpec]> = [
+  [
+    "x",
+    "Move X",
+    { min: -2000, max: 2000, integer: true, example: "8", suffix: "px", placeholder: "0" },
+  ],
+  [
+    "y",
+    "Move Y",
+    { min: -2000, max: 2000, integer: true, example: "-4", suffix: "px", placeholder: "0" },
+  ],
+  [
+    "scale",
+    "Scale",
+    { min: 10, max: 400, integer: true, example: "105", suffix: "%", placeholder: "100" },
+  ],
+  [
+    "rotate",
+    "Rotate",
+    { min: -360, max: TURN, integer: true, example: "15", suffix: "°", placeholder: "0" },
+  ],
+];
+
+/**
+ * W-953: move, scale and rotate, one number row each; clearing the last row unsets Transform.
+ * In the Hover state it lifts or nudges the element (with a Transform transition to animate it).
+ */
+export function TransformControl({
+  value,
+  inherited,
+  onChange,
+}: {
+  value: Transform | undefined;
+  inherited?: Transform;
+  onChange: (next: Transform | undefined) => void;
+}) {
+  const patch = (key: keyof Transform, n: number | undefined) => {
+    const next: Record<string, number> = {};
+    for (const [k, v] of Object.entries({ ...value, [key]: n })) {
+      if (typeof v === "number") next[k] = v;
+    }
+    onChange(Object.keys(next).length > 0 ? (next as Transform) : undefined);
+  };
+  const [open, setOpen] = React.useState(value !== undefined || inherited !== undefined);
+  const rows = React.useRef<HTMLDivElement>(null);
+  return (
+    <div
+      className="emvb-filters"
+      data-emvb-style="transform"
+      data-set={value ? "true" : undefined}
+      ref={rows}
+    >
+      <p className="emvb-sub-label">Transform</p>
+      {value || inherited || open ? (
+        TRANSFORM_ROWS.map(([key, label, spec]) => (
+          <NumberRow
+            key={key}
+            rowKey={`transform.${key}`}
+            label={label}
+            value={value?.[key]}
+            spec={spec}
+            inherited={inherited?.[key]}
+            onCommit={(n) => patch(key, n)}
+          />
+        ))
+      ) : (
+        <Button
+          type="button"
+          variant="secondary"
+          className={`${BUTTON} emvb-add-transform`}
+          icon={<PlusIcon aria-hidden="true" />}
+          onClick={() => {
+            setOpen(true);
+            requestAnimationFrame(() => rows.current?.querySelector<HTMLElement>("input")?.focus());
+          }}
+        >
+          Add transform
+        </Button>
+      )}
+    </div>
+  );
+}
+
 /** The filter functions, one number row each; clearing the last one unsets Filters. */
 export function FiltersControl({
   value,
   inherited,
   onChange,
+  styleKey = "filter",
+  label: heading = "Filters",
 }: {
   value: Filter | undefined;
   inherited?: Filter;
   onChange: (next: Filter | undefined) => void;
+  /** W-957: the same rows edit `backdropFilter` (what's behind the element). */
+  styleKey?: "filter" | "backdropFilter";
+  label?: string;
 }) {
   const patch = (key: keyof Filter, n: number | undefined) => {
     const next: Record<string, number> = {};
@@ -144,16 +297,16 @@ export function FiltersControl({
   return (
     <div
       className="emvb-filters"
-      data-emvb-style="filter"
+      data-emvb-style={styleKey}
       data-set={value ? "true" : undefined}
       ref={rows}
     >
-      <p className="emvb-sub-label">Filters</p>
+      <p className="emvb-sub-label">{heading}</p>
       {open || value || inherited ? (
         FILTER_ROWS.map(([key, label, spec]) => (
           <NumberRow
             key={key}
-            rowKey={`filter.${key}`}
+            rowKey={`${styleKey}.${key}`}
             label={label}
             value={value?.[key]}
             spec={spec}
@@ -172,7 +325,7 @@ export function FiltersControl({
             requestAnimationFrame(() => rows.current?.querySelector<HTMLElement>("input")?.focus());
           }}
         >
-          Add filters
+          {`Add ${heading.toLowerCase()}`}
         </Button>
       )}
     </div>
@@ -195,6 +348,8 @@ const APPLIES_TO: ReadonlyArray<{ value: Transition["property"]; label: string }
   { value: "opacity", label: "Opacity" },
   { value: "shadow", label: "Shadow" },
   { value: "filter", label: "Filters" },
+  // W-953: move, scale and rotate (use it with a hover transform for a lift).
+  { value: "transform", label: "Transform" },
 ];
 
 export function TransitionSelect<T extends string>({
@@ -240,10 +395,12 @@ const ENTRANCE_TYPES: { value: Entrance["type"]; label: string }[] = [
 /** Plays once on load (W-101, Normal only). Add entrance starts at Fade, 400 ms. */
 export function EntranceControl({
   value,
+  inherited,
   onChange,
   reset,
 }: {
   value: Entrance | undefined;
+  inherited?: Entrance | undefined;
   onChange: (next: Entrance | undefined) => void;
   reset: React.ReactNode;
 }) {
@@ -252,6 +409,7 @@ export function EntranceControl({
       className="emvb-style-row"
       data-emvb-style="entrance"
       data-set={value ? "true" : undefined}
+      data-inherited={!value && inherited ? "true" : undefined}
     >
       <div className="emvb-field-group emvb-transition">
         <span className="emvb-var-field-label">Entrance</span>
@@ -290,6 +448,12 @@ export function EntranceControl({
               }
             />
           </>
+        ) : inherited ? (
+          <InheritedStart
+            summary={`${ENTRANCE_TYPES.find((t) => t.value === inherited.type)?.label ?? inherited.type}, ${inherited.duration} ms`}
+            label="entrance"
+            onEdit={() => onChange({ ...inherited })}
+          />
         ) : (
           <Button
             type="button"
@@ -310,10 +474,12 @@ export function EntranceControl({
 /** One transition (W-089, Normal only): Add transition when unset; duration, delay, easing, property when set. */
 export function TransitionControl({
   value,
+  inherited,
   onChange,
   reset,
 }: {
   value: Transition | undefined;
+  inherited?: Transition | undefined;
   onChange: (next: Transition | undefined) => void;
   reset: React.ReactNode;
 }) {
@@ -328,6 +494,7 @@ export function TransitionControl({
       className="emvb-style-row"
       data-emvb-style="transition"
       data-set={value ? "true" : undefined}
+      data-inherited={!value && inherited ? "true" : undefined}
     >
       <div className="emvb-field-group emvb-transition">
         <span className="emvb-var-field-label">Transition</span>
@@ -362,6 +529,12 @@ export function TransitionControl({
               onChange={(property) => patch({ property })}
             />
           </>
+        ) : inherited ? (
+          <InheritedStart
+            summary={`${inherited.duration} ms, ${EASINGS.find((e) => e.value === inherited.easing)?.label ?? inherited.easing}`}
+            label="transition"
+            onEdit={() => onChange({ ...inherited })}
+          />
         ) : (
           <Button
             type="button"

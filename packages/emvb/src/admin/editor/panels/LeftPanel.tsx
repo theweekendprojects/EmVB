@@ -1,14 +1,17 @@
 import { Tabs } from "@cloudflare/kumo";
 import * as React from "react";
-import type { Layout } from "../../../core/index.ts";
+import type { ElementType, Layout } from "../../../core/index.ts";
 import { AddPanel } from "./AddPanel.tsx";
 import { LayersPanel } from "./LayersPanel.tsx";
+import { CoDesignPanel } from "./CoDesignPanel.tsx";
+import type { CoDesign } from "../useCoDesign.ts";
+import { ExtensionPanels } from "../extensions/ExtensionPanels.tsx";
 import type { ClipboardActions } from "../useClipboardActions.ts";
 import type { SavedSectionActions } from "../useSavedSections.ts";
 
 const SESSION_KEY = "emvb-left-tab";
 
-/** Add | Layers left panel (W-018). Remembers the last tab for the session. */
+/** Add | Layers | Agent left panel (W-018, W-930). Remembers the last tab for the session. */
 export function LeftPanel({
   layout,
   selectedId,
@@ -24,11 +27,12 @@ export function LeftPanel({
   onRename,
   onSaveSection,
   formsAvailable = true,
+  coDesign,
 }: {
   layout: Layout | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onAdd: (type: string) => void;
+  onAdd: (type: ElementType | string) => void;
   /** Adds a section recipe (W-320). */
   onRecipe?: (id: string) => void;
   /** My sections (W-876). */
@@ -43,10 +47,13 @@ export function LeftPanel({
   /** Save as section in the row menu (W-876). */
   onSaveSection?: (id: string) => void;
   formsAvailable?: boolean;
+  /** W-930: agent proposals to review; the Agent tab shows only with it. */
+  coDesign?: CoDesign;
 }) {
   const [tab, setTab] = React.useState(() => {
     try {
-      return sessionStorage.getItem(SESSION_KEY) === "layers" ? "layers" : "add";
+      const last = sessionStorage.getItem(SESSION_KEY);
+      return last === "layers" || (last === "agent" && coDesign) ? last : "add";
     } catch {
       return "add";
     }
@@ -67,12 +74,33 @@ export function LeftPanel({
         tabs={[
           { value: "add", label: "Add" },
           { value: "layers", label: "Layers" },
+          ...(coDesign
+            ? [
+                {
+                  value: "agent",
+                  label:
+                    coDesign.proposals.items.length > 0
+                      ? `Agent (${coDesign.proposals.items.length})`
+                      : "Agent",
+                },
+              ]
+            : []),
         ]}
         value={tab}
         onValueChange={changeTab}
       />
-      {tab === "add" ? (
-        <AddPanel onAdd={onAdd} onRecipe={onRecipe} saved={saved} formsAvailable={formsAvailable} />
+      {tab === "agent" && coDesign ? (
+        <CoDesignPanel co={coDesign} layout={layout} />
+      ) : tab === "add" ? (
+        <>
+          <AddPanel
+            onAdd={onAdd}
+            onRecipe={onRecipe}
+            saved={saved}
+            formsAvailable={formsAvailable}
+          />
+          <ExtensionPanels />
+        </>
       ) : (
         <LayersPanel
           layout={layout}

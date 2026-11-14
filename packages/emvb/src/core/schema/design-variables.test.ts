@@ -23,7 +23,7 @@ const page = (style: Record<string, unknown>): Layout => ({
 describe("design variables (W-028, R-020)", () => {
   test("fonts, fontSizes and spacings emit namespaced custom properties", () => {
     const design = {
-      schemaVersion: 16 as const,
+      schemaVersion: 17 as const,
       variables: {
         colors: [{ id: "brand", name: "Brand", value: "#112233" }],
         fonts: [{ id: "body", name: "Body", value: "Noto Sans, sans-serif" }],

@@ -19,10 +19,10 @@ describe("section templates (W-374)", () => {
 });
 
 describe("part templates on the canvas (W-658)", () => {
-  const loopNode = (id: string, itemPartId: string) => ({
+  const loopNode = (id: string, partId: string) => ({
     id,
     type: "loop",
-    props: { itemPartId },
+    props: { partId },
     children: [],
   });
   const withRoot = (children: unknown[]) =>

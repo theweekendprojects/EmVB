@@ -5,7 +5,7 @@ import {
   emptyDesign,
   type DesignSystem,
   type LayoutNode,
-  type StyleProps,
+  type FlatStyleProps,
 } from "../../../../core/index.ts";
 import { styleDeclarations } from "../../../../core/sanitize/css.ts";
 import type { Fetcher } from "../../../api.ts";
@@ -63,7 +63,7 @@ function Harness({
   );
 }
 
-const box = (style?: StyleProps): LayoutNode => ({
+const box = (style?: FlatStyleProps): LayoutNode => ({
   id: "box00001",
   type: "container",
   props: {},

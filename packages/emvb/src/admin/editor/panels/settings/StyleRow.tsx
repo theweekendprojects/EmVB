@@ -1,6 +1,7 @@
 import { Input, Select } from "@cloudflare/kumo";
 import { MotionControl } from "./MotionControl.tsx";
-import { isSafeFontStack, type DesignSystem, type StyleProps } from "../../../../core/index.ts";
+import { LoopControl } from "./LoopControl.tsx";
+import { isSafeFontStack, type DesignSystem, type FlatStyleProps } from "../../../../core/index.ts";
 import type { Fetcher } from "../../../api.ts";
 import { FIELD } from "../../../ui.ts";
 import { ColorControl } from "../ColorControl.tsx";
@@ -12,6 +13,7 @@ import {
   EntranceControl,
   FiltersControl,
   ShadowControl,
+  TransformControl,
   TransitionControl,
 } from "./EffectsControls.tsx";
 import {
@@ -33,6 +35,8 @@ const LENGTH_KEYS = new Set<StyleKey>([
   "height",
   "minHeight",
   "maxHeight",
+  "flexBasis",
+  "markerSize",
   "paddingTop",
   "paddingRight",
   "paddingBottom",
@@ -61,11 +65,14 @@ const LENGTH_KEYS = new Set<StyleKey>([
 ]);
 
 const Z_INDEX: NumberSpec = { min: -9999, max: 9999, integer: true, example: "10" };
+/** W-954: a flex child's share of free space (grow) or of the shortfall (shrink). */
+const FLEX_FACTOR: NumberSpec = { min: 0, max: 100, example: "1" };
+const ORDER: NumberSpec = { min: -99, max: 99, integer: true, example: "-1" };
 const GRID_SPAN: NumberSpec = { min: 1, max: 12, integer: true, example: "2" };
 const GRID_LINE: NumberSpec = { min: 1, max: 13, integer: true, example: "1" };
 const OPACITY: NumberSpec = { min: 0, max: 100, scale: 100, example: "50", suffix: "%" };
 
-const COLOR_KEYS = new Set<StyleKey>(["color", "backgroundColor", "borderColor"]);
+const COLOR_KEYS = new Set<StyleKey>(["color", "backgroundColor", "borderColor", "markerColor"]);
 
 const SELECT_OPTIONS: Partial<Record<StyleKey, { value: string; label: string }[]>> = {
   textAlign: [
@@ -100,12 +107,60 @@ const SELECT_OPTIONS: Partial<Record<StyleKey, { value: string; label: string }[
     { value: "scroll", label: "Scroll" },
     { value: "auto", label: "Auto" },
   ],
+  alignSelf: [
+    { value: "auto", label: "Follow the parent" },
+    { value: "stretch", label: "Stretch" },
+    { value: "flex-start", label: "Start" },
+    { value: "center", label: "Center" },
+    { value: "flex-end", label: "End" },
+    { value: "baseline", label: "Baseline" },
+  ],
+  overflowX: [
+    { value: "visible", label: "Visible" },
+    { value: "hidden", label: "Hidden" },
+    { value: "clip", label: "Clip" },
+    { value: "scroll", label: "Scroll" },
+    { value: "auto", label: "Auto" },
+  ],
+  overflowY: [
+    { value: "visible", label: "Visible" },
+    { value: "hidden", label: "Hidden" },
+    { value: "clip", label: "Clip" },
+    { value: "scroll", label: "Scroll" },
+    { value: "auto", label: "Auto" },
+  ],
+  objectPosition: [
+    { value: "center", label: "Center" },
+    { value: "top", label: "Top" },
+    { value: "bottom", label: "Bottom" },
+    { value: "left", label: "Left" },
+    { value: "right", label: "Right" },
+    { value: "top left", label: "Top left" },
+    { value: "top right", label: "Top right" },
+    { value: "bottom left", label: "Bottom left" },
+    { value: "bottom right", label: "Bottom right" },
+  ],
   aspectRatio: [
     { value: "auto", label: "Auto" },
     ...["1/1", "4/3", "3/2", "16/9", "21/9", "3/4", "2/3", "9/16"].map((ratio) => ({
       value: ratio,
       label: ratio.replace("/", ":"),
     })),
+  ],
+  fontStyle: [
+    { value: "normal", label: "Normal" },
+    { value: "italic", label: "Italic" },
+  ],
+  whiteSpace: [
+    { value: "normal", label: "Wrap" },
+    { value: "nowrap", label: "Don't wrap" },
+    { value: "pre-line", label: "Keep line breaks" },
+    { value: "pre-wrap", label: "Keep spaces and line breaks" },
+  ],
+  overflowWrap: [
+    { value: "normal", label: "Keep whole" },
+    { value: "break-word", label: "Break if needed" },
+    { value: "anywhere", label: "Break anywhere" },
   ],
   objectFit: [
     { value: "fill", label: "Fill" },
@@ -210,9 +265,9 @@ export function StyleRow({
   onDesignChange,
 }: {
   styleKey: StyleKey;
-  style: StyleProps | undefined;
+  style: FlatStyleProps | undefined;
   /** The Normal styles while a state is edited (W-089): shown as placeholders, never saved. */
-  inherited?: StyleProps;
+  inherited?: FlatStyleProps;
   design: DesignSystem;
   /** Present on an element, so a background image can use the media library. */
   fetcher?: Fetcher;
@@ -220,7 +275,7 @@ export function StyleRow({
   elementType?: string;
   /** Which class and device the background fill memory belongs to (W-184). */
   fillScope?: string;
-  onPatch: (patch: Partial<StyleProps>) => void;
+  onPatch: (patch: Partial<FlatStyleProps>) => void;
   onDesignChange: (design: DesignSystem) => Promise<void>;
 }) {
   const value = style?.[styleKey];
@@ -287,7 +342,7 @@ export function StyleRow({
       >
         <ColorControl
           label={label}
-          value={value as StyleProps["color"]}
+          value={value as FlatStyleProps["color"]}
           placeholder={placeholder}
           design={design}
           onChange={(color) => onPatch({ [styleKey]: color })}
@@ -343,7 +398,7 @@ export function StyleRow({
               const n = Number(next);
               onPatch({
                 fontWeight: Number.isFinite(n)
-                  ? (n as NonNullable<StyleProps["fontWeight"]>)
+                  ? (n as NonNullable<FlatStyleProps["fontWeight"]>)
                   : undefined,
               });
               return;
@@ -407,7 +462,7 @@ export function StyleRow({
           kind="font"
           design={design}
           current={ref?.var ?? null}
-          onBind={(next) => onPatch({ fontFamily: next as StyleProps["fontFamily"] })}
+          onBind={(next) => onPatch({ fontFamily: next as FlatStyleProps["fontFamily"] })}
         />
         {reset}
       </div>
@@ -416,6 +471,9 @@ export function StyleRow({
 
   if (
     styleKey === "zIndex" ||
+    styleKey === "flexGrow" ||
+    styleKey === "flexShrink" ||
+    styleKey === "order" ||
     styleKey === "opacity" ||
     styleKey === "gridColumnSpan" ||
     styleKey === "gridRowSpan" ||
@@ -425,11 +483,15 @@ export function StyleRow({
     const spec =
       styleKey === "zIndex"
         ? Z_INDEX
-        : styleKey === "opacity"
-          ? OPACITY
-          : styleKey === "gridColumnStart" || styleKey === "gridRowStart"
-            ? GRID_LINE
-            : GRID_SPAN;
+        : styleKey === "flexGrow" || styleKey === "flexShrink"
+          ? FLEX_FACTOR
+          : styleKey === "order"
+            ? ORDER
+            : styleKey === "opacity"
+              ? OPACITY
+              : styleKey === "gridColumnStart" || styleKey === "gridRowStart"
+                ? GRID_LINE
+                : GRID_SPAN;
     return (
       <NumberRow
         rowKey={styleKey}
@@ -477,6 +539,7 @@ export function StyleRow({
     return (
       <IconShadowControl
         value={style?.iconShadow}
+        inherited={inherited?.iconShadow}
         design={design}
         onChange={(iconShadow) => onPatch({ iconShadow })}
         onDesignChange={onDesignChange}
@@ -497,6 +560,7 @@ export function StyleRow({
     return (
       <ShadowControl
         value={style?.boxShadow}
+        inherited={inherited?.boxShadow}
         design={design}
         onChange={(boxShadow) => onPatch({ boxShadow })}
         onDesignChange={onDesignChange}
@@ -509,6 +573,7 @@ export function StyleRow({
     return (
       <EntranceControl
         value={style?.entrance}
+        inherited={inherited?.entrance}
         onChange={(entrance) => onPatch({ entrance })}
         reset={reset}
       />
@@ -525,10 +590,21 @@ export function StyleRow({
     );
   }
 
+  if (styleKey === "loopMotion") {
+    return (
+      <LoopControl
+        value={style?.loopMotion}
+        onChange={(loopMotion) => onPatch({ loopMotion })}
+        reset={reset}
+      />
+    );
+  }
+
   if (styleKey === "transition") {
     return (
       <TransitionControl
         value={style?.transition}
+        inherited={inherited?.transition}
         onChange={(transition) => onPatch({ transition })}
         reset={reset}
       />
@@ -545,6 +621,28 @@ export function StyleRow({
     );
   }
 
+  if (styleKey === "transform") {
+    return (
+      <TransformControl
+        value={style?.transform}
+        inherited={inherited?.transform}
+        onChange={(transform) => onPatch({ transform })}
+      />
+    );
+  }
+
+  if (styleKey === "backdropFilter") {
+    return (
+      <FiltersControl
+        styleKey="backdropFilter"
+        label="Backdrop filters"
+        value={style?.backdropFilter}
+        inherited={inherited?.backdropFilter}
+        onChange={(backdropFilter) => onPatch({ backdropFilter })}
+      />
+    );
+  }
+
   if (LENGTH_KEYS.has(styleKey)) {
     return (
       <LengthRow
@@ -557,6 +655,7 @@ export function StyleRow({
         slider={styleKey === "gap"}
         onPatch={onPatch}
         reset={reset}
+        viewportUnits={style?.viewportUnits}
       />
     );
   }
@@ -569,6 +668,9 @@ export const IMPLEMENTED_STYLE_KEYS: StyleKey[] = [
   ...COLOR_KEYS,
   "fontFamily",
   "zIndex",
+  "flexGrow",
+  "flexShrink",
+  "order",
   "gridColumnSpan",
   "gridColumnStart",
   "gridRowSpan",
@@ -576,8 +678,13 @@ export const IMPLEMENTED_STYLE_KEYS: StyleKey[] = [
   "opacity",
   "boxShadow",
   "filter",
+  "backdropFilter",
+  "transform",
   "entrance",
   "scrollMotion",
+  "loopMotion",
+  // W-974: set by the Height rows' dvh/svh units (LengthRow), never a row of its own.
+  "viewportUnits",
   "transition",
   "iconRotate",
   "iconFlip",

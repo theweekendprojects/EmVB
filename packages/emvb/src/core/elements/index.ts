@@ -13,6 +13,7 @@ import type {
   DividerNode,
   HeadingNode,
   TocNode,
+  LanguageSwitcherNode,
   IconNode,
   ImageNode,
   LabelNode,
@@ -23,11 +24,13 @@ import type {
   VideoNode,
   ProviderNode,
 } from "../schema/layout.ts";
+import { LIST_MARKERS, NUMBERED_MARKERS } from "../css-keywords.ts";
 import { CONTAINER_TAGS, TEXT_TAGS } from "../schema/layout.ts";
 import type { ElementDescriptor } from "../schema/descriptors.ts";
 import { sanitizeHref } from "../sanitize/href.ts";
 import { sanitizeSvgMarkup } from "../sanitize/svg.ts";
 import { scopeSvgIds } from "./svg-ids.ts";
+import { markedChildren } from "../text-marks.ts";
 import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import { getBundledIcon } from "../icons/catalog.ts";
 import { resolveEmbedUrl } from "../sanitize/embed-url.ts";
@@ -35,7 +38,22 @@ import type { VNode } from "../render/vnode.ts";
 import { componentProvider } from "@perkyzz/emvb-provider-api";
 
 import type { ElementDefinition } from "./definition.ts";
+import { ICON_STROKE_WIDTHS, iconGlyph } from "./icon-svg.ts";
+export { iconHasAdjustableStroke, iconHasOwnColors } from "./icon-svg.ts";
 import { menu, menuItem } from "./menu.ts";
+import {
+  alert,
+  carousel,
+  carouselSlide,
+  gallery,
+  galleryImage,
+  iconBox,
+  imageBox,
+  rating,
+  socialIcons,
+  socialLink,
+  testimonial,
+} from "./widgets.ts";
 import { checkbox, form, radio, selectEl, submit, textInput, textareaEl } from "./form-elements.ts";
 import {
   loop,
@@ -104,6 +122,7 @@ const heading: ElementDefinition<HeadingNode> = {
     defaultTab: "content",
     fields: [
       { key: "text", kind: "text", label: "Text" },
+      { key: "marks", kind: "marks", label: "Formatting", optional: true },
       {
         key: "level",
         kind: "select",
@@ -114,13 +133,13 @@ const heading: ElementDefinition<HeadingNode> = {
     ],
   },
   build: (node, attrs) => {
-    const linked = innerLink(node.props.href, node.props.newTab, "emvb-heading-link", [
-      node.props.text,
-    ]);
+    // W-950: a linked heading is one link, so its words keep their formatting but not links.
+    const words = (links: boolean) => markedChildren(node.props.text, node.props.marks, links);
+    const linked = innerLink(node.props.href, node.props.newTab, "emvb-heading-link", words(false));
     return {
       tag: HEADING_TAGS[node.props.level - 1] ?? "h2",
       attrs,
-      children: [linked ?? node.props.text],
+      children: linked ? [linked] : words(true),
     };
   },
 };
@@ -220,6 +239,7 @@ const text: ElementDefinition<TextNode> = {
     defaultTab: "content",
     fields: [
       { key: "text", kind: "textarea", label: "Text" },
+      { key: "marks", kind: "marks", label: "Formatting", optional: true },
       {
         key: "tag",
         kind: "select",
@@ -232,7 +252,7 @@ const text: ElementDefinition<TextNode> = {
   build: (node, attrs) => {
     const tag = node.props.tag ?? "p";
     const safe = (TEXT_TAGS as readonly string[]).includes(tag) ? tag : "p";
-    return { tag: safe, attrs, children: [node.props.text] };
+    return { tag: safe, attrs, children: markedChildren(node.props.text, node.props.marks) };
   },
 };
 
@@ -379,6 +399,20 @@ function buttonChildren(node: ButtonNode): (VNode | string)[] {
   return node.props.iconPosition === "after" ? [buttonText, icon] : [icon, buttonText];
 }
 
+const MARKER_LABELS: Record<(typeof LIST_MARKERS)[number], string> = {
+  disc: "Bullets",
+  circle: "Circles",
+  square: "Squares",
+  decimal: "1, 2, 3",
+  "decimal-leading-zero": "01, 02, 03",
+  "lower-alpha": "a, b, c",
+  "upper-alpha": "A, B, C",
+  "lower-roman": "i, ii, iii",
+  "upper-roman": "I, II, III",
+  steps: "Numbered steps",
+  none: "None",
+};
+
 const list: ElementDefinition<ListNode> = {
   // W-796: "100." is wider than 1.25em, so three-digit numbers sat outside the list's box.
   baseCss:
@@ -391,16 +425,42 @@ const list: ElementDefinition<ListNode> = {
     defaultTab: "content",
     fields: [
       { key: "ordered", kind: "boolean", label: "Numbered list", optional: true },
+      {
+        key: "marker",
+        kind: "select",
+        label: "Markers",
+        optional: true,
+        options: LIST_MARKERS.map((value) => ({ value, label: MARKER_LABELS[value] })),
+      },
+      { key: "start", kind: "int", label: "Start at", optional: true, min: 1, max: 9999 },
       { key: "items", kind: "list-items", label: "Items" },
     ],
   },
   build: (node, attrs) => {
     // W-275: blank items would be empty bullets on the page; a list of only blanks has none.
     const items = node.props.items.filter((item) => item.trim() !== "");
-    const wide = node.props.ordered === true && items.length >= 100;
+    const marker = node.props.marker;
+    // W-952: a number style or steps makes the list numbered.
+    const ordered =
+      node.props.ordered === true || (marker !== undefined && NUMBERED_MARKERS.has(marker));
+    const wide = ordered && items.length >= 100;
+    const classes = [
+      attrs.class ?? "",
+      wide ? "emvb-list--wide" : "",
+      marker === "steps" ? "emvb-list--steps" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const start = node.props.start;
     return {
-      tag: node.props.ordered ? "ol" : "ul",
-      attrs: wide ? { ...attrs, class: `${attrs.class ?? ""} emvb-list--wide`.trim() } : attrs,
+      tag: ordered ? "ol" : "ul",
+      attrs: {
+        ...attrs,
+        ...(classes ? { class: classes } : {}),
+        ...(ordered && typeof start === "number" && Number.isInteger(start) && start > 1
+          ? { start: String(start) }
+          : {}),
+      },
       children: items.map((item) => ({ tag: "li", attrs: {}, children: [item] })),
     };
   },
@@ -565,9 +625,6 @@ function imageSources(
   return parts.join(", ");
 }
 
-/** Root stroke widths the Stroke width control can override (W-237); Lucide and Tabler use 2. */
-const ICON_STROKE_WIDTHS = ["1", "1.5", "2", "2.5", "3"] as const;
-
 const icon: ElementDefinition<IconNode> = {
   baseCss:
     // W-237: the glyph reads the wrapper's icon custom properties (rotate, flip, shadow, loop,
@@ -608,10 +665,12 @@ const icon: ElementDefinition<IconNode> = {
     ],
   },
   build: (node, attrs) => {
-    // W-234: a picked library icon carries its own SVG; the allowlist checks it on every render.
-    const picked = node.props.iconSvg ? sanitizeSvgMarkup(node.props.iconSvg) : undefined;
-    const bundled = picked ? undefined : getBundledIcon(node.props.iconId);
-    if (!picked && !bundled) {
+    const decorative = node.props.decorative === true;
+    const aria: Record<string, string> = decorative
+      ? { "aria-hidden": "true" }
+      : { role: "img", ...(node.props.title ? { "aria-label": node.props.title } : {}) };
+    const svg = iconGlyph(node.props, node.props.size ?? 24, aria);
+    if (!svg) {
       // Never treat iconId as a URL or raw HTML (R-032 / R-033).
       return {
         tag: "span",
@@ -623,48 +682,7 @@ const icon: ElementDefinition<IconNode> = {
         children: [],
       };
     }
-    const decorative = node.props.decorative === true;
-    const size = node.props.size ?? 24;
-    const svgAttrs: Record<string, string> = picked
-      ? {
-          ...pickedIconAttrs(picked.attrs),
-          width: String(size),
-          height: String(size),
-          focusable: "false",
-        }
-      : {
-          xmlns: "http://www.w3.org/2000/svg",
-          width: String(size),
-          height: String(size),
-          viewBox: "0 0 24 24",
-          fill: "none",
-          stroke: "currentColor",
-          "stroke-width": "2",
-          "stroke-linecap": "round",
-          "stroke-linejoin": "round",
-          focusable: "false",
-        };
-    if (decorative) {
-      svgAttrs["aria-hidden"] = "true";
-    } else {
-      svgAttrs.role = "img";
-      if (node.props.title) svgAttrs["aria-label"] = node.props.title;
-    }
-    const children: (VNode | string)[] = picked
-      ? picked.children
-      : (bundled?.children ?? []).map((child) => ({
-          tag: child.tag,
-          attrs: { ...child.attrs },
-          children: [],
-        }));
-    strokeClass(svgAttrs);
-    const single = picked !== undefined && node.props.singleColor === true;
-    if (single) monochromeRoot(svgAttrs);
-    const svg: VNode = {
-      tag: "svg",
-      attrs: svgAttrs,
-      children: single ? monochrome(children) : children,
-    };
+    const svgAttrs = svg.attrs;
     // A linked icon is named by its title on the link, so the svg inside is hidden.
     const title = node.props.title?.trim();
     const { role: _role, "aria-label": _label, ...plain } = svgAttrs;
@@ -677,84 +695,6 @@ const icon: ElementDefinition<IconNode> = {
     return { tag: "span", attrs, children: [linked ?? svg] };
   },
 };
-
-/**
- * W-237: a stroke icon's root `stroke-width` moves into a class whose CSS reads the wrapper's
- * `--emvb-icon-stroke` with the original width as fallback; any other width stays as it was.
- */
-function strokeClass(svgAttrs: Record<string, string>): void {
-  const width = svgAttrs["stroke-width"];
-  if (!width || !(ICON_STROKE_WIDTHS as readonly string[]).includes(width)) return;
-  if (!svgAttrs.stroke || svgAttrs.stroke === "none") return;
-  delete svgAttrs["stroke-width"];
-  const cls = `emvb-icon-sw${width.replace(".", "_")}`;
-  svgAttrs.class = svgAttrs.class ? `${svgAttrs.class} ${cls}` : cls;
-}
-
-/** Whether an icon's SVG is stroke-drawn with an adjustable width (the panel shows the control). */
-export function iconHasAdjustableStroke(svg: string | undefined): boolean {
-  if (!svg) return true; // bundled Lucide
-  const picked = sanitizeSvgMarkup(svg);
-  if (!picked) return false;
-  const attrs = pickedIconAttrs(picked.attrs);
-  const before = attrs["stroke-width"];
-  strokeClass(attrs);
-  return before !== undefined && attrs["stroke-width"] === undefined;
-}
-
-/** Paint attributes a multi-colour SVG sets its colours with (W-238). */
-const PAINT_ATTRS = ["fill", "stroke", "stop-color"] as const;
-
-const ownColor = (value: string | undefined) =>
-  value !== undefined && value !== "none" && value.toLowerCase() !== "currentcolor";
-
-/** W-238: every fill, stroke and gradient stop becomes the icon's colour; `none` stays none. */
-function monochrome(nodes: (VNode | string)[]): (VNode | string)[] {
-  return nodes.map((child) => {
-    if (typeof child === "string") return child;
-    const attrs = { ...child.attrs };
-    for (const name of PAINT_ATTRS) if (ownColor(attrs[name])) attrs[name] = "currentColor";
-    return { ...child, attrs, children: monochrome(child.children) };
-  });
-}
-
-/** The root too; without a fill, SVG paints black, so it gets the icon's colour. */
-function monochromeRoot(attrs: Record<string, string>): void {
-  if (attrs.fill === undefined || ownColor(attrs.fill)) attrs.fill = "currentColor";
-  if (ownColor(attrs.stroke)) attrs.stroke = "currentColor";
-}
-
-/**
- * Whether an icon's SVG paints with its own colours (W-238): any fill, stroke or stop other than
- * `none`/`currentColor`, or a root without a fill (SVG's default is black). The panel offers
- * Force single colour only then. Bundled Lucide icons follow the icon's colour already.
- */
-export function iconHasOwnColors(svg: string | undefined): boolean {
-  if (!svg) return false;
-  const picked = sanitizeSvgMarkup(svg);
-  if (!picked) return false;
-  if (picked.attrs.fill === undefined || PAINT_ATTRS.some((name) => ownColor(picked.attrs[name])))
-    return true;
-  const walk = (nodes: (VNode | string)[]): boolean =>
-    nodes.some(
-      (child) =>
-        typeof child !== "string" &&
-        (PAINT_ATTRS.some((name) => ownColor(child.attrs[name])) || walk(child.children)),
-    );
-  return walk(picked.children);
-}
-
-/** A picked icon's root attributes minus what the element sets itself (size, name, id). */
-function pickedIconAttrs(attrs: Record<string, string>): Record<string, string> {
-  const kept: Record<string, string> = { xmlns: "http://www.w3.org/2000/svg" };
-  for (const [name, value] of Object.entries(attrs)) {
-    if (name === "width" || name === "height" || name === "id" || name === "role") continue;
-    if (name.startsWith("aria-") || name === "focusable") continue;
-    kept[name] = value;
-  }
-  if (!kept.viewBox) kept.viewBox = "0 0 24 24";
-  return kept;
-}
 
 const video: ElementDefinition<VideoNode> = {
   baseCss:
@@ -1189,10 +1129,40 @@ const providerElement: ElementDefinition<ProviderNode> = {
   },
 };
 
+const languageSwitcher: ElementDefinition<LanguageSwitcherNode> = {
+  baseCss:
+    ".emvb-language-switcher ul{display:flex;flex-wrap:wrap;gap:0.75em;margin:0;padding:0;list-style:none}.emvb-language-switcher a{color:inherit}.emvb-language-switcher a[aria-current]{font-weight:600;text-decoration:none}",
+  defaults: () => ({ type: "language-switcher", props: {} }),
+  descriptor: {
+    type: "language-switcher",
+    name: "Language switcher",
+    group: "content",
+    defaultTab: "content",
+    fields: [{ key: "label", kind: "text", label: "Label", optional: true }],
+  },
+  build: (node, attrs) => ({
+    tag: "nav",
+    attrs: { ...attrs, "aria-label": node.props.label?.trim() || "Languages" },
+    children: [],
+  }),
+};
+
 export const ELEMENTS = {
   heading,
   provider: providerElement,
   toc,
+  "language-switcher": languageSwitcher,
+  rating,
+  alert,
+  "icon-box": iconBox,
+  "image-box": imageBox,
+  testimonial,
+  "social-icons": socialIcons,
+  "social-link": socialLink,
+  gallery,
+  "gallery-image": galleryImage,
+  carousel,
+  "carousel-slide": carouselSlide,
   container,
   "layout-section": layoutSection,
   spacer,
@@ -1222,7 +1192,7 @@ export const ELEMENTS = {
   loop,
   "loop-empty": loopEmpty,
   pagination,
-  section,
+  "part-ref": section,
   "div-block": divBlock,
   flexbox,
   grid,

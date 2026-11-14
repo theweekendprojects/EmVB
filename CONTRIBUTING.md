@@ -20,6 +20,21 @@ bun run e2e e2e/<area>.e2e.ts --project=node    # the e2e specs for what you tou
 ```
 
 - **Tests prove themselves.** Every new or changed test needs a seeded bug in `scripts/seeded-bugs.json` that makes it fail. Run it with `bun run seeded-bugs --only <id>`.
+
+### Running seeded bugs fast
+
+```bash
+bun run seeded-bugs --only <id>                  # one seed (or every id containing the text)
+bun run seeded-bugs --changed-since <git ref>    # every seed that edits a file changed since the ref
+bun run seeded-bugs --changed-since <ref> --list # just list them
+bun run seeded-bugs                              # all of them
+```
+
+- Unit seeds run in parallel git worktrees (a quarter of the cores, at most 4; `--jobs <n>` to change). Each seed is still applied alone and must make its test fail.
+- e2e seeds run in parallel lanes (`--e2e-lanes <n>`, default a quarter of the cores, at most 4), each with its own worktree and demo ports (4411/4412, then 4511/4512, 4611/4612…; production servers 10 above). Each lane keeps one Node dev server up and signs in once. A seed's test runs only once a dev-only probe (`scripts/seed-probe.ts`, copied into the lane's worktree, never into the demo) shows the server has the mutation, and the next seed waits until it shows the restore. After each test file's seeds, the tests that caught them run again on the clean code; a catch counts only if its test passes there. Anything not proven that way, and every `e2e:prod` seed, runs on a fresh server. `--cold-e2e` gives every e2e seed its own fresh server (the 1.1.0 release gate's mode); `--one-lane-e2e` runs them one at a time in the repo itself.
+- Benchmark seeds run alone at the end. Every run starts with a self-check: a known seed must be caught and a no-op seed must escape.
+- `--cache` skips seeds already caught with the same seed, edited files and test files. Use it while iterating, not for a release.
+- Stop your own demo servers on those ports first; the runner refuses to start on a busy port.
 - Never weaken, skip or delete a failing test. Fix the code, or explain why the test is wrong.
 - `packages/emvb/src/core` stays free of React, Astro, EmDash, Cloudflare and `node:*` imports. Oxlint and Fallow check this.
 - Every string in a layout is untrusted. Output goes through the core serializer and the CSS sanitizers.

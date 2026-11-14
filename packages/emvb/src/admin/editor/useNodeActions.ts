@@ -20,10 +20,12 @@ import {
   withFreshIds,
   subtreeSize,
   type Arranged,
+  type ElementType,
   type Layout,
   type LayoutNode,
 } from "../../core/index.ts";
-import { newElement } from "./dnd/new-element.ts";
+import { adminExtensionDefaults } from "./extension-manifests.ts";
+import { newElement, withLoopPostTitleLevel, withPageHeadingLevel } from "./dnd/new-element.ts";
 import { componentProvider } from "@perkyzz/emvb-provider-api";
 import { ELEMENT_NAMES } from "./element-chrome.ts";
 import type { ItemActions } from "./panels/settings/ItemList.tsx";
@@ -211,7 +213,9 @@ export function useNodeActions({
       notice(result.reason);
       return;
     }
-    dispatch({ type: "apply-arranged", layout: result.layout, selected: result.selected });
+    // W-968: a Post title placed inside a Loop starts as an H2.
+    const placed = withLoopPostTitleLevel(result.layout, node.id, latest.current.page.partType);
+    dispatch({ type: "apply-arranged", layout: placed, selected: result.selected });
     const nameOf = (id: string) => ELEMENT_NAMES[findNode(layout, id)?.type ?? "container"];
     if (result.fallback) {
       // Added next to the nearest ancestor that takes it, rather than refused (W-175).
@@ -222,7 +226,7 @@ export function useNodeActions({
     announce(`${label} added inside ${nameOf(result.parentId) ?? "Container"}`);
   };
 
-  const addFromPanel = (type: string) => {
+  const addFromPanel = (type: ElementType | string) => {
     const current = latest.current.page.layout;
     if (!current && type === "container") {
       dispatch({ type: "add-root-container" });
@@ -231,11 +235,20 @@ export function useNodeActions({
     // UX-094: an empty page (one made outside EmVB has no layout) gets its container first, so
     // a click or palette insert lands instead of doing nothing.
     const layout = current ?? startingLayout();
-    const node = newElement(type);
-    if (!node) return;
-    const label = type.startsWith("daisy:")
-      ? type.slice("daisy:".length).replace(/-/g, " ")
-      : (ELEMENT_DESCRIPTORS.find((d) => d.type === type)?.name ?? type);
+    const added = newElement(type, undefined, adminExtensionDefaults(type));
+    if (!added) return;
+    // W-946: a click or palette insert picks the heading level the way a drop does.
+    const node = withPageHeadingLevel(added, layout, latest.current.page.partType);
+    const builtInName = ELEMENT_DESCRIPTORS.find((d) => d.type === type)?.name;
+    const label = builtInName
+      ? builtInName
+      : type.startsWith("provider:")
+        ? type.slice(type.lastIndexOf(":") + 1).replace(/-/g, " ")
+        : type.startsWith("daisy:")
+          ? type.slice("daisy:".length).replace(/-/g, " ")
+          : type.startsWith("ext:")
+            ? type.slice(type.lastIndexOf("/") + 1)
+            : type;
     place(layout, node, label);
   };
 
@@ -268,7 +281,7 @@ export function useNodeActions({
                 id: newNodeId(),
                 type: "container",
                 props: {},
-                label: `${recipeId.replace(/-/g, " ")} recipe`,
+                editorLabel: `${recipeId.replace(/-/g, " ")} recipe`,
                 children,
               };
         place(layout, node, `${recipeId.replace(/-/g, " ")} recipe`, true);
@@ -280,7 +293,7 @@ export function useNodeActions({
     const nativeId = id.startsWith("native:") ? id.slice("native:".length) : id;
     const node = recipeNode(nativeId, latest.current.design, layout);
     if (!node) return;
-    place(layout, withFreshIds(layout, node), `${node.label ?? "Section"} section`, true);
+    place(layout, withFreshIds(layout, node), `${node.editorLabel ?? "Section"} section`, true);
   };
 
   return {

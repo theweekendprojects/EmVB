@@ -2,6 +2,7 @@ import { Button, DropdownMenu, Loader } from "@cloudflare/kumo";
 import * as React from "react";
 import {
   ArrowSquareOutIcon,
+  CalendarBlankIcon,
   CaretDownIcon,
   CheckIcon,
   EyeIcon,
@@ -10,6 +11,8 @@ import {
   DeviceTabletIcon,
   FloppyDiskIcon,
   KeyboardIcon,
+  LaptopIcon,
+  MonitorIcon,
   PaintBrushIcon,
   SignOutIcon,
   UploadSimpleIcon,
@@ -17,18 +20,29 @@ import {
 } from "@phosphor-icons/react";
 import { BUTTON, SOLID_PRIMARY } from "../ui.ts";
 import { statusLabel } from "../entry-status.ts";
+import { scheduleLabel } from "./ScheduleDialog.tsx";
 import type { SaveStatus } from "./useSave.ts";
-import type { PopupDevice } from "../../core/index.ts";
+import { WIDE_MIN_PX, type EditorDevice } from "../../core/index.ts";
 import { useMediaQuery } from "./useMediaQuery.ts";
 
 /** Preview sizes (W-158): the canvas device widths, in a window of that size. */
 const PREVIEW_SIZES = [
+  { device: "wide", label: "Wide screen (2560 px)", icon: MonitorIcon },
   { device: "desktop", label: "Desktop", icon: DesktopIcon },
+  { device: "laptop", label: "Laptop (1200 px)", icon: LaptopIcon },
   { device: "tablet", label: "Tablet (768 px)", icon: DeviceTabletIcon },
   { device: "mobile", label: "Mobile (390 px)", icon: DeviceMobileIcon },
 ] as const;
 
-export type TopBarPage = { title: string; status: string };
+export type TopBarPage = {
+  title: string;
+  status: string;
+  /** W-1027: when EmDash publishes the saved draft by itself. */
+  scheduledAt?: string | null;
+};
+
+const wideScreenFits = () =>
+  typeof window !== "undefined" && (window.screen?.availWidth ?? 0) >= WIDE_MIN_PX;
 
 function SaveStatusText({
   status,
@@ -80,6 +94,7 @@ export function TopBar({
   stylesUnpublished = false,
   canRevert = false,
   onRevert,
+  onSchedule,
   tools,
   onApply,
 }: {
@@ -91,7 +106,7 @@ export function TopBar({
   onShortcuts: () => void;
   onSiteStyles?: () => void;
   /** Opens the preview; with no device, at the device shown on the canvas (W-158). */
-  onPreview: (device?: PopupDevice) => void;
+  onPreview: (device?: EditorDevice) => void;
   onSave: () => void;
   onPublish: () => void;
   /** Site styles have unpublished changes (W-153): the Publish button carries a dot. */
@@ -100,6 +115,8 @@ export function TopBar({
   canRevert?: boolean;
   /** Shown once the entry has a published version; asks before discarding. */
   onRevert?: () => void;
+  /** W-1027: opens Schedule publishing. */
+  onSchedule?: () => void;
   /** Extra tools beside Site styles: the page weight and accessibility meters, … (W-310). */
   tools?: React.ReactNode;
   /** Field mode (W-900): one Apply button replaces Preview, Revert, Save draft and Publish. */
@@ -141,6 +158,12 @@ export function TopBar({
               <span className="emvb-status-dot" aria-hidden="true" />
               {statusLabel(page.status)}
             </span>
+            {page.scheduledAt && (
+              <span className="emvb-status" data-emvb-scheduled="">
+                <CalendarBlankIcon size={12} aria-hidden="true" />
+                Publishes {scheduleLabel(page.scheduledAt)}
+              </span>
+            )}
           </>
         )}
       </div>
@@ -251,11 +274,26 @@ export function TopBar({
                   />
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content data-emvb-preview-sizes="">
-                  {PREVIEW_SIZES.map(({ device, label, icon }) => (
-                    <DropdownMenu.Item key={device} icon={icon} onClick={() => onPreview(device)}>
-                      {label}
-                    </DropdownMenu.Item>
-                  ))}
+                  {PREVIEW_SIZES.map(({ device, label, icon }) => {
+                    // W-959: a window can't be wider than the screen, so Wide screen's media
+                    // queries only apply on a screen at least 2400 px wide.
+                    const tooNarrow = device === "wide" && !wideScreenFits();
+                    return (
+                      <DropdownMenu.Item
+                        key={device}
+                        icon={icon}
+                        disabled={tooNarrow}
+                        title={
+                          tooNarrow
+                            ? `Needs a screen at least ${WIDE_MIN_PX} px wide; the canvas shows Wide screen at any size`
+                            : undefined
+                        }
+                        onClick={() => onPreview(device)}
+                      >
+                        {label}
+                      </DropdownMenu.Item>
+                    );
+                  })}
                 </DropdownMenu.Content>
               </DropdownMenu>
             </div>
@@ -299,6 +337,22 @@ export function TopBar({
               Save draft
               {dirty && <span className="emvb-unsaved-dot" aria-hidden="true" />}
             </Button>
+            {onSchedule && (
+              <Button
+                variant="secondary"
+                shape="square"
+                className="emvb-icon-btn"
+                // Named without "Publish", so the Publish button keeps a name of its own.
+                aria-label={page?.scheduledAt ? "Change schedule" : "Schedule"}
+                title={page?.scheduledAt ? "Change scheduled publishing" : "Schedule publishing"}
+                aria-disabled={busy !== null}
+                onClick={() => {
+                  if (busy === null) onSchedule();
+                }}
+              >
+                <CalendarBlankIcon size={16} aria-hidden="true" />
+              </Button>
+            )}
             <Button
               variant="primary"
               className={`${BUTTON} emvb-publish-button`}

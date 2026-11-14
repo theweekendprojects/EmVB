@@ -1,3 +1,14 @@
+import { setLoopCollections } from "../core/loop-collections.ts";
+import { setGeoTrust } from "../core/geo-trust.ts";
+import {
+  proposalCreateRoute,
+  proposalGetRoute,
+  proposalsRoute,
+  proposalAcceptedRoute,
+  proposalWithdrawRoute,
+} from "./proposals.ts";
+import { presenceRoute } from "./presence.ts";
+import { requestCancelRoute, requestCreateRoute, requestsRoute } from "./requests.ts";
 import { definePlugin } from "emdash";
 import { ADMIN_ENTRY, PLUGIN_ID, PLUGIN_VERSION } from "../constants.ts";
 import {
@@ -23,6 +34,7 @@ import {
 } from "./agent-settings.ts";
 import { canvasStyleUrls } from "../core/canvas-styles.ts";
 import { canvasCollectionSlugs } from "../core/canvas-collections.ts";
+import { manifestsFromOptions } from "../core/extensions/index.ts";
 import { TOOLS } from "../mcp/tools.ts";
 import { mcpRoutes, mcpToolConfig } from "./mcp-routes.ts";
 
@@ -45,9 +57,24 @@ function registerServerProviders(specifiers: readonly string[]): void {
   }
 }
 
+/** W-1005: the name and description EmDash 1.5 shows for the plugin. */
+export const PLUGIN_META = {
+  displayName: "EmVB",
+  description: "Visual page builder: pages, theme parts and site styles, edited on a live canvas.",
+};
+
 export function createPlugin(
-  options: { canvasStyles?: unknown; canvasCollections?: unknown; providers?: unknown } = {},
+  options: {
+    canvasStyles?: unknown;
+    canvasCollections?: unknown;
+    providers?: unknown;
+    extensions?: unknown;
+    trustGeoHeaders?: unknown;
+    loopCollections?: unknown;
+  } = {},
 ) {
+  setGeoTrust(options.trustGeoHeaders);
+  setLoopCollections(options.loopCollections);
   const canvasStyles = canvasStyleUrls(options.canvasStyles);
   const canvasCollections = canvasCollectionSlugs(options.canvasCollections);
   const providers = Array.isArray(options.providers)
@@ -57,7 +84,11 @@ export function createPlugin(
   // The provider module self-registers its singleton on import (idempotent). The editor (browser)
   // registers separately via the host's `adminEntry` wrapper — see EmVBOptions.providers.
   void registerServerProviders(providers);
+  const extensions = manifestsFromOptions(options.extensions);
   return definePlugin({
+    // W-1005: EmDash 1.5 shows these on its plugins screen; 1.4 ignores them. Spread from a
+    // constant because 1.4's types don't list them.
+    ...PLUGIN_META,
     id: PLUGIN_ID,
     version: PLUGIN_VERSION,
     capabilities: [
@@ -68,6 +99,8 @@ export function createPlugin(
       "content:publish",
       "content:revisions:read",
       "hooks.content-policy:register",
+      // W-991 (S-04): check every co-editor EmDash 1.5 lists in a save's `editedBy`.
+      "users:read",
     ],
     // W-239: uploaded SVG icons (EmDash's media library refuses SVG by default).
     storage: {
@@ -78,6 +111,9 @@ export function createPlugin(
       designhistory: { indexes: ["at"] },
       // W-875 (D-060): saved sections, by name, per site.
       emvb_saved_sections: { indexes: ["updatedAt"] },
+      emvb_proposals: { indexes: ["createdAt"] },
+      // W-931: prompt relay requests for bring-your-own agents.
+      emvb_requests: { indexes: ["createdAt"] },
     },
     hooks: {
       "content:beforeSave": {
@@ -103,18 +139,42 @@ export function createPlugin(
       ],
     },
     routes: {
+      // S-12 (W-1001): the public check says the plugin is loaded, not which version (a version
+      // tells an attacker which advisories apply); editors read it from `version`.
       health: {
         public: true,
-        handler: async () => ({ ok: true, plugin: PLUGIN_ID, version: PLUGIN_VERSION }),
+        handler: async () => ({ ok: true, plugin: PLUGIN_ID }),
       },
-      // W-327: what the editor needs from the host's `emvb()` options.
-      "editor/config": { handler: async () => ({ canvasStyles, canvasCollections, providers }) },
+      version: {
+        permission: "content:edit_any",
+        handler: async () => ({ plugin: PLUGIN_ID, version: PLUGIN_VERSION }),
+      },
+      // W-327: what the editor needs from the host's `emvb()` options. S-12 (W-1001): without a
+      // permission the route was admin-only, so an editor's canvas lacked the site's styles.
+      "editor/config": {
+        permission: "content:edit_any",
+        handler: async () => ({
+          canvasStyles,
+          canvasCollections,
+          extensions,
+          providers,
+        }),
+      },
       design: designRoute,
       "design/draft": designDraftRoute,
       "design/save": designSaveRoute,
       "design/publish": designPublishRoute,
       icons: iconsRoute,
       "saved-sections": savedSectionsRoute,
+      proposals: proposalsRoute,
+      "proposals/get": proposalGetRoute,
+      "proposals/create": proposalCreateRoute,
+      "proposals/withdraw": proposalWithdrawRoute,
+      "proposals/accepted": proposalAcceptedRoute,
+      presence: presenceRoute,
+      requests: requestsRoute,
+      "requests/create": requestCreateRoute,
+      "requests/cancel": requestCancelRoute,
       "saved-sections/get": savedSectionGetRoute,
       "saved-sections/save": savedSectionSaveRoute,
       "saved-sections/rename": savedSectionRenameRoute,

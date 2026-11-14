@@ -4,7 +4,7 @@ import { emptyDesign, renderPage, type DesignSystem } from "../core/index.ts";
 import { loadDesign, renderStored } from "./render.ts";
 
 const DESIGN: DesignSystem = {
-  schemaVersion: 16,
+  schemaVersion: 17,
   variables: { colors: [{ id: "brand", name: "Brand", value: "#123456" }] },
 };
 const BASE = new URL("http://example.test/pricing");
@@ -47,6 +47,7 @@ describe("rendering a stored layout (R-031, R-033)", () => {
       providerStyles: [],
       providerRuntimes: [],
       needsDaisyRuntime: false,
+      baseTypes: expected.baseTypes,
     });
     expect(fromObject.css).toContain("#123456");
     expect(renderStored(JSON.stringify(s1Page()), DESIGN, "01PAGE")).toEqual(fromObject);
@@ -128,6 +129,24 @@ describe("rendering a stored layout (R-031, R-033)", () => {
       logged.mockRestore();
     }
   });
+});
+
+test("a layout that throws while rendering leaves the page empty, never a failed request (S-02)", () => {
+  const logged = spyOn(console, "error").mockImplementation(() => undefined);
+  try {
+    const raw = {
+      schemaVersion: 1,
+      get root() {
+        throw new Error("unrenderable");
+      },
+    };
+    expect(renderStored(raw, DESIGN, "01PAGE").html).toBe("");
+    expect(logged.mock.calls).toEqual([
+      ["emvb: stored layout failed to render", { pageId: "01PAGE", error: "Error" }],
+    ]);
+  } finally {
+    logged.mockRestore();
+  }
 });
 
 test("renderStored reports the site's text direction, also for an unreadable layout (W-230)", () => {

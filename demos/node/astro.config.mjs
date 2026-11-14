@@ -3,6 +3,7 @@ import react from "@astrojs/react";
 import { defineConfig } from "astro/config";
 import { formsPlugin } from "@emdash-cms/plugin-forms";
 import { emvb } from "@perkyzz/emvb";
+import hello from "emvb-ext-hello";
 import emdash, { local } from "emdash/astro";
 import { sqlite } from "emdash/db";
 import tailwindcss from "@tailwindcss/vite";
@@ -25,6 +26,8 @@ export default defineConfig({
   integrations: [
     react(),
     emdash({
+      // W-929: EmDash's MCP endpoint, so e2e can drive the EmVB tools with the bridge's client.
+      mcp: true,
       database: sqlite({ url: "file:./data.db" }),
       storage: local({
         directory: "./uploads",
@@ -39,9 +42,19 @@ export default defineConfig({
           // browser editor via the `adminEntry` wrapper that imports it.
           providers: ["@perkyzz/emvb-daisyui"],
           adminEntry: "/src/emvb-admin.ts",
+          extensions: [hello],
+          // The e2e sends Cloudflare's country header to this local server (S-10, W-999).
+          trustGeoHeaders: true,
         }),
       ],
     }),
   ],
+  // W-935 (D-068): English at /, French at /fr/. prefixDefaultLocale stays false: EmDash's admin
+  // breaks when the default locale is prefixed.
+  i18n: {
+    defaultLocale: "en",
+    locales: ["en", "fr"],
+    routing: { prefixDefaultLocale: false },
+  },
   devToolbar: { enabled: false },
 });

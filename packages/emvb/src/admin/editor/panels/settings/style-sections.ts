@@ -1,4 +1,4 @@
-import type { StyleProps } from "../../../../core/index.ts";
+import type { FlatStyleProps } from "../../../../core/index.ts";
 
 export type StyleSectionId =
   | "icon"
@@ -12,7 +12,7 @@ export type StyleSectionId =
   | "effects"
   | "advanced";
 
-export type StyleKey = keyof StyleProps;
+export type StyleKey = keyof FlatStyleProps;
 
 /** Elementor v4 order (W-088); every list below follows it. */
 const SECTION_ORDER: StyleSectionId[] = [
@@ -139,7 +139,7 @@ export const SECTION_LABELS: Record<StyleSectionId, string> = {
   advanced: "Advanced",
 };
 
-/** Style property keys shown in each section (subset of StyleProps). */
+/** Style property keys shown in each section (subset of FlatStyleProps). */
 const SECTION_KEYS: Record<StyleSectionId, StyleKey[]> = {
   layout: [
     "flexDirection",
@@ -170,10 +170,16 @@ const SECTION_KEYS: Record<StyleSectionId, StyleKey[]> = {
     "maxWidth",
     "maxHeight",
     "overflow",
+    "overflowX",
+    "overflowY",
     "aspectRatio",
     "objectFit",
+    "objectPosition",
+    "flexGrow",
+    "flexShrink",
+    "flexBasis",
   ],
-  position: ["position", "top", "right", "bottom", "left", "zIndex"],
+  position: ["position", "top", "right", "bottom", "left", "zIndex", "alignSelf", "order"],
   typography: [
     "fontFamily",
     "fontSize",
@@ -183,7 +189,12 @@ const SECTION_KEYS: Record<StyleSectionId, StyleKey[]> = {
     "textAlign",
     "textTransform",
     "textDecoration",
+    "fontStyle",
+    "whiteSpace",
+    "overflowWrap",
     "color",
+    "markerColor",
+    "markerSize",
   ],
   background: [
     "backgroundColor",
@@ -209,7 +220,18 @@ const SECTION_KEYS: Record<StyleSectionId, StyleKey[]> = {
     "borderBottomRightRadius",
     "borderBottomLeftRadius",
   ],
-  effects: ["opacity", "boxShadow", "filter", "cursor", "entrance", "scrollMotion", "transition"],
+  effects: [
+    "opacity",
+    "boxShadow",
+    "filter",
+    "backdropFilter",
+    "transform",
+    "cursor",
+    "entrance",
+    "scrollMotion",
+    "loopMotion",
+    "transition",
+  ],
   icon: ["iconRotate", "iconFlip", "iconScale", "iconStrokeWidth", "iconShadow", "iconAnimation"],
   advanced: [],
 };
@@ -223,6 +245,9 @@ const ICON_MOVED: StyleKey[] = ["color", "transition"];
 /** Keys that only make sense on some element types. */
 const ONLY_FOR: Partial<Record<StyleKey, string[]>> = {
   objectFit: ["image", "video"],
+  objectPosition: ["image", "video"],
+  markerColor: ["list"],
+  markerSize: ["list"],
   ...Object.fromEntries(
     ["iconRotate", "iconFlip", "iconScale", "iconStrokeWidth", "iconShadow", "iconAnimation"].map(
       (key) => [key, ["icon"]],
@@ -276,7 +301,7 @@ const TYPE_SECTION_KEYS: Record<string, Partial<Record<StyleSectionId, StyleKey[
 const OFFSETS = new Set<StyleKey>(["top", "right", "bottom", "left"]);
 
 /** Offsets only do anything once the element is positioned (W-088). */
-export const offsetsApply = (position: StyleProps["position"]) =>
+export const offsetsApply = (position: FlatStyleProps["position"]) =>
   position !== undefined && position !== "static";
 
 /**
@@ -287,8 +312,8 @@ export const offsetsApply = (position: StyleProps["position"]) =>
 export function keysFor(
   type: string,
   section: StyleSectionId,
-  style?: StyleProps,
-  position?: StyleProps["position"],
+  style?: FlatStyleProps,
+  position?: FlatStyleProps["position"],
 ): StyleKey[] {
   const offered = new Set(
     (
@@ -307,7 +332,7 @@ export function keysFor(
 /** The type's sections, plus any other section holding a set value, in section order. */
 export function sectionsFor(
   sections: StyleSectionId[],
-  style: StyleProps | undefined,
+  style: FlatStyleProps | undefined,
   type?: string,
 ): StyleSectionId[] {
   const moved = type === "icon" ? ICON_MOVED : [];
@@ -337,6 +362,21 @@ export const STYLE_LABELS: Record<StyleKey, string> = {
   overflow: "Overflow",
   aspectRatio: "Aspect ratio",
   objectFit: "Object fit",
+  objectPosition: "Object position",
+  overflowX: "Overflow X",
+  overflowY: "Overflow Y",
+  fontStyle: "Style",
+  whiteSpace: "Line wrapping",
+  overflowWrap: "Long words",
+  backdropFilter: "Backdrop filters",
+  transform: "Transform",
+  flexGrow: "Grow",
+  flexShrink: "Shrink",
+  flexBasis: "Basis",
+  alignSelf: "Align self",
+  order: "Order",
+  markerColor: "Marker color",
+  markerSize: "Marker size",
   paddingTop: "Padding top",
   paddingRight: "Padding right",
   paddingBottom: "Padding bottom",
@@ -386,6 +426,8 @@ export const STYLE_LABELS: Record<StyleKey, string> = {
   cursor: "Cursor",
   entrance: "Entrance",
   scrollMotion: "Scroll motion",
+  loopMotion: "Loop",
+  viewportUnits: "Viewport units",
   iconRotate: "Rotate",
   iconFlip: "Flip",
   iconScale: "Scale",
@@ -395,5 +437,5 @@ export const STYLE_LABELS: Record<StyleKey, string> = {
   transition: "Transition",
 };
 
-/** Every StyleProps key that the settings panel must be able to edit. */
+/** Every FlatStyleProps key that the settings panel must be able to edit. */
 export const CONTROLLED_STYLE_KEYS: StyleKey[] = Object.values(SECTION_KEYS).flat();

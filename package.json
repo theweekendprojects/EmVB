@@ -5,7 +5,8 @@
   "workspaces": [
     "packages/*",
     "demos/*",
-    "site"
+    "site",
+    "examples/*"
   ],
   "type": "module",
   "scripts": {
@@ -16,6 +17,9 @@
     "fmt:check": "oxfmt --check",
     "typecheck": "bun --check --cwd packages/emvb && bun --check",
     "fallow": "fallow dead-code",
+    "fallow:dupes": "fallow dupes --baseline scripts/fallow/dupes-baseline.json",
+    "fallow:health": "fallow health --baseline scripts/fallow/health-baseline.json",
+    "fallow:baselines": "fallow dupes --save-baseline scripts/fallow/dupes-baseline.json --quiet; fallow health --save-baseline scripts/fallow/health-baseline.json --quiet; oxfmt scripts/fallow",
     "check": "bun run lint && bun run fmt:check && bun run typecheck && bun run fallow && bun run check:runtime && bun run check:seeds && bun run test && bun run test:astro",
     "demo:node": "bun run --cwd demos/node dev",
     "demo:node:build": "bun run --cwd demos/node build",
@@ -31,10 +35,14 @@
     "test:astro": "bun run --cwd packages/emvb test:astro",
     "e2e": "playwright test",
     "e2e:prod": "playwright test -c playwright.prod.config.ts",
+    "e2e:full": "bun scripts/e2e-full.ts",
     "seeded-bugs": "bun scripts/seeded-bug.ts",
     "bench:render": "bun scripts/bench-render.ts",
     "bench:css": "bun scripts/css-budget.ts",
+    "bench:large": "bun scripts/bench-large.ts",
+    "bench:editor": "bun scripts/bench-editor.ts",
     "pack:smoke": "bun scripts/pack-smoke.ts",
+    "check:upgrade": "bun scripts/upgrade-check.ts",
     "icons:build": "bun scripts/build-icon-sets.ts",
     "daisy:generate": "bun run --cwd packages/emvb-daisyui generate",
     "daisy:test": "bun run --cwd packages/emvb-daisyui test",
@@ -47,19 +55,19 @@
     "@axe-core/playwright": "^4.14.0",
     "@fortawesome/fontawesome-free": "7.3.1",
     "@happy-dom/global-registrator": "21.0.4",
-    "@playwright/test": "1.64.1",
-    "@tabler/icons": "3.50.0",
+    "@playwright/test": "1.65.0",
+    "@tabler/icons": "3.51.0",
     "@types/bun": "1.4.4",
-    "evlog": "2.34.0",
-    "fallow": "3.37.0",
+    "evlog": "2.35.1",
+    "fallow": "3.42.0",
     "happy-dom": "21.0.4",
-    "lucide-static": "1.64.0",
-    "oxfmt": "0.75.0",
-    "oxlint": "1.90.0",
+    "lucide-static": "1.72.0",
+    "oxfmt": "0.78.0",
+    "oxlint": "1.93.0",
     "remixicon": "4.9.1",
     "typescript": "7.0.2"
   },
   "overrides": {
-    "zod": "4.5.4"
+    "zod": "4.6.7"
   }
 }

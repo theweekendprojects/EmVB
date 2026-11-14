@@ -26,7 +26,7 @@ const withUnknown = {
       { id: "head0001", type: "heading" as const, props: { text: "Hi", level: 1 } },
       {
         id: "car00001",
-        type: "carousel",
+        type: "future-widget",
         props: { slides: 3 },
         children: [
           { id: "head0002", type: "heading" as const, props: { text: "Slide", level: 2 } },
@@ -41,7 +41,7 @@ describe("unknown nodes (W-022, R-033)", () => {
     const ok = validateLayout(withUnknown);
     expect(ok.ok).toBe(true);
     if (!ok.ok) return;
-    expect(ok.layout.root.children.some((c) => c.type === "carousel")).toBe(true);
+    expect(ok.layout.root.children.some((c) => c.type === "future-widget")).toBe(true);
 
     const badId = structuredClone(withUnknown);
     (badId.root.children[1] as { id: string }).id = "!!";
@@ -56,7 +56,7 @@ describe("unknown nodes (W-022, R-033)", () => {
         children: [
           {
             id: "car00001",
-            type: "carousel",
+            type: "future-widget",
             props: { slides: 3 },
             dir: "rtl" as const,
             container: true as const,
@@ -72,6 +72,16 @@ describe("unknown nodes (W-022, R-033)", () => {
     expect(node && "dir" in node && node.dir).toBe("rtl");
     expect(node && "container" in node && node.container).toBe(true);
     expect(node && "query" in node && node.query?.min).toBe(480);
+    // They are checked like any element's, not kept as unknown keys.
+    const bad = (extra: Record<string, unknown>) =>
+      validateLayout({
+        ...withUnknown,
+        root: {
+          ...withUnknown.root,
+          children: [{ id: "car00001", type: "future-widget", props: {}, ...extra }],
+        },
+      }).ok;
+    expect(bad({ dir: "sideways" })).toBe(false);
   });
 
   test("an unknown node can be hidden on a device or given device styles and still saves", () => {
@@ -81,7 +91,7 @@ describe("unknown nodes (W-022, R-033)", () => {
     });
     const hidden: UnknownNode = {
       id: "car00001",
-      type: "carousel",
+      type: "future-widget",
       props: { slides: 3 },
       devices: { tablet: { color: "#111111" } },
       hiddenOn: ["mobile"],
@@ -94,7 +104,7 @@ describe("unknown nodes (W-022, R-033)", () => {
     expect(reloaded.ok && reloaded.layout).toEqual(saved.layout);
 
     // What the device bar's hide toggle and Paste style write onto the selected element.
-    const bare: UnknownNode = { id: "car00001", type: "carousel", props: {} };
+    const bare: UnknownNode = { id: "car00001", type: "future-widget", props: {} };
     const toggled = { ...bare, hiddenOn: toggleHidden(bare.hiddenOn, "mobile") };
     expect(validateLayout(page(toggled)).ok).toBe(true);
     const donor: LayoutNode = {
@@ -110,6 +120,11 @@ describe("unknown nodes (W-022, R-033)", () => {
       hiddenOn: ["tablet"],
     });
     expect(validateLayout(page(pasted)).ok).toBe(true);
+    // A hide or device style is checked like any element's, not kept as an unknown key.
+    expect(validateLayout(page({ ...bare, hiddenOn: ["sideways"] } as never)).ok).toBe(false);
+    expect(
+      validateLayout(page({ ...bare, devices: { tablet: { color: "red;}" } } } as never)).ok,
+    ).toBe(false);
   });
 
   test("validateLayout still refuses nesting past the depth limit when unknowns are present", () => {
@@ -118,7 +133,7 @@ describe("unknown nodes (W-022, R-033)", () => {
     for (let i = 0; i < 25; i++) {
       kids = {
         id: `u${String(i).padStart(7, "0")}`,
-        type: "carousel",
+        type: "future-widget",
         props: {},
         children: [kids],
       };
@@ -144,12 +159,12 @@ describe("unknown nodes (W-022, R-033)", () => {
     if (!ok.ok) return;
     const pub = renderPage(ok.layout, emptyDesign(), { mode: "public" });
     expect(pub.html).toContain("Hi");
-    expect(pub.html).not.toContain("carousel");
+    expect(pub.html).not.toContain("future-widget");
     expect(pub.html).not.toContain("Unknown element");
     expect(pub.warnings.some((w) => w.code === "unknown-type")).toBe(true);
 
     const editor = renderPage(ok.layout, emptyDesign(), { mode: "editor" });
-    expect(editor.html).toContain('Unknown element "carousel"');
+    expect(editor.html).toContain('Unknown element "future-widget"');
     expect(editor.html).toContain('data-emvb-id="car00001"');
   });
 
@@ -163,7 +178,7 @@ describe("unknown nodes (W-022, R-033)", () => {
     expect(moved.layout.root.children.map((c) => c.id)).toEqual(["car00001", "head0001"]);
 
     const gone = removeNode(moved.layout, "car00001");
-    expect(gone.removed?.node.type).toBe("carousel");
+    expect(gone.removed?.node.type).toBe("future-widget");
     expect(gone.layout.root.children.map((c) => c.id)).toEqual(["head0001"]);
   });
 

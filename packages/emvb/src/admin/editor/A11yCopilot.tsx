@@ -75,11 +75,13 @@ export function A11yDialog({
     refocusAfterFix.current = true;
     onApply(next, note);
   };
+  // W-979: the issue list of a large page was built on every edit while the dialog was closed.
+  if (!open) return null;
   const name = (id: string) => {
     const node = layout ? findNode(layout, id) : undefined;
     if (!node) return "Element";
     if (layout && node.id === layout.root.id) return "Page";
-    return node.label || ELEMENT_NAMES[node.type] || node.type;
+    return node.editorLabel || ELEMENT_NAMES[node.type] || node.type;
   };
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

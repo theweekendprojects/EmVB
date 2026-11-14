@@ -1,6 +1,6 @@
 {
   "name": "@perkyzz/emvb",
-  "version": "0.9.0",
+  "version": "1.2.0",
   "description": "Visual page builder plugin for EmDash CMS",
   "keywords": [
     "astro",
@@ -40,6 +40,7 @@
     "./astro/floats": "./src/astro/floats/index.ts",
     "./astro/tabs": "./src/astro/tabs/index.ts",
     "./astro/menu": "./src/astro/menu/index.ts",
+    "./astro/widgets": "./src/astro/widgets/index.ts",
     "./mcp": "./src/mcp/index.ts"
   },
   "publishConfig": {
@@ -49,30 +50,30 @@
     "test:astro": "bun --bun vitest run"
   },
   "dependencies": {
-    "@perkyzz/emvb-icons": "0.9.0",
+    "@perkyzz/emvb-icons": "1.2.0",
     "@perkyzz/emvb-provider-api": "workspace:*",
     "photocn": "0.1.2",
-    "zod": "~4.5.4"
+    "zod": ">=4.5.4 <5"
   },
   "devDependencies": {
-    "@cloudflare/kumo": "2.6.0",
-    "@emdash-cms/plugin-forms": "0.2.12",
+    "@cloudflare/kumo": "2.15.0",
+    "@emdash-cms/plugin-forms": "0.2.13",
     "@perkyzz/emvb-daisyui": "workspace:*",
     "@phosphor-icons/react": "2.1.10",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "astro": "7.3.5",
-    "emdash": "1.4.0",
+    "astro": "7.4.11",
+    "emdash": "1.5.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "vitest": "5.0.5"
+    "vitest": "5.1.0"
   },
   "peerDependencies": {
-    "@cloudflare/kumo": "2.6.0",
+    "@cloudflare/kumo": "2.6.0 || 2.15.0",
     "@emdash-cms/plugin-forms": "^0.2.9",
     "@phosphor-icons/react": "^2.1.10",
     "astro": "^7.0.0",
-    "emdash": "^1.0.0",
+    "emdash": ">=1.4.0 <2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

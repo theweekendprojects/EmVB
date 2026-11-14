@@ -37,7 +37,8 @@ import {
   type Arranged,
   inheritedStyle,
   type LayoutNode,
-  type PopupDevice,
+  type Device,
+  type EditorDevice,
   type ResponsiveDevice,
   classStylesInListOrder,
   iconHasAdjustableStroke,
@@ -45,7 +46,8 @@ import {
   resolveCascade,
   SAMPLE_POST,
   STYLE_STATES,
-  type StyleProps,
+  type FlatStyleProps,
+  flattenMotion,
   type StyleStates,
   boxLinkHeldBack,
 } from "../../../core/index.ts";
@@ -68,6 +70,7 @@ import {
   HtmlIdField,
 } from "./settings/AdvancedFields.tsx";
 import { ClassChipInput } from "./settings/ClassChipInput.tsx";
+import { useExtensionElement } from "../extensions-context.tsx";
 import { StateDot, StateSwitcher, type StyleStateChoice } from "./settings/StateSwitcher.tsx";
 import {
   DEFAULT_UI,
@@ -134,7 +137,7 @@ const writeSections = (type: string, open: Set<StyleSectionId>) => {
   }
 };
 
-const countSet = (type: string, style: StyleProps | undefined, section: StyleSectionId) =>
+const countSet = (type: string, style: FlatStyleProps | undefined, section: StyleSectionId) =>
   keysFor(type, section, style).filter((key) => style?.[key] !== undefined).length;
 
 /** Whether any state sets a key of this section (the section header's dot in Normal). */
@@ -152,6 +155,14 @@ const NORMAL_ONLY_KEYS = new Set<StyleKey>([
   "scrollMotion",
 ]);
 
+/** UX-063: which device is being edited and what it overrides (W-956 Laptop, W-959 Wide screen). */
+const DEVICE_NOTE: Record<Exclude<EditorDevice, "desktop">, string> = {
+  wide: "Editing Wide screen (2400 px and up). These styles override Desktop.",
+  laptop: "Editing Laptop. These styles override Desktop.",
+  tablet: "Editing Tablet. These styles override Laptop and Desktop.",
+  mobile: "Editing Mobile. These styles override Tablet, Laptop and Desktop.",
+};
+
 const JUMP_HELP: Record<Exclude<StyleStateChoice, "normal">, string> = {
   hover: "Changing size or position on hover can make the page jump.",
   focus: "Changing size or position on focus can make the page jump.",
@@ -162,7 +173,7 @@ const JUMP_HELP: Record<Exclude<StyleStateChoice, "normal">, string> = {
 const positionInEffect = (
   node: LayoutNode,
   design: DesignSystem,
-  cls: { style?: StyleProps } | undefined,
+  cls: { style?: FlatStyleProps } | undefined,
 ) =>
   cls
     ? cls.style?.position
@@ -221,7 +232,7 @@ type Props = {
   /** The chosen style state, for the canvas preview (W-089). */
   onStyleState?: (nodeId: string, state: StyleStateChoice) => void;
   /** Tablet and mobile edit overrides. Desktop edits `style` (W-096). */
-  device?: PopupDevice;
+  device?: EditorDevice;
   /** Add, move and delete for Accordion items and Tabs panels (W-130). */
   items?: ItemActions;
   /** The theme part being edited, if any, for the H1 warning (W-208). */
@@ -324,7 +335,7 @@ function pairFields<F extends { key: string }>(fields: readonly F[]): F[][] {
 
 /** UX-071: fields that only apply to some values of another field on the same element. */
 const SHOWN_WHEN: Readonly<
-  Record<string, (props: Record<string, unknown>, device: PopupDevice) => boolean>
+  Record<string, (props: Record<string, unknown>, device: Device) => boolean>
 > = {
   "loop.columns": (props) => props["display"] === "grid" || props["display"] === "cards",
   "pagination.countText": (props) => props["showCount"] === true,
@@ -338,7 +349,7 @@ const SHOWN_WHEN: Readonly<
   "grid.columnTracksMobile": (_props, device) => device === "mobile",
 };
 
-function fieldShown(key: string, node: LayoutNode, device: PopupDevice = "desktop"): boolean {
+function fieldShown(key: string, node: LayoutNode, device: Device = "desktop"): boolean {
   const props = node.props as Record<string, unknown>;
   // A stored value always shows, so it can be seen and reset.
   if (props[key] !== undefined) return true;
@@ -372,10 +383,22 @@ function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
 
 /** Right panel with an element selected (IA / W-021): descriptor Content + Style sections. */
 export function ElementPanel(props: Props) {
-  const descriptor =
+  const builtIn =
     props.node.type === "provider"
       ? daisyDescriptor(props.node)
       : ELEMENT_DESCRIPTORS.find((d) => d.type === props.node.type);
+  const extension = useExtensionElement(props.node.type);
+  const descriptor: ElementDescriptor | undefined = builtIn
+    ? builtIn
+    : extension
+      ? {
+          type: extension.type,
+          name: extension.label,
+          group: extension.group,
+          defaultTab: "content",
+          fields: [...extension.fields],
+        }
+      : undefined;
   if (!descriptor) {
     return (
       <div
@@ -383,9 +406,21 @@ export function ElementPanel(props: Props) {
         data-emvb-panel="element"
         data-emvb-element={props.node.type}
       >
-        <h2 className="emvb-panel-title">Unknown element</h2>
+        <h2 className="emvb-panel-title">
+          {props.node.type.startsWith("ext:") ? "Missing extension" : "Unknown element"}
+        </h2>
         <p className="emvb-helper">
-          Unknown element &quot;{props.node.type}&quot;. It can be moved or deleted, but not edited.
+          {props.node.type.startsWith("ext:") ? (
+            <>
+              This block needs the extension for &quot;{props.node.type}&quot;. It can be moved or
+              deleted; install the extension to edit it.
+            </>
+          ) : (
+            <>
+              Unknown element &quot;{props.node.type}&quot;. It can be moved or deleted, but not
+              edited.
+            </>
+          )}
         </p>
         {props.rejection && <Alert>{props.rejection}</Alert>}
       </div>
@@ -439,10 +474,20 @@ function KnownElementPanel({
   React.useEffect(() => {
     onStyleState?.(node.id, tab === "style" ? styleState : "normal");
   }, [node.id, styleState, tab, onStyleState]);
-  const normal = cls ? cls.style : node.style;
+  // W-925: the rows read the flat motion keys; applyStylePatch nests them again.
+  // W-959: the own style's `wide` record is Wide screen's, not a Desktop value.
+  const { wide: storedWide, ...ownDesktop } = (cls ? cls.style : node.style) ?? {};
+  const normal = flattenMotion(cls || node.style ? ownDesktop : undefined);
   const states = cls ? cls.states : node.states;
-  const responsive: ResponsiveDevice | null = device === "desktop" ? null : device;
-  const ownerDevices = cls ? cls.devices : node.devices;
+  const responsive: ResponsiveDevice | "wide" | null = device === "desktop" ? null : device;
+  const storedDevices = cls ? cls.devices : node.devices;
+  const { hidden: _wideHidden, ...wideValues } = storedWide ?? {};
+  const ownerDevices = (storedDevices || storedWide) && {
+    wide: flattenMotion(storedWide ? wideValues : undefined),
+    laptop: flattenMotion(storedDevices?.laptop),
+    tablet: flattenMotion(storedDevices?.tablet),
+    mobile: flattenMotion(storedDevices?.mobile),
+  };
   const style = responsive
     ? ownerDevices?.[responsive]
     : styleState === "normal"
@@ -451,6 +496,9 @@ function KnownElementPanel({
   const ownInherited = responsive
     ? {
         ...normal,
+        // W-956: each device inherits the wider ones: Laptop, then Tablet. W-959: Wide screen
+        // builds on Desktop only.
+        ...(responsive !== "laptop" && responsive !== "wide" ? ownerDevices?.laptop : undefined),
         ...(responsive === "mobile" ? ownerDevices?.tablet : undefined),
       }
     : styleState === "normal"
@@ -489,7 +537,9 @@ function KnownElementPanel({
     !singleColorOffered &&
     node.props.singleColor !== true &&
     ownColors;
-  const patchStyle = (patch: Partial<StyleProps>) => {
+  // Field values have no laptop or wide screen setting: those devices edit Desktop's.
+  const fieldDevice: Device = device === "laptop" || device === "wide" ? "desktop" : device;
+  const patchStyle = (patch: Partial<FlatStyleProps>) => {
     const written = applyStylePatch({
       node,
       design,
@@ -584,7 +634,7 @@ function KnownElementPanel({
       />
       {tab === "content" && (
         <div className="emvb-panel-body" data-emvb-tab="content">
-          {hasItemList(node.type) ? (
+          {hasItemList(node.type) && descriptor.fields.length === 0 ? (
             <ItemList node={node} onChange={onChange} onSelect={onSelect} actions={items} />
           ) : descriptor.fields.length === 0 ? (
             <p className="emvb-helper">
@@ -594,7 +644,7 @@ function KnownElementPanel({
             </p>
           ) : (
             pairFields(
-              descriptor.fields.filter((field) => fieldShown(field.key, node, device)),
+              descriptor.fields.filter((field) => fieldShown(field.key, node, fieldDevice)),
             ).map((row) => {
               const controls = row.map((field) => (
                 <React.Fragment key={field.key}>
@@ -607,7 +657,7 @@ function KnownElementPanel({
                     duplicateName={
                       field.key === "field" && layout ? duplicateFieldName(layout, node.id) : false
                     }
-                    device={device}
+                    device={fieldDevice}
                   />
                 </React.Fragment>
               ));
@@ -622,6 +672,10 @@ function KnownElementPanel({
           )}
           <ProviderMetaFields node={node} onChange={onChange} />
           <ProviderCompoundEditor node={node} onChange={onChange} />
+          {/* W-1024: an element with its own settings lists its items after them. */}
+          {hasItemList(node.type) && descriptor.fields.length > 0 && (
+            <ItemList node={node} onChange={onChange} onSelect={onSelect} actions={items} />
+          )}
           <BindingsEditor node={node} onChange={onChange} post={SAMPLE_POST} />
           <AudienceEditor node={node} isRoot={layout?.root.id === node.id} onChange={onChange} />
           <VariantEditor
@@ -702,10 +756,8 @@ function KnownElementPanel({
           ) : (
             // UX-063: say which device is being edited, as states say "Editing Hover".
             <p className="emvb-helper" data-emvb-device-note={device}>
-              {device === "mobile"
-                ? "Editing Mobile. These styles override Tablet and Desktop."
-                : "Editing Tablet. These styles override Desktop."}{" "}
-              Hover, Focus and Active are set on Desktop and apply on every device.
+              {DEVICE_NOTE[device]} Hover, Focus and Active are set on Desktop and apply on every
+              device.
             </p>
           )}
           {!cls && <StyleSources node={node} design={design} device={device} state={styleState} />}

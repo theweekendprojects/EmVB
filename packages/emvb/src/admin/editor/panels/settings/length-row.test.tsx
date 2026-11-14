@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { act } from "react";
-import { emptyDesign, type StyleProps } from "../../../../core/index.ts";
+import { emptyDesign, type FlatStyleProps } from "../../../../core/index.ts";
 import { cleanup, mount, settle } from "../../../../../test/dom/mount.ts";
 import { parseLengthDraft, unitsFor } from "./length-units.ts";
 import { StyleRow } from "./StyleRow.tsx";
@@ -8,12 +8,12 @@ import type { StyleKey } from "./style-sections.ts";
 
 afterEach(cleanup);
 
-let patches: Partial<StyleProps>[] = [];
+let patches: Partial<FlatStyleProps>[] = [];
 afterEach(() => {
   patches = [];
 });
 
-const row = (styleKey: StyleKey, style: StyleProps = {}) =>
+const row = (styleKey: StyleKey, style: FlatStyleProps = {}) =>
   mount(
     <StyleRow
       styleKey={styleKey}
@@ -190,9 +190,9 @@ describe("Line height units (W-125)", () => {
 
 describe("length field messages for other units (W-262)", () => {
   test("a number with a unit the field doesn't take lists the units it does", () => {
-    expect(parseLengthDraft("100dvh", "height", "px")).toEqual({
+    expect(parseLengthDraft("100dvh", "width", "px")).toEqual({
       ok: false,
-      message: "Height takes px, %, rem, em, vw, vh or ch.",
+      message: "Width takes px, %, rem, em, vw, vh or ch.",
     });
     expect(parseLengthDraft("12pt", "fontSize", "px")).toEqual({
       ok: false,

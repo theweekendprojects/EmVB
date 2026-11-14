@@ -8,7 +8,7 @@ const PAGES = "/_emdash/admin/plugins/emvb/pages";
 const MAX_LAYOUT_BYTES = 512 * 1024;
 
 const layoutFor = (text: string) => ({
-  schemaVersion: 17,
+  schemaVersion: 18,
   root: {
     id: "root0001",
     type: "container",
@@ -72,7 +72,7 @@ test("after save and reload the layout is deep-equal, and a draft save leaves th
   await openEditor(page, id, "Saved text");
   expect(parsed((await getPage(request, id)).data["layout"])).toEqual(saved);
 
-  await overlay(page).getByRole("button", { name: "Publish" }).click();
+  await overlay(page).getByRole("button", { name: "Publish", exact: true }).click();
   await expect(page.getByText("Published", { exact: true }).last()).toBeVisible();
   await expect(overlay(page).locator(".emvb-status")).toHaveText("Published");
   await expect(page.getByRole("button", { name: "View page (opens in a new tab)" })).toBeVisible();

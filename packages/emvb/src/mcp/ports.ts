@@ -1,3 +1,9 @@
+import type {
+  Proposal,
+  ProposalRecord,
+  ProposalRefusal,
+  applyProposal,
+} from "../core/proposals.ts";
 import type { AgentSettings } from "./settings.ts";
 import type { RateClass } from "./rate-limit.ts";
 import type {
@@ -45,6 +51,9 @@ export type AgentLogEntry = {
   pageId?: string;
   rev?: string;
   revisionId?: string;
+  /** W-933 audit: which proposal, and how many changes it carried. */
+  proposalId?: string;
+  changes?: number;
   summary: string;
 };
 
@@ -92,6 +101,52 @@ export interface EmvbPorts {
   ): Promise<ReadonlyMap<string, readonly RequiredFieldInfo[]>>;
   /** W-875: saved sections; without it the saved-section tools answer NOT_SET_UP. */
   savedSections?: SavedSectionsPort;
+  /** W-929: reviewable agent proposals (D-064); without it the proposal tools answer NOT_SET_UP. */
+  proposals?: ProposalsPort;
+  /**
+   * W-929 (D-064): true while the page is open in the EmVB editor. Direct page writes are then
+   * refused with PAGE_OPEN and the agent proposes instead. Without this port nothing is refused.
+   */
+  pageOpen?(id: string): Promise<boolean>;
+  /** W-931: the editor's requests for agents (prompt relay); without it get_requests is NOT_SET_UP. */
+  requests?: RequestsPort;
+}
+
+/** W-931: a person's request for their agent, written in the editor's Agent tab. */
+export type AgentRequest = {
+  id: string;
+  target: Proposal["target"];
+  prompt: string;
+  createdAt: string;
+  status: "open" | "answered";
+  proposalId?: string;
+};
+
+export interface RequestsPort {
+  /** The person's requests for the page, newest first (the editor's list). */
+  list(target: Proposal["target"], userId: string | null): Promise<AgentRequest[]>;
+  /**
+   * The person's open, unexpired requests, oldest first (what their agent should answer). A
+   * request is private to its author (W-990, S-01): no one else's are ever returned.
+   */
+  open(userId: string | null, target?: Proposal["target"]): Promise<AgentRequest[]>;
+  create(
+    target: Proposal["target"],
+    prompt: string,
+    userId: string | null,
+  ): Promise<{ ok: true; request: AgentRequest } | { ok: false; reason: string }>;
+  /** Deletes a request of the person's own, or anyone's for an admin. */
+  cancel(id: string, userId: string | null, isAdmin: boolean): Promise<boolean>;
+  /** Marks the person's open request for `target` answered by a proposal; false otherwise. */
+  answer(
+    id: string,
+    target: Proposal["target"],
+    proposalId: string,
+    userId: string | null,
+  ): Promise<boolean>;
+  /** An agent checked for requests now (the editor's "connected" status). */
+  seen(): Promise<void>;
+  lastSeen(): Promise<string | null>;
 }
 
 /** Saved sections in plugin storage `emvb_saved_sections` (W-875, D-060). */
@@ -103,4 +158,27 @@ export interface SavedSectionsPort {
   create(record: SavedSectionRecord): Promise<{ id: string } | Refusal>;
   rename(id: string, name: string): Promise<SavedSectionSummary | Refusal | null>;
   remove(id: string): Promise<boolean>;
+}
+
+/** W-928: storage and checked previews only; never writes or publishes content. */
+export interface ProposalsPort {
+  create(
+    proposal: unknown,
+    /** S-09 (W-998): the proposer, so only they (or an admin) withdraw it from an agent. */
+    createdBy?: string | null,
+  ): Promise<{ ok: true; id: string; record: ProposalRecord } | ProposalRefusal>;
+  get(
+    id: string,
+  ): Promise<{ ok: true; id: string; record: ProposalRecord } | ProposalRefusal | null>;
+  list(target: Proposal["target"]): Promise<{ id: string; record: ProposalRecord }[]>;
+  withdraw(id: string): Promise<boolean>;
+  /** W-929: the revisions a new proposal for `target` must name; null when there is no such page. */
+  base(target: Proposal["target"]): Promise<{
+    revision: string;
+    designRevision: string | null;
+  } | null>;
+  prepare(
+    id: string,
+    selected?: readonly number[],
+  ): Promise<ReturnType<typeof applyProposal> | null>;
 }

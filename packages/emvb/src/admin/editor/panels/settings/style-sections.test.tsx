@@ -4,7 +4,7 @@ import {
   emptyDesign,
   type DesignSystem,
   type LayoutNode,
-  type StyleProps,
+  type FlatStyleProps,
 } from "../../../../core/index.ts";
 import type { Fetcher } from "../../../api.ts";
 import { cleanup, mount } from "../../../../../test/dom/mount.ts";
@@ -19,12 +19,12 @@ afterEach(async () => {
   sessionStorage.clear();
 });
 
-let patches: Partial<StyleProps>[] = [];
+let patches: Partial<FlatStyleProps>[] = [];
 afterEach(() => {
   patches = [];
 });
 
-const row = (styleKey: StyleKey, style: StyleProps = {}) =>
+const row = (styleKey: StyleKey, style: FlatStyleProps = {}) =>
   mount(
     <StyleRow
       styleKey={styleKey}
@@ -97,7 +97,12 @@ describe("Size section (W-088)", () => {
       "maxWidth",
       "maxHeight",
       "overflow",
+      "overflowX",
+      "overflowY",
       "aspectRatio",
+      "flexGrow",
+      "flexShrink",
+      "flexBasis",
     ]);
     expect(keysFor("container", "layout")).toEqual([
       "flexDirection",
@@ -233,7 +238,7 @@ const styleRows = (section: string) =>
 
 const offsetsHelp = () => document.querySelector("[data-emvb-offsets-help]")?.textContent ?? null;
 
-const box = (style?: StyleProps, classes?: string[]): LayoutNode => ({
+const box = (style?: FlatStyleProps, classes?: string[]): LayoutNode => ({
   id: "boxx0001",
   type: "container",
   props: {},
@@ -242,7 +247,7 @@ const box = (style?: StyleProps, classes?: string[]): LayoutNode => ({
   ...(classes ? { classes } : {}),
 });
 
-const withClass = (style: StyleProps): DesignSystem => ({
+const withClass = (style: FlatStyleProps): DesignSystem => ({
   ...emptyDesign(),
   classes: [{ id: "pin", name: "Pin", style }],
 });
@@ -252,7 +257,7 @@ describe("Position section (W-088)", () => {
     await panel(box());
     await styleTab();
     await openSection("position");
-    expect(styleRows("position")).toEqual(["position", "zIndex"]);
+    expect(styleRows("position")).toEqual(["position", "zIndex", "alignSelf", "order"]);
     expect(offsetsHelp()).toBe(
       "Offsets apply once Position is Relative, Absolute, Fixed or Sticky.",
     );
@@ -262,7 +267,16 @@ describe("Position section (W-088)", () => {
     await panel(box({ position: "relative" }));
     await styleTab();
     await openSection("position");
-    expect(styleRows("position")).toEqual(["position", "top", "right", "bottom", "left", "zIndex"]);
+    expect(styleRows("position")).toEqual([
+      "position",
+      "top",
+      "right",
+      "bottom",
+      "left",
+      "zIndex",
+      "alignSelf",
+      "order",
+    ]);
     expect(offsetsHelp()).toBeNull();
   });
 
@@ -288,14 +302,14 @@ describe("Position section (W-088)", () => {
     ) as HTMLButtonElement;
     await act(async () => chip.click());
     await openSection("position");
-    expect(styleRows("position")).toEqual(["position", "zIndex"]);
+    expect(styleRows("position")).toEqual(["position", "zIndex", "alignSelf", "order"]);
   });
 
   test("a set offset stays visible while static", async () => {
     await panel(box({ top: { value: 4, unit: "px" } }));
     await styleTab();
     await openSection("position");
-    expect(styleRows("position")).toEqual(["position", "top", "zIndex"]);
+    expect(styleRows("position")).toEqual(["position", "top", "zIndex", "alignSelf", "order"]);
   });
 
   test("offsets take negative numbers, auto and a spacing variable", async () => {
@@ -367,9 +381,12 @@ describe("Effects section (W-088)", () => {
       "opacity",
       "boxShadow",
       "filter",
+      "backdropFilter",
+      "transform",
       "cursor",
       "entrance",
       "scrollMotion",
+      "loopMotion",
       "transition",
     ]);
     expect(STYLE_UI.spacer?.sections).not.toContain("effects");
@@ -462,6 +479,26 @@ describe("Effects section (W-088)", () => {
     expect(reset?.disabled).toBe(false);
     await act(async () => reset?.click());
     expect(patches).toEqual([{ boxShadow: undefined }]);
+  });
+
+  test("W-953: Transform starts as a button, then move, scale and rotate rows", async () => {
+    await row("transform");
+    expect(document.querySelectorAll("input[data-emvb-number]").length).toBe(0);
+    await act(async () =>
+      document.querySelector<HTMLButtonElement>(".emvb-add-transform")?.click(),
+    );
+    expect(
+      [...document.querySelectorAll("input[data-emvb-number]")].map((el) =>
+        el.getAttribute("data-emvb-number"),
+      ),
+    ).toEqual(["transform.x", "transform.y", "transform.scale", "transform.rotate"]);
+    await commitText(numberInput("transform.scale"), "500");
+    expect(document.body.textContent).toContain("Scale can be from 10 to 400.");
+    await commitText(numberInput("transform.y"), "-4");
+    expect(patches).toEqual([{ transform: { y: -4 } }]);
+    await row("transform", { transform: { y: -4 } });
+    await commitText(numberInput("transform.y"), "");
+    expect(patches.at(-1)).toEqual({ transform: undefined });
   });
 
   test("each filter is its own row; clearing the last one unsets Filters", async () => {
@@ -560,6 +597,7 @@ describe("Transition (W-089)", () => {
       "Opacity",
       "Shadow",
       "Filters",
+      "Transform",
     ]);
     expect(patches).toEqual([{ transition: { ...set, delay: 40, property: "colors" } }]);
   });

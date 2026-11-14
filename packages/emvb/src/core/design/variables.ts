@@ -33,7 +33,7 @@ export function refMatchesKind(ref: VariableRefLike, kind: VariableKind): boolea
 const matches = (value: unknown, id: string, kind: VariableKind | undefined) =>
   isVariableRef(value) && value.var === id && (kind === undefined || refMatchesKind(value, kind));
 
-const NESTED_COLOR_KEYS = new Set(["boxShadow", "iconShadow", "gradient", "overlay"]);
+const NESTED_COLOR_KEYS = new Set(["boxShadow", "iconShadow", "gradient", "overlay", "wide"]);
 
 /** Every value that can be a variable, including nested colours (W-356). */
 export function forEachStyleRef(
@@ -50,7 +50,16 @@ export function forEachStyleRef(
   style.gradient?.stops.forEach((stop, index) => {
     visit(stop.color, `gradient.stops.${index}`);
   });
-  if (style.overlay) visit(style.overlay.color, "overlay.color");
+  const overlay = style.overlay;
+  if (overlay && "color" in overlay) visit(overlay.color, "overlay.color");
+  if (overlay && "gradient" in overlay) {
+    overlay.gradient.stops.forEach((stop, index) => {
+      visit(stop.color, `overlay.gradient.stops.${index}`);
+    });
+  }
+  // W-959: an own style's Wide screen values use variables too.
+  const wide = (style as { wide?: StyleProps }).wide;
+  if (wide) forEachStyleRef(wide, (value, path) => visit(value, `wide.${path}`));
 }
 
 function collectStyleUsages(
@@ -64,7 +73,7 @@ function collectStyleUsages(
   });
 }
 
-const RESPONSIVE = ["tablet", "mobile"] as const;
+const RESPONSIVE = ["laptop", "tablet", "mobile"] as const;
 
 /** Style, state styles and device overrides. A nested usage is `<state|device>.<prop>`. */
 function collectAllUsages(
@@ -150,9 +159,26 @@ function stripRefsFromStyle(
     delete next["gradient"];
     changed = true;
   }
-  if (style.overlay && matches(style.overlay.color, id, kind)) {
+  // W-949: a gradient overlay goes with any of its stops, as a gradient does.
+  const overlay = style.overlay;
+  if (
+    overlay &&
+    ("color" in overlay
+      ? matches(overlay.color, id, kind)
+      : overlay.gradient.stops.some((stop) => matches(stop.color, id, kind)))
+  ) {
     delete next["overlay"];
     changed = true;
+  }
+  // W-959: and in the own style's Wide screen values (`hidden` stays when they all go).
+  const wide = (style as { wide?: StyleProps & { hidden?: boolean } }).wide;
+  if (wide) {
+    const stripped = stripRefsFromStyle(wide, id, kind);
+    if (stripped !== wide) {
+      changed = true;
+      if (stripped) next["wide"] = stripped;
+      else delete next["wide"];
+    }
   }
   if (!changed) return style;
   return Object.keys(next).length === 0 ? undefined : (next as StyleProps);
@@ -194,7 +220,7 @@ function stripRefsFromDevices(
     else delete next[device];
   }
   if (!changed) return devices;
-  return next.tablet || next.mobile ? next : undefined;
+  return next.laptop || next.tablet || next.mobile ? next : undefined;
 }
 
 /** Style, states and device overrides with the refs removed. Same object when nothing changed. */

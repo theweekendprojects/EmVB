@@ -1,17 +1,30 @@
 import { STYLE_LABELS, type StyleKey } from "./style-sections.ts";
 
-export type LengthUnit = "px" | "rem" | "em" | "%" | "vw" | "vh" | "ch";
+export type LengthUnit = "px" | "rem" | "em" | "%" | "vw" | "vh" | "ch" | ViewportUnit;
+/**
+ * W-974: dynamic and small viewport height, for full-height sections on phones. Stored as `vh`
+ * plus the record's `viewportUnits`, so 1.0 still draws them as `vh`.
+ */
+export type ViewportUnit = "dvh" | "svh";
+export const isViewportUnit = (unit: unknown): unit is ViewportUnit =>
+  unit === "dvh" || unit === "svh";
 /** `x` is a unitless number, for Line height only (W-213). */
 export type UnitChoice = LengthUnit | "auto" | "x";
 export type LengthLiteral = { value: number; unit: LengthUnit };
 
 const BOX: readonly UnitChoice[] = ["px", "%", "rem", "em", "vw", "vh", "ch"];
 const BOX_AUTO: readonly UnitChoice[] = [...BOX, "auto"];
+/** Heights also take dvh and svh (W-974). */
+const HEIGHT: readonly UnitChoice[] = ["px", "%", "rem", "em", "vw", "vh", "dvh", "svh", "ch"];
+const HEIGHT_AUTO: readonly UnitChoice[] = [...HEIGHT, "auto"];
 
 /** Units each length property offers in its unit menu (DESIGN.md § Inputs). */
 const UNITS: Partial<Record<StyleKey, readonly UnitChoice[]>> = {
   width: BOX_AUTO,
-  height: BOX_AUTO,
+  height: HEIGHT_AUTO,
+  minHeight: HEIGHT,
+  maxHeight: HEIGHT,
+  flexBasis: BOX_AUTO,
   marginTop: BOX_AUTO,
   marginRight: BOX_AUTO,
   marginBottom: BOX_AUTO,
@@ -25,6 +38,7 @@ const UNITS: Partial<Record<StyleKey, readonly UnitChoice[]>> = {
   // em first, so a typed 1.5 means 1.5 times the font size, not 1.5 px (W-125).
   lineHeight: ["em", "px", "rem", "%", "x"],
   letterSpacing: ["px", "rem", "em"],
+  markerSize: ["em", "px", "rem", "%"],
   borderWidth: ["px", "rem", "em"],
   borderTopWidth: ["px", "rem", "em"],
   borderRightWidth: ["px", "rem", "em"],
@@ -52,11 +66,49 @@ const NEGATIVE = new Set<StyleKey>([
   "marginLeft",
 ]);
 
+/** W-955: a fluid size, px on small screens to px on large ones. */
+export type FluidLiteral = { fluid: { min: number; max: number } };
+
+/** Keys that take a fluid size ("32–56"): type, gap, sizes, padding and margins (W-955). */
+const FLUID = new Set<StyleKey>([
+  "fontSize",
+  "gap",
+  "width",
+  "minWidth",
+  "maxWidth",
+  "height",
+  "minHeight",
+  "maxHeight",
+  "paddingTop",
+  "paddingRight",
+  "paddingBottom",
+  "paddingLeft",
+  "marginTop",
+  "marginRight",
+  "marginBottom",
+  "marginLeft",
+]);
+
+export const takesFluid = (key: StyleKey) => FLUID.has(key);
+
+export const isFluid = (value: unknown): value is FluidLiteral =>
+  typeof value === "object" &&
+  value !== null &&
+  "fluid" in value &&
+  typeof (value as FluidLiteral).fluid?.min === "number" &&
+  typeof (value as FluidLiteral).fluid?.max === "number";
+
+/** How a fluid size reads in a length field: "32–56" (px). */
+export const fluidDraft = (value: FluidLiteral) => `${value.fluid.min}–${value.fluid.max}`;
+
+/** "32–56", "32-56px", "32 to 56": small-screen and large-screen px. */
+const FLUID_DRAFT = /^(\d+(?:\.\d+)?)\s*(?:px)?\s*(?:–|—|-|to|→)\s*(\d+(?:\.\d+)?)\s*(?:px)?$/i;
+
 export type ParsedLength =
-  | { ok: true; value: LengthLiteral | "auto" | number | undefined }
+  | { ok: true; value: LengthLiteral | FluidLiteral | "auto" | number | undefined }
   | { ok: false; message: string };
 
-const DRAFT = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(px|rem|em|%|vw|vh|ch)?$/i;
+const DRAFT = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(px|rem|em|%|vw|dvh|svh|vh|ch)?$/i;
 /** A number with a unit EmVB doesn't take ("100dvh", "12pt"), or a comma decimal ("1,5") (W-262). */
 const OTHER_UNIT = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)\s*[a-z%]+$/i;
 const COMMA_DECIMAL = /^[+-]?\d*,\d+\s*[a-z%]*$/i;
@@ -81,6 +133,18 @@ export function parseLengthDraft(
     return allowed.includes("auto")
       ? { ok: true, value: "auto" }
       : { ok: false, message: `${label} can't be auto. Enter a number.` };
+  }
+  const range = FLUID_DRAFT.exec(text);
+  if (range) {
+    if (!FLUID.has(key)) {
+      return { ok: false, message: `${label} takes one number, not a range.` };
+    }
+    const min = Number(range[1]);
+    const max = Number(range[2]);
+    if (min > 10_000 || max > 10_000) {
+      return { ok: false, message: `${label} can be up to 10000. Enter a smaller number.` };
+    }
+    return { ok: true, value: { fluid: { min, max } } };
   }
   const match = DRAFT.exec(text);
   const n = match ? Number(match[1]) : Number.NaN;

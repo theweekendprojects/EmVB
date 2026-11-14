@@ -1,3 +1,5 @@
+import { cssTypeName } from "../schema/layout.ts";
+import { MARK_CSS } from "../text-marks.ts";
 import { DEFAULT_FLUID_RANGE, fluidClamp } from "../design/tokens.ts";
 import type { FluidRange, LengthVariable } from "../schema/design.ts";
 import type { DesignSystem } from "../schema/design.ts";
@@ -17,8 +19,8 @@ import {
   type StateDeclarations,
 } from "../sanitize/css.ts";
 import { STYLE_STATES, type StyleStateName } from "../schema/state-names.ts";
-import { DEVICE_MEDIA, type PopupDevice } from "../theme/popup-rules.ts";
-import { MOTION_KEYFRAMES } from "../sanitize/motion.ts";
+import { DEVICE_MEDIA, type Device, type EditorDevice } from "../theme/popup-rules.ts";
+import { LOOP_KEYFRAMES, MOTION_KEYFRAMES } from "../sanitize/motion.ts";
 
 export type CssInput = {
   design: DesignSystem;
@@ -28,10 +30,14 @@ export type CssInput = {
     id: string;
     declarations: Declaration[];
     states?: StateDeclarations;
-    /** Tablet and mobile overrides (W-096). Desktop stays in `declarations`. */
+    /** W-959: Wide screen overrides (2400 px and up), and its hide override. */
+    wide?: Declaration[];
+    wideHidden?: boolean;
+    /** Laptop (W-956), tablet and mobile overrides (W-096). Desktop stays in `declarations`. */
+    laptop?: Declaration[];
     tablet?: Declaration[];
     mobile?: Declaration[];
-    hiddenOn?: readonly PopupDevice[];
+    hiddenOn?: readonly Device[];
     /** W-443: an image with a caption, rendered inside a figure that hides with it. */
     figure?: boolean;
     /** Container-query overrides (W-346). */
@@ -42,13 +48,33 @@ export type CssInput = {
   previewStates?: boolean;
   /** When a node rendered a background video (W-110). */
   backgroundVideo?: boolean;
+  /** W-952: when a List is drawn as numbered steps. */
+  listSteps?: boolean;
   /**
    * Editor canvas only (W-116): the device the canvas previews. Device rules then follow this
    * device instead of the frame's width, so the Desktop canvas never picks up tablet styles in a
    * narrow window. Without it, the rules sit in their media queries as usual.
    */
-  previewDevice?: PopupDevice;
+  previewDevice?: EditorDevice;
 };
+
+/**
+ * W-959: a class's Wide screen overrides and hide. `renderableDesign` moved the class's
+ * `style.wide` to `devices.wide` and `wideHidden`; the values build on Desktop's.
+ */
+function classWide(cls: unknown): { wide: Declaration[]; wideHidden?: boolean } {
+  const { style, devices, wideHidden } = cls as {
+    style?: unknown;
+    devices?: { wide?: unknown };
+    wideHidden?: unknown;
+  };
+  return {
+    wide: devices?.wide
+      ? styleDeclarations(withInheritedLayers(devices.wide, style ?? {})).declarations
+      : [],
+    ...(typeof wideHidden === "boolean" ? { wideHidden } : {}),
+  };
+}
 
 /** Focus is keyboard focus (W-089): `:focus-visible`, never `:focus`. */
 const STATE_PSEUDO: Readonly<Record<StyleStateName, string>> = {
@@ -123,6 +149,10 @@ function declare<T extends { id: string }>(
 const usesMotion = (declarations: readonly Declaration[]) =>
   declarations.some((d) => d.property === "animation" && /\bemvb-m[otsrb]\b/.test(d.value));
 
+/** W-938: declarations that play a loop. */
+const usesLoop = (declarations: readonly Declaration[]) =>
+  declarations.some((d) => d.property === "animation" && /\bemvb-l[otsrb]\b/.test(d.value));
+
 /**
  * Cascade order (R-021 / W-030 / W-089): variables on `.emvb-root`, base CSS, shared
  * `.emvb-k-<id>` class rules, then local `.emvb-e-<id>` (local wins). Each selector's `:hover`,
@@ -130,6 +160,22 @@ const usesMotion = (declarations: readonly Declaration[]) =>
  * local states beat class states, and Active beats Hover when both apply. Transitions sit on the
  * base rule, and one closing `prefers-reduced-motion: reduce` block turns them all off.
  */
+/**
+ * The element base rules for these types, in the order every sheet writes them (W-971 reads
+ * the same order to write them once for all theme parts on a page).
+ */
+export function baseRulesFor(
+  types: Iterable<string>,
+  baseCss: ReadonlyMap<string, string>,
+): string {
+  return [...types]
+    .toSorted((a, b) =>
+      cssTypeName(a) < cssTypeName(b) ? -1 : cssTypeName(a) > cssTypeName(b) ? 1 : 0,
+    )
+    .map((type) => baseCss.get(type) ?? "")
+    .join("");
+}
+
 export function generateCss({
   design,
   usedTypes,
@@ -137,6 +183,7 @@ export function generateCss({
   localRules,
   previewStates = false,
   backgroundVideo = false,
+  listSteps = false,
   previewDevice,
 }: CssInput): string {
   const { colors, fonts, fontSizes, spacings } = design.variables;
@@ -150,6 +197,8 @@ export function generateCss({
   const entrances: string[] = [];
   /** W-319: any scroll motion on the page, so its keyframes are sent. */
   let motion = false;
+  /** W-938: any loop on the page, so its keyframes are sent. */
+  let loops = false;
   const rules = (selector: string, declarations: Declaration[], states: StateDeclarations) => [
     block(selector, declarations),
     ...STYLE_STATES.map((state) =>
@@ -165,6 +214,7 @@ export function generateCss({
     if (declarations.some((d) => d.property === "transition")) animated.push(selector);
     if (declarations.some((d) => d.property === "animation")) entrances.push(selector);
     if (usesMotion(declarations)) motion = true;
+    if (usesLoop(declarations)) loops = true;
     return declarations;
   };
   const classes = (design.classes ?? []).flatMap((cls) => {
@@ -187,11 +237,19 @@ export function generateCss({
         ? [
             {
               selector: `.${className}`,
+              ...classWide(cls),
               // W-210: a device that sets one background layer keeps the layers it inherits.
-              tablet: styleDeclarations(withInheritedLayers(cls.devices?.tablet, cls.style ?? {}))
+              laptop: styleDeclarations(withInheritedLayers(cls.devices?.laptop, cls.style ?? {}))
                 .declarations,
+              tablet: styleDeclarations(
+                withInheritedLayers(cls.devices?.tablet, { ...cls.style, ...cls.devices?.laptop }),
+              ).declarations,
               mobile: styleDeclarations(
-                withInheritedLayers(cls.devices?.mobile, { ...cls.style, ...cls.devices?.tablet }),
+                withInheritedLayers(cls.devices?.mobile, {
+                  ...cls.style,
+                  ...cls.devices?.laptop,
+                  ...cls.devices?.tablet,
+                }),
               ).declarations,
               hiddenOn: cls.hiddenOn,
               // W-571: the page root is never hidden (W-567), not even by a class.
@@ -202,6 +260,9 @@ export function generateCss({
     }),
     ...localRules.map((rule) => ({
       selector: `.emvb-e-${rule.id}`,
+      wide: rule.wide ?? [],
+      wideHidden: rule.wideHidden,
+      laptop: rule.laptop ?? [],
       tablet: rule.tablet ?? [],
       mobile: rule.mobile ?? [],
       hiddenOn: rule.hiddenOn,
@@ -209,37 +270,77 @@ export function generateCss({
     })),
   ];
   /** A device block: in its media query, or, for a previewed device, on or off outright. */
-  const forDevices = (devices: readonly PopupDevice[], query: string, body: string) => {
+  const forDevices = (devices: readonly EditorDevice[], query: string, body: string) => {
     if (!body) return "";
     if (previewDevice === undefined) return `@media ${query}{${body}}`;
     return devices.includes(previewDevice) ? body : "";
   };
-  const at = (query: string, which: "tablet" | "mobile") =>
+  const at = (query: string, which: "wide" | "laptop" | "tablet" | "mobile") =>
     forDevices(
-      which === "tablet" ? ["tablet", "mobile"] : ["mobile"],
+      which === "wide"
+        ? ["wide"]
+        : which === "laptop"
+          ? ["laptop", "tablet", "mobile"]
+          : which === "tablet"
+            ? ["tablet", "mobile"]
+            : ["mobile"],
       query,
       responsive.map((rule) => block(rule.selector, rule[which])).join(""),
     );
-  const hide = (device: PopupDevice, query: string) => {
+  /**
+   * W-956: Desktop and Laptop hidden together keep the one `min-width: 1025px` rule every page
+   * saved before Laptop had; hidden on only one of them, each gets its own range.
+   */
+  /**
+   * W-959: Wide screen follows Desktop's hide unless `wide.hidden` says otherwise. An element
+   * that Wide screen shows again gets a Desktop range that stops at 2399.98 px (`notWide`); one
+   * hidden on Wide screen only gets the Wide screen rule. Rules without `wide.hidden` keep the
+   * CSS they had.
+   */
+  type HideRule = { hiddenOn?: readonly Device[] | undefined; wideHidden?: boolean | undefined };
+  const hide = (
+    devices: readonly Device[],
+    query: string,
+    wide: "follows" | "notWide" | "only" = "follows",
+  ) => {
+    const hidden = (rule: HideRule) => {
+      const on = rule.hiddenOn ?? [];
+      if (wide === "only") return rule.wideHidden === true && !on.includes("desktop");
+      if (devices.includes("desktop") && (rule.wideHidden === false) !== (wide === "notWide"))
+        return false;
+      if (devices.includes("desktop") && devices.includes("laptop"))
+        return on.includes("desktop") && on.includes("laptop");
+      if (devices[0] === "desktop") return on.includes("desktop") && !on.includes("laptop");
+      if (devices[0] === "laptop") return on.includes("laptop") && !on.includes("desktop");
+      return on.includes(devices[0] as Device);
+    };
+    const previewed: EditorDevice[] =
+      wide === "only"
+        ? ["wide"]
+        : wide === "follows" && devices.includes("desktop")
+          ? ["wide", ...devices]
+          : [...devices];
     // W-443: a captioned image hides its figure too, or the caption stayed on its own.
     const selectors = responsive
-      .filter((rule) => rule.hiddenOn?.includes(device))
+      .filter(hidden)
       .flatMap((rule) =>
         "figure" in rule && rule.figure
           ? [rule.selector, `.emvb-figure:has(>${rule.selector},>a>${rule.selector})`]
           : ["hideSelector" in rule && rule.hideSelector ? rule.hideSelector : rule.selector],
       );
     return forDevices(
-      [device],
+      previewed,
       query,
       selectors.length > 0 ? `${selectors.join(",")}{display:none}` : "",
     );
   };
   for (const rule of responsive) {
-    if (usesMotion(rule.tablet) || usesMotion(rule.mobile)) motion = true;
+    const devices = [rule.wide ?? [], rule.laptop, rule.tablet, rule.mobile];
+    if (devices.some(usesMotion)) motion = true;
+    if (devices.some(usesLoop)) loops = true;
     if (
       !entrances.includes(rule.selector) &&
-      [...rule.tablet, ...rule.mobile].some((d) => d.property === "animation")
+      devices.flat().some((d) => d.property === "animation")
     ) {
       entrances.push(rule.selector);
     }
@@ -251,6 +352,7 @@ export function generateCss({
     const query = rule.query ?? [];
     const selector = `.emvb-e-${rule.id}`;
     if (usesMotion(query)) motion = true;
+    if (usesLoop(query)) loops = true;
     if (!entrances.includes(selector) && query.some((d) => d.property === "animation")) {
       entrances.push(selector);
     }
@@ -258,11 +360,12 @@ export function generateCss({
       animated.push(selector);
     }
   }
-  return [
+  const sheet = [
     entrances.length > 0
       ? "@keyframes emvb-fade{from{opacity:0}to{opacity:1}}@keyframes emvb-fade-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes emvb-fade-down{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}@keyframes emvb-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}@keyframes emvb-slide-down{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}@keyframes emvb-scale{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:none}}"
       : "",
     entrances.length > 0 && motion ? MOTION_KEYFRAMES : "",
+    entrances.length > 0 && loops ? LOOP_KEYFRAMES : "",
     block(".emvb-root", variables),
     defaultsCss,
     backgroundVideo
@@ -272,7 +375,7 @@ export function generateCss({
         // W-801: a looping video kept playing for visitors who ask for reduced motion.
         "@media (prefers-reduced-motion: reduce){.emvb-bg-video{display:none}}"
       : "",
-    ...[...usedTypes].toSorted().map((type) => baseCss.get(type) ?? ""),
+    baseRulesFor(usedTypes, baseCss),
     ...classes,
     ...locals,
     ...localRules
@@ -281,11 +384,18 @@ export function generateCss({
         (rule) =>
           `@container (min-width:${rule.queryMin}px){${block(`.emvb-e-${rule.id}`, rule.query ?? [])}}`,
       ),
+    at(DEVICE_MEDIA.wide, "wide"),
+    at(DEVICE_MEDIA.laptop, "laptop"),
     at(DEVICE_MEDIA.tablet, "tablet"),
     at(DEVICE_MEDIA.mobile, "mobile"),
-    hide("desktop", DEVICE_MEDIA.hideDesktop),
-    hide("tablet", DEVICE_MEDIA.hideTablet),
-    hide("mobile", DEVICE_MEDIA.hideMobile),
+    hide(["desktop", "laptop"], DEVICE_MEDIA.hideDesktop),
+    hide(["desktop"], DEVICE_MEDIA.hideDesktopOnly),
+    hide(["desktop", "laptop"], DEVICE_MEDIA.hideDesktopNotWide, "notWide"),
+    hide(["desktop"], DEVICE_MEDIA.hideDesktopOnlyNotWide, "notWide"),
+    hide([], DEVICE_MEDIA.wide, "only"),
+    hide(["laptop"], DEVICE_MEDIA.hideLaptop),
+    hide(["tablet"], DEVICE_MEDIA.hideTablet),
+    hide(["mobile"], DEVICE_MEDIA.hideMobile),
     animated.length > 0
       ? `@media (prefers-reduced-motion: reduce){${animated.join(",")}{transition:none}}`
       : "",
@@ -293,4 +403,25 @@ export function generateCss({
       ? `@media (prefers-reduced-motion: reduce){${entrances.join(",")}{animation:none}}`
       : "",
   ].join("");
+  // W-952: list marker colour and size, and numbered steps, only on pages that use them, so
+  // every page saved before them keeps the exact CSS it had.
+  return [
+    sheet,
+    sheet.includes("--emvb-marker-") ? LIST_MARKER_CSS : "",
+    listSteps ? LIST_STEPS_CSS : "",
+    sheet.includes("--emvb-mark-") ? MARK_CSS : "",
+  ].join("");
 }
+
+/** Markers take the list's marker colour and size when it sets them (W-952). */
+const LIST_MARKER_CSS =
+  ".emvb-list>li::marker{color:var(--emvb-marker-color,inherit);font-size:var(--emvb-marker-size,inherit)}";
+
+/**
+ * Numbered steps (W-952): each number in a circle beside its item, counted by the list's own
+ * `list-item` counter so Start at still applies.
+ */
+const LIST_STEPS_CSS =
+  ".emvb-list--steps{list-style:none;padding-inline-start:0;display:flex;flex-direction:column;gap:0.75em}" +
+  ".emvb-list--steps>li{display:flex;align-items:flex-start;gap:0.75em;counter-increment:list-item}" +
+  ".emvb-list--steps>li::before{content:counter(list-item);flex:none;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-width:2em;height:2em;padding:0 0.4em;border-radius:999px;border:2px solid var(--emvb-marker-color,currentColor);color:var(--emvb-marker-color,currentColor);font-size:var(--emvb-marker-size,1em);font-weight:600;line-height:1}";

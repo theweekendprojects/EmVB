@@ -13,8 +13,9 @@ import {
   type LayoutNode,
   type Removed,
   LAYOUT_SCHEMA_VERSION,
+  withShiftedMarks,
 } from "../../core/index.ts";
-import { withPageHeadingLevel } from "./dnd/new-element.ts";
+import { withLoopPostTitleLevel, withPageHeadingLevel } from "./dnd/new-element.ts";
 import type { PageDraft } from "../content-api.ts";
 
 /** Editor state (A-07): a pure reducer, so every edit is testable without a browser. */
@@ -22,6 +23,8 @@ export type EditorState = {
   id: string;
   page: PageDraft;
   status: string;
+  /** W-1027: when EmDash will publish the saved draft by itself (ISO), or null. */
+  scheduledAt?: string | null;
   rev: string | null;
   design: DesignSystem;
   designRevision: string | null;
@@ -58,6 +61,7 @@ export type EditorAction =
   | { type: "apply-arranged"; layout: Layout; selected: string }
   | { type: "saved"; rev: string; version: number }
   | { type: "published"; rev: string }
+  | { type: "scheduled"; rev: string; status: string; at: string | null }
   | { type: "set-design"; design: DesignSystem; revision: string | null }
   /**
    * W-536: a site styles edit shown before its save lands, so the next edit builds on it. The
@@ -184,7 +188,10 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       if (!state.page.layout || !findNode(state.page.layout, action.id)) return state;
       return edited(state, {
         ...state.page,
-        layout: updateNode(state.page.layout, action.id, action.update),
+        // W-950: formatted words follow an edit of the text, wherever it was made.
+        layout: updateNode(state.page.layout, action.id, (node) =>
+          withShiftedMarks(node, action.update(node)),
+        ),
       });
     case "delete-node": {
       if (!state.page.layout) return state;
@@ -211,8 +218,14 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
     case "add-node": {
       if (!state.page.layout) return state;
       const place = { parentId: action.parentId, index: action.index };
-      const node = withPageHeadingLevel(action.node, state.page.layout);
-      return arranged(state, addNode(state.page.layout, node, place));
+      const node = withPageHeadingLevel(action.node, state.page.layout, state.page.partType);
+      const added = addNode(state.page.layout, node, place);
+      return arranged(
+        state,
+        added.ok
+          ? { ...added, layout: withLoopPostTitleLevel(added.layout, node.id, state.page.partType) }
+          : added,
+      );
     }
     case "move-node":
       if (!state.page.layout) return state;
@@ -228,7 +241,10 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
         status: state.status === "published" ? "changed" : state.status,
       };
     case "published":
-      return { ...state, rev: action.rev, status: "published" };
+      return { ...state, rev: action.rev, status: "published", scheduledAt: null };
+    case "scheduled":
+      // W-1027: scheduling (or cancelling it) keeps the draft; EmDash publishes it at `at`.
+      return { ...state, rev: action.rev, status: action.status, scheduledAt: action.at };
     case "preview-design":
       return { ...state, design: action.design };
     case "set-design":

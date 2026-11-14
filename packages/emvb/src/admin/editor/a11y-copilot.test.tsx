@@ -15,7 +15,12 @@ const layout = {
     props: {},
     children: [
       { id: "head0001", type: "heading", props: { text: "A", level: 1 } },
-      { id: "head0002", type: "heading", props: { text: "B", level: 1 }, label: "Second title" },
+      {
+        id: "head0002",
+        type: "heading",
+        props: { text: "B", level: 1 },
+        editorLabel: "Second title",
+      },
       { id: "head0003", type: "heading", props: { text: "C", level: 5 } },
     ],
   },
@@ -113,4 +118,27 @@ test("W-833: after a fix, focus moves to the next fix, then to Close once nothin
   await act(async () => fixes()[0]?.click());
   expect(fixes().length).toBe(0);
   expect(document.activeElement?.hasAttribute("data-emvb-a11y-close")).toBe(true);
+});
+
+test("W-979: while closed, the dialog doesn't build its list of issues", async () => {
+  const report = auditPage(layout, emptyDesign());
+  let listed = 0;
+  const issues = Object.assign([...report.issues], {
+    map(...args: Parameters<typeof Array.prototype.map>) {
+      listed += 1;
+      return Array.prototype.map.apply(this, args);
+    },
+  });
+  const props = {
+    onOpenChange: () => undefined,
+    report: { ...report, issues },
+    layout,
+    onSelect: () => undefined,
+    onApply: () => undefined,
+  };
+  await mount(<A11yDialog open={false} {...props} />);
+  expect(listed).toBe(0);
+  await cleanup();
+  await mount(<A11yDialog open {...props} />);
+  expect(listed).toBeGreaterThan(0);
 });

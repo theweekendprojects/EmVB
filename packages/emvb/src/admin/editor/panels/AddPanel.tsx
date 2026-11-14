@@ -2,7 +2,14 @@ import { Button, Input } from "@cloudflare/kumo";
 import * as React from "react";
 import { elementIcon, providerIcon } from "../element-chrome.ts";
 import { componentProviders } from "@perkyzz/emvb-provider-api";
-import { ELEMENT_DESCRIPTORS, SECTION_RECIPES, typeMayAddScript } from "../../../core/index.ts";
+import {
+  ELEMENT_DESCRIPTORS,
+  SECTION_RECIPES,
+  typeMayAddScript,
+  type ElementType,
+} from "../../../core/index.ts";
+import { useExtensionElements } from "../extensions-context.tsx";
+import { PuzzlePieceIcon } from "@phosphor-icons/react";
 import { NEW_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { BUTTON, FIELD } from "../../ui.ts";
 import { isCancelEscape } from "../ime.ts";
@@ -25,7 +32,7 @@ export function AddPanel({
   defaultQuery = "",
   formsAvailable = true,
 }: {
-  onAdd: (type: string) => void;
+  onAdd: (type: ElementType | string) => void;
   /** Adds a section recipe (W-320); without it, recipes are not offered. */
   onRecipe?: (id: string) => void;
   /** My sections (W-876); without it the group is not shown. */
@@ -67,6 +74,9 @@ export function AddPanel({
       d.type !== "daisy" &&
       (formsAvailable || d.group !== "form") &&
       matchesSearch(query, d.name, d.group, "category" in d ? d.category : "", "keywords" in d ? d.keywords.join(" ") : ""),
+  );
+  const extensionElements = useExtensionElements().filter((el) =>
+    matchesSearch(query, el.label, el.name, "extension"),
   );
   const recipes = onRecipe
     ? [
@@ -171,6 +181,31 @@ export function AddPanel({
             </div>
           );
         })
+      )}
+      {extensionElements.length > 0 && (
+        <div className="emvb-add-group" data-emvb-extensions="">
+          <h3 className="emvb-add-group-title">Extensions</h3>
+          <div className="emvb-add-tiles" aria-label="Extensions">
+            {extensionElements.map((tile) => (
+              <button
+                key={tile.type}
+                type="button"
+                className="emvb-element-tile"
+                data-emvb-add-tile={tile.type}
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.setData(NEW_ELEMENT_MIME, tile.type);
+                  event.dataTransfer.effectAllowed = "copy";
+                  dragStash.new(tile.type);
+                }}
+                onClick={() => onAdd(tile.type)}
+              >
+                <PuzzlePieceIcon size={20} aria-hidden="true" />
+                <span>{tile.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
       {onRecipe && recipes.length > 0 && (
         <div className="emvb-add-group" data-emvb-recipes="">

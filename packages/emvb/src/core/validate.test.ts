@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import { container, heading, layoutOfBytes, nested, s1Page } from "../../test/fixtures/layouts.ts";
-import { LAYOUT_SCHEMA_VERSION } from "./schema/layout.ts";
 import { MAX_DEPTH, MAX_DESIGN_BYTES, MAX_LAYOUT_BYTES, MAX_NODES } from "./limits.ts";
 import { summarizeIssues, validateDesign, validateLayout } from "./validate.ts";
 
@@ -13,7 +12,7 @@ const issuesOf = (input: unknown) => {
 describe("valid layouts", () => {
   test("the S1 page parses and keeps its content", () => {
     const result = validateLayout(s1Page());
-    expect(result).toEqual({ ok: true, layout: s1Page(), upgradedFrom: LAYOUT_SCHEMA_VERSION });
+    expect(result).toEqual({ ok: true, layout: s1Page(), upgradedFrom: 18 });
   });
 
   test("an empty root container is valid", () => {
@@ -60,11 +59,12 @@ describe("invalid layouts fail with the exact path", () => {
       "root.children[0].props.level",
       "too_big",
     ],
+    // W-925 (D-065): unknown prop and style keys are kept, not refused; see contract.test.ts.
     [
-      "unknown prop",
-      withChild({ ...heading("abcd1234"), props: { text: "x", level: 1, onclick: "x" } }),
-      "root.children[0].props",
-      "unrecognized_keys",
+      "unknown prop with a name no key can have",
+      withChild({ ...heading("abcd1234"), props: { text: "x", level: 1, "on click<": "x" } }),
+      "root.children[0].props.on click<",
+      "unknown_key",
     ],
     ["bad id", withChild(heading("a b")), "root.children[0].id", "invalid_format"],
     [
@@ -72,12 +72,6 @@ describe("invalid layouts fail with the exact path", () => {
       withChild({ ...heading("abcd1234"), style: { color: "red;}body{x:y" } }),
       "root.children[0].style.color",
       "invalid_format",
-    ],
-    [
-      "unknown style property",
-      withChild({ ...heading("abcd1234"), style: { float: "left" } }),
-      "root.children[0].style",
-      "unrecognized_keys",
     ],
     [
       "negative gap",
@@ -187,7 +181,7 @@ describe("size budget (N-005, K12)", () => {
 
 describe("versions", () => {
   test("a newer schema version is refused with an update message", () => {
-    expect(issuesOf({ ...s1Page(), schemaVersion: LAYOUT_SCHEMA_VERSION + 1 })).toEqual([
+    expect(issuesOf({ ...s1Page(), schemaVersion: 19 })).toEqual([
       expect.objectContaining({ path: "schemaVersion", code: "newer-version" }),
     ]);
   });
@@ -209,7 +203,7 @@ describe("design system document (D-013)", () => {
   test("a valid design parses", () => {
     expect<unknown>(validateDesign(design([color(1)]))).toEqual({
       ok: true,
-      design: { ...design([color(1)]), schemaVersion: 16 },
+      design: { ...design([color(1)]), schemaVersion: 17 },
       upgradedFrom: 1,
     });
   });

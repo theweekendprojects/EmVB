@@ -88,7 +88,9 @@ describe("entrance motion (W-107)", () => {
         id: "head0001",
         type: "heading",
         props: { text: "Hi", level: 1 },
-        style: { entrance: { type: "slide-up", duration: 500, delay: 120, trigger: "view" } },
+        style: {
+          motion: { entrance: { type: "slide-up", duration: 500, delay: 120, trigger: "view" } },
+        },
       },
     ]);
     const css = renderPage(layout, design).css;

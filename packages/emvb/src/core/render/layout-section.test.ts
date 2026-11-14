@@ -48,6 +48,7 @@ describe("layout Section (W-156)", () => {
       ).ok;
     expect(bad({ tag: "script" })).toBe(false);
     expect(bad({ contentWidth: { value: -5, unit: "px" } })).toBe(false);
-    expect(bad({ align: "center" })).toBe(false);
+    // W-925 (D-065): an unknown prop is kept for a newer 1.x, not refused.
+    expect(bad({ align: "center" })).toBe(true);
   });
 });

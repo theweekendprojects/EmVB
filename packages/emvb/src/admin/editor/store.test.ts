@@ -187,6 +187,13 @@ describe("a new Heading's level (W-147)", () => {
     expect(levelOf(state, "headNEW2")).toBe(2);
   });
 
+  test("in a header part the first Heading stays H2, since the page has its own H1 (W-946)", () => {
+    const page = withoutH1();
+    let state: EditorState = { ...page, page: { ...page.page, partType: "header" } };
+    state = add(state, fresh("headNEW4"));
+    expect(levelOf(state, "headNEW4")).toBe(2);
+  });
+
   test("a Heading whose level was chosen, and other elements, are added as they are", () => {
     let state = withoutH1();
     state = add(state, { id: "headNEW3", type: "heading", props: { text: "H", level: 3 } });
@@ -210,5 +217,27 @@ describe("A drop on its own spot is no edit (W-521)", () => {
       expect(state.page.layout).toBe(start.page.layout);
       expect(state.selectedId).toBe("head0002");
     }
+  });
+});
+
+test("W-950: formatted words follow an edit of the text, from any control", () => {
+  const start = initial();
+  const layout = structuredClone(start.page.layout);
+  if (!layout) throw new Error("no layout");
+  layout.root.children.push({
+    id: "text0950",
+    type: "text",
+    props: { text: "a gold word", marks: [{ start: 2, end: 6, bold: true }] },
+  } as LayoutNode);
+  let state: EditorState = { ...start, page: { ...start.page, layout } };
+  state = editorReducer(state, {
+    type: "update-node",
+    id: "text0950",
+    update: (node) => ({ ...node, props: { ...node.props, text: "the gold word" } }) as LayoutNode,
+  });
+  const node = state.page.layout ? findNode(state.page.layout, "text0950") : undefined;
+  expect(node?.props).toEqual({
+    text: "the gold word",
+    marks: [{ start: 4, end: 8, bold: true }],
   });
 });

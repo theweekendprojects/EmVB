@@ -1,10 +1,22 @@
+import { isShadowingId } from "../shadowing-ids.ts";
+import { renderableDesign, renderableDynamic, renderableLayout } from "../contract.ts";
+import { markColors } from "../text-marks.ts";
+import type { TextMark } from "../schema/layout.ts";
+import { LIST_MARKERS } from "../css-keywords.ts";
 import { MAX_NODES } from "../limits.ts";
 import { loneAbTests, variantShows } from "../audience/variants.ts";
 import { audienceShows, audienceSummary } from "../audience/rules.ts";
-import { generateCss } from "../css/generate.ts";
+import { baseRulesFor, generateCss } from "../css/generate.ts";
 import { printCss } from "../css/print.ts";
-import { cssScopeToken, scopeClassName, scopeCss, scopeWrapperCss } from "../css/scope.ts";
+import {
+  cssScopeToken,
+  scopeClassName,
+  scopeCss,
+  scopeCssAll,
+  scopeWrapperCss,
+} from "../css/scope.ts";
 import { ELEMENTS } from "../elements/index.ts";
+import { nodeRuntime, type WidgetRuntime } from "../elements/widgets.ts";
 import { controlId } from "../elements/field-id.ts";
 import { layoutHasForm } from "../forms/binding.ts";
 import { nodeChildren, someNode } from "../tree-ops.ts";
@@ -17,6 +29,7 @@ import {
   isParentNode,
   isSectionNode,
   isTabsNode,
+  cssTypeName,
   type Layout,
   type LayoutNode,
   type PaginationNode,
@@ -34,9 +47,11 @@ import {
 } from "../sanitize/css.ts";
 import { STYLE_STATES } from "../schema/state-names.ts";
 import { resolveEmbedUrl } from "../sanitize/embed-url.ts";
+import { sanitizeHref } from "../sanitize/href.ts";
 import { resolvePostForRender, type ThemeDynamicData } from "../theme/dynamic.ts";
 import type { FormDefinitions } from "../forms/definition.ts";
-import type { PopupDevice } from "../theme/popup-rules.ts";
+import { DEVICES, type Device, type EditorDevice } from "../theme/popup-rules.ts";
+import { hiddenOnEveryDevice } from "../design/devices.ts";
 import type { RenderContext, RenderMode } from "./context.ts";
 import { isDynamicPostNode, renderDynamicPost } from "./dynamic-post.ts";
 import { renderForm, withFieldOptions } from "./form.ts";
@@ -45,6 +60,11 @@ import { renderPagination } from "./pagination.ts";
 import { renderSection } from "./section.ts";
 import { renderTabs } from "./tabs.ts";
 import { serialize, type VNode } from "./vnode.ts";
+import {
+  isExtensionType,
+  renderExtensionNode,
+  EXTENSION_PLACEHOLDER_CSS,
+} from "../extensions/index.ts";
 import { classStylesInListOrder, resolveCascade } from "../design/cascade.ts";
 import { applyBindings, hasBindings, type BindingData } from "../data/bindings.ts";
 import {
@@ -59,7 +79,7 @@ export { FORMS_SUBMIT_PATH } from "./form.ts";
 
 export type RenderWarning = {
   nodeId: string;
-  code: "unknown-type" | "rejected-style" | "unknown-variable";
+  code: "unknown-type" | "rejected-style" | "unknown-variable" | "refused-markup";
   detail: string;
 };
 export type RenderResult = {
@@ -70,9 +90,16 @@ export type RenderResult = {
   needsTabsRuntime: boolean;
   /** A Menu has a dropdown: hosts load `EmVBMenuRuntime` (W-197). */
   needsMenuRuntime: boolean;
+  /**
+   * W-1025: the opt-in widget scripts the page's elements asked for, sorted; empty for most
+   * pages. `EmVBPage` loads them; a theme part's go to `EmVBWidgetRuntimes`.
+   */
+  runtimes: WidgetRuntime[];
   /** The site's text direction when set in Site styles, for the host's `<html dir>` (W-230). */
   dir?: "ltr" | "rtl" | "auto";
   warnings: RenderWarning[];
+  /** W-971: the element types whose base rules this sheet holds (see `sharedPartCss`). */
+  baseTypes: string[];
 };
 
 const ID = /^[A-Za-z0-9_-]{4,24}$/;
@@ -86,6 +113,8 @@ function focalPercent(value: unknown, fallback: number): number | undefined {
   }
   return value;
 }
+
+const LIST_MARKER_SET: ReadonlySet<string> = new Set(LIST_MARKERS);
 
 /** `object-position` only when both axes are whole percentages. A string here would break the sheet. */
 function objectPosition(x: unknown, y: unknown): string | undefined {
@@ -195,9 +224,47 @@ function renameIds(vnode: VNode, base: string, next: string): VNode {
 /** Elements synced sections may add to one render, all copies together (W-653): 20 full pages. */
 const MAX_SECTION_ELEMENTS = 20 * MAX_NODES;
 
+const baseCss = new Map(Object.entries(ELEMENTS).map(([type, def]) => [type, def.baseCss]));
+// W-927: placeholder + wrapper styles ship with every page that may hold an extension node.
+baseCss.set("ext", EXTENSION_PLACEHOLDER_CSS);
+
+/**
+ * W-971: theme parts on one page (header, footer, popups, floats) each repeated the scope wrapper
+ * rule, the print rules and the base rules of their element types. Given their sheets (each the
+ * `css` of a scoped `renderPage`), this writes the wrapper and the union of base rules once, scoped
+ * to every part, then each part's own rules, then the print rules once. Base rules have no
+ * specificity of their own beyond their element class and came before every class and local rule
+ * in each sheet, so writing them first keeps the cascade.
+ */
+export function sharedPartCss(
+  sheets: readonly { css: string; scope: string; baseTypes: readonly string[] }[],
+): string {
+  const scopes = sheets.flatMap((s) => {
+    const token = cssScopeToken(s.scope);
+    return token ? [token] : [];
+  });
+  if (scopes.length !== sheets.length || sheets.length < 2)
+    return sheets.map((s) => s.css).join("\n");
+  const wrapper = scopeWrapperCss();
+  const print = printCss();
+  const own: string[] = [];
+  for (const sheet of sheets) {
+    const token = cssScopeToken(sheet.scope) as string;
+    const base = scopeCss(baseRulesFor(sheet.baseTypes, baseCss), token);
+    let css = sheet.css;
+    if (!css.startsWith(wrapper) || !css.endsWith(print) || (base && !css.includes(base)))
+      return sheets.map((s) => s.css).join("\n");
+    css = css.slice(wrapper.length, css.length - print.length);
+    own.push(base ? css.replace(base, "") : css);
+  }
+  const union = new Set(sheets.flatMap((s) => s.baseTypes));
+  const shared = scopeCssAll(baseRulesFor(union, baseCss), scopes);
+  return [wrapper + shared, ...own, print].filter(Boolean).join("\n");
+}
+
 export function renderPage(
-  layout: Layout,
-  design: DesignSystem,
+  storedLayout: Layout,
+  storedDesign: DesignSystem,
   opts: {
     mode?: RenderMode;
     formDefinitions?: FormDefinitions;
@@ -205,7 +272,7 @@ export function renderPage(
     /** Public renders: wrap the markup and scope the CSS to it, so sheets can't override each other (W-112). */
     scope?: string;
     /** Editor canvas: device rules follow this device, not the frame width (W-116). */
-    previewDevice?: PopupDevice;
+    previewDevice?: EditorDevice;
     /**
      * Theme parts (header, footer, popup, float) render apart from the page, so a synced section
      * on both gave form fields, honeypots and tab groups the same ids: a label in a popup focused
@@ -217,13 +284,20 @@ export function renderPage(
   } = {},
 ): RenderResult {
   const mode = opts.mode ?? "public";
-  const baseDynamic = opts.dynamic;
+  // W-925: the renderer reads the 0.x flat style shape and known keys only (D-065), so keys a
+  // newer 1.x wrote are never rendered and the output matches 0.x byte for byte.
+  const layout = renderableLayout(storedLayout);
+  const design = renderableDesign(storedDesign);
+  const baseDynamic = renderableDynamic(opts.dynamic);
   const warnings: RenderWarning[] = [];
   const usedTypes = new Set<string>();
   const localRules: {
     id: string;
     declarations: Declaration[];
     states: StateDeclarations;
+    wide?: Declaration[];
+    wideHidden?: boolean;
+    laptop?: Declaration[];
     tablet?: Declaration[];
     mobile?: Declaration[];
     hiddenOn?: LayoutNode["hiddenOn"];
@@ -248,14 +322,19 @@ export function renderPage(
   const renderedHeadings: { id: string; text: string; tocClass?: string }[] = [];
   const emittedIds = new Set<string>();
   const tocNodes: { node: LayoutNode; vnode: VNode }[] = [];
+  // S-02: markup the serializer refuses empties its element instead of failing the whole page.
+  const elementIds = new WeakMap<VNode, string>();
   const knownVariables = new Set(design.variables.colors.map((c) => c.id));
   let backgroundVideo = false;
+  /** W-952: any List drawn as numbered steps, so their rules are sent. */
+  let listSteps = false;
 
   const domIds = new Map<string, number>();
   const idSuffix = opts.partIds && opts.scope ? `-t${originHash(opts.scope)}` : "";
   // W-253: runtimes follow what renders, including synced section and loop item contents,
   // which the page's own layout doesn't hold.
   const rendered = { form: false, tabs: false, menuDropdown: false };
+  const runtimes = new Set<WidgetRuntime>();
   let sectionBudget = MAX_SECTION_ELEMENTS;
   const ctx: RenderContext = {
     takeSectionBudget: (nodes) => {
@@ -293,7 +372,7 @@ export function renderPage(
     nodeId: string,
     ruleId: string | undefined,
   ): Record<string, string> => {
-    const classes = [...(isRoot ? ["emvb-root"] : []), `emvb-${node.type}`];
+    const classes = [...(isRoot ? ["emvb-root"] : []), `emvb-${cssTypeName(node.type)}`];
     for (const classId of node.classes ?? []) {
       const name = styleClassName(classId);
       if (name) classes.push(name);
@@ -329,12 +408,29 @@ export function renderPage(
     const { declarations, rejected } = styleDeclarations(own);
     // W-210: a device that sets one background layer keeps the layers it inherits.
     const base = { ...classLayers, ...own };
+    // W-956: Laptop between Desktop and Tablet; each narrower device inherits the wider ones.
+    const laptopStyle = node.devices?.laptop;
+    const laptop = styleDeclarations(withInheritedLayers(laptopStyle, base));
     const tabletStyle = node.devices?.tablet;
-    const tablet = styleDeclarations(withInheritedLayers(tabletStyle, base));
+    const tablet = styleDeclarations(withInheritedLayers(tabletStyle, { ...base, ...laptopStyle }));
     const mobile = styleDeclarations(
-      withInheritedLayers(node.devices?.mobile, { ...base, ...tabletStyle }),
+      withInheritedLayers(node.devices?.mobile, { ...base, ...laptopStyle, ...tabletStyle }),
     );
-    for (const key of [...rejected, ...tablet.rejected, ...mobile.rejected]) {
+    // W-959: Wide screen (2400 px and up) builds on Desktop; `renderableNode` moved `style.wide`
+    // here. The narrower devices never overlap it, so they don't inherit it.
+    const { devices: wideDevices, wideHidden } = node as {
+      devices?: { wide?: unknown };
+      wideHidden?: boolean;
+    };
+    const wideStyle = wideDevices?.wide;
+    const wide = styleDeclarations(withInheritedLayers(wideStyle, base));
+    for (const key of [
+      ...rejected,
+      ...wide.rejected,
+      ...laptop.rejected,
+      ...tablet.rejected,
+      ...mobile.rejected,
+    ]) {
       warnings.push({ nodeId, code: "rejected-style", detail: key });
     }
     if (node.type === "spacer") {
@@ -373,6 +469,20 @@ export function renderPage(
         declarations.push({ property: "object-fit", value: "cover" });
       }
     }
+    if (node.type === "heading" || node.type === "text") {
+      // W-950: each mark colour as a variable its words read.
+      markColors((node.props as { marks?: TextMark[] }).marks).forEach((color, n) =>
+        declarations.push({ property: `--emvb-mark-${n}`, value: color }),
+      );
+    }
+    if (node.type === "list") {
+      // W-952: the marker style; items inherit it. Steps draw their own numbers.
+      const marker = (node.props as { marker?: unknown }).marker;
+      if (marker === "steps") listSteps = true;
+      else if (typeof marker === "string" && LIST_MARKER_SET.has(marker)) {
+        declarations.push({ property: "list-style-type", value: marker });
+      }
+    }
     if (node.type === "button") {
       const gap = (node.props as { iconGap?: unknown }).iconGap;
       if (typeof gap === "number" && Number.isInteger(gap) && gap >= 0 && gap <= 64) {
@@ -398,10 +508,14 @@ export function renderPage(
     }
     const grid = gridOf.get(node.id);
     if (grid) {
-      const counts = gridColumnCounts(grid);
-      const tabletPlacement = { ...node.style, ...node.devices?.tablet };
+      // A grid's laptop columns are its desktop ones (column counts have no laptop value).
+      const [desktopCount, tabletCount, mobileCount] = gridColumnCounts(grid);
+      const counts = [desktopCount, desktopCount, tabletCount, mobileCount];
+      const laptopPlacement = { ...node.style, ...node.devices?.laptop };
+      const tabletPlacement = { ...laptopPlacement, ...node.devices?.tablet };
       const levels = [
         node.style ?? {},
+        laptopPlacement,
         tabletPlacement,
         { ...tabletPlacement, ...node.devices?.mobile },
       ];
@@ -412,8 +526,29 @@ export function renderPage(
         const at = (i: number) => ({ property: "grid-column", value: fitted[i]?.value ?? "auto" });
         const kept = declarations.filter((d) => d.property !== "grid-column");
         declarations.splice(0, declarations.length, ...kept, at(0));
-        tablet.declarations.push(at(1));
-        mobile.declarations.push(at(2));
+        // On laptop only when it differs from desktop or the laptop style places it itself
+        // (released pages, which have no laptop styles, keep their CSS).
+        const ownLaptop = laptop.declarations.some((d) => d.property === "grid-column");
+        if (ownLaptop || fitted[1]?.value !== fitted[0]?.value) {
+          const others = laptop.declarations.filter((d) => d.property !== "grid-column");
+          laptop.declarations.splice(0, laptop.declarations.length, ...others, at(1));
+        }
+        tablet.declarations.push(at(2));
+        mobile.declarations.push(at(3));
+      }
+      // W-959: a Wide screen placement of its own, on the Desktop column count.
+      const wideOwn = wideStyle as { gridColumnStart?: unknown; gridColumnSpan?: unknown };
+      if (
+        wideOwn &&
+        (wideOwn.gridColumnStart !== undefined || wideOwn.gridColumnSpan !== undefined)
+      ) {
+        const place = { ...node.style, ...wideOwn } as typeof node.style & object;
+        const fit = fitGridColumn(place.gridColumnStart, place.gridColumnSpan, desktopCount);
+        const others = wide.declarations.filter((d) => d.property !== "grid-column");
+        wide.declarations.splice(0, wide.declarations.length, ...others, {
+          property: "grid-column",
+          value: fit.value ?? "auto",
+        });
       }
     }
     const states = stateDeclarations(node.states);
@@ -428,6 +563,9 @@ export function renderPage(
     // W-567: the root is the page itself; hiding it on a device blanked the whole page there.
     const hiddenOn = isRoot ? undefined : node.hiddenOn;
     const responsive =
+      wide.declarations.length > 0 ||
+      (!isRoot && wideHidden !== undefined) ||
+      laptop.declarations.length > 0 ||
       tablet.declarations.length > 0 ||
       mobile.declarations.length > 0 ||
       (hiddenOn?.length ?? 0) > 0;
@@ -445,6 +583,9 @@ export function renderPage(
         id: ruleId,
         declarations,
         states: states.states,
+        ...(wide.declarations.length > 0 ? { wide: wide.declarations } : {}),
+        ...(!isRoot && wideHidden !== undefined ? { wideHidden } : {}),
+        laptop: laptop.declarations,
         tablet: tablet.declarations,
         mobile: mobile.declarations,
         hiddenOn,
@@ -460,7 +601,7 @@ export function renderPage(
     const attrs: Record<string, string> = { class: classes.join(" "), ...customAttributes(node) };
     if (mode === "editor" && id) attrs["data-emvb-id"] = id;
     const htmlId =
-      node.htmlId && HTML_ID.test(node.htmlId)
+      node.htmlId && HTML_ID.test(node.htmlId) && !isShadowingId(node.htmlId)
         ? node.htmlId
         : node.type === "heading" && id && layoutHasToc
           ? `emvb-h-${id}`
@@ -492,6 +633,15 @@ export function renderPage(
     const nodeId = id ?? "(invalid id)";
     const type: string = node.type;
     if (!Object.hasOwn(ELEMENTS, type)) {
+      // W-927: extension elements render via the Extensions API, or a placeholder when missing.
+      if (isExtensionType(type)) {
+        usedTypes.add("ext");
+        return renderExtensionNode(node, mode === "editor" ? "editor" : "public", (nodes) =>
+          nodes
+            .map((child) => visit(child, false, dynamic))
+            .filter((child): child is VNode => child !== undefined),
+        );
+      }
       warnings.push({ nodeId, code: "unknown-type", detail: type });
       if (mode === "public") return undefined;
       return {
@@ -504,6 +654,8 @@ export function renderPage(
     if (isFormNode(node) && node.props.formId.trim()) rendered.form = true;
     if (isTabsNode(node)) rendered.tabs = true;
     if (type === "menu-item" && hasChildren(node)) rendered.menuDropdown = true;
+    const runtime = nodeRuntime(node as LayoutNode);
+    if (runtime) runtimes.add(runtime);
     const ruleId = id === undefined ? undefined : ruleIdFor(id, dynamic?.idOrigin ?? "");
     const attrs = nodeAttrs(node, isRoot, id, nodeId, ruleId);
     if (mode === "editor" && hasBindings(stored)) attrs["data-emvb-bound"] = "";
@@ -534,6 +686,12 @@ export function renderPage(
       );
     }
     if (isTabsNode(node)) return finish(node, renderTabs(node, id, attrs, ctx, dynamic));
+    if (node.type === "language-switcher") {
+      const links = languageLinks(dynamic?.translations, mode);
+      // W-937: a page in one language has nothing to switch to; the public page shows nothing.
+      if (!links) return undefined;
+      return finish(node, { ...def.build(node as never, attrs, []), children: [links] });
+    }
     if (node.type === "toc") {
       const built = def.build(node as never, attrs, []);
       const vnode = { ...built, children: [] as (VNode | string)[] };
@@ -543,9 +701,7 @@ export function renderPage(
     if (node.type === "heading" && pageHeadings?.has(stored) && attrs.id) {
       const text = String((node.props as { text?: unknown }).text ?? "").trim();
       // W-409: a heading hidden on every device has nothing to jump to.
-      const hiddenEverywhere = (["desktop", "tablet", "mobile"] as const).every((device) =>
-        node.hiddenOn?.includes(device),
-      );
+      const hiddenEverywhere = hiddenOnEveryDevice(node);
       if (text && !hiddenEverywhere && !renderedHeadings.some((h) => h.id === attrs.id)) {
         // W-793: a heading hidden on some devices (itself or an ancestor) hides its contents
         // entry there too, or the entry was a dead link on those devices.
@@ -597,7 +753,9 @@ export function renderPage(
     if (!vnode) return undefined;
     const src = videoOf(node);
     if (src) backgroundVideo = true;
-    return applyBackgroundVideo(applyBoxLink(node, vnode), src);
+    const out = applyBackgroundVideo(applyBoxLink(node, vnode), src);
+    elementIds.set(out, node.id);
+    return out;
   }
 
   function bindingData(dynamic: ThemeDynamicData | undefined): BindingData {
@@ -636,7 +794,6 @@ export function renderPage(
       toc.vnode.children = [];
     }
   }
-  const baseCss = new Map(Object.entries(ELEMENTS).map(([type, def]) => [type, def.baseCss]));
   const css = generateCss({
     design,
     usedTypes,
@@ -644,13 +801,22 @@ export function renderPage(
     localRules,
     previewStates: mode === "editor",
     backgroundVideo,
+    listSteps,
     ...(mode === "editor" && opts.previewDevice ? { previewDevice: opts.previewDevice } : {}),
   });
   const scope = opts.scope === undefined ? undefined : cssScopeToken(opts.scope);
   const vnode = scope
     ? { tag: "div", attrs: { class: scopeClassName(scope) }, children: [page] }
     : page;
-  const html = serialize(vnode);
+  const html = serialize(vnode, {
+    isElement: (node) => elementIds.has(node),
+    onRefused: (element, error) =>
+      warnings.push({
+        nodeId: elementIds.get(element) ?? "(page)",
+        code: "refused-markup",
+        detail: error.message,
+      }),
+  });
   return {
     vnode,
     html,
@@ -658,8 +824,10 @@ export function renderPage(
     needsFormsRuntime: rendered.form || layoutHasForm(layout),
     needsTabsRuntime: rendered.tabs || layoutHasTabs(layout),
     needsMenuRuntime: rendered.menuDropdown || layoutHasMenuDropdown(layout),
+    runtimes: [...runtimes].toSorted(),
     ...(design.direction ? { dir: design.direction } : {}),
     warnings,
+    baseTypes: [...usedTypes],
   };
 }
 
@@ -672,9 +840,9 @@ function treeHasType(node: LayoutNode, type: string): boolean {
  * inside an element hidden on every device, which never show, so a contents link has nothing
  * to jump to (W-409 covered only the heading's own visibility).
  */
-function headingAnchors(root: LayoutNode): { node: LayoutNode; hiddenOn: PopupDevice[] }[] {
-  const out: { node: LayoutNode; hiddenOn: PopupDevice[] }[] = [];
-  const walk = (node: LayoutNode, inherited: PopupDevice[]) => {
+function headingAnchors(root: LayoutNode): { node: LayoutNode; hiddenOn: Device[] }[] {
+  const out: { node: LayoutNode; hiddenOn: Device[] }[] = [];
+  const walk = (node: LayoutNode, inherited: Device[]) => {
     if (node !== root && HIDDEN_DEVICES.every((device) => node.hiddenOn?.includes(device))) return;
     const own = node === root ? [] : (node.hiddenOn ?? []);
     const hiddenOn = HIDDEN_DEVICES.filter((d) => inherited.includes(d) || own.includes(d));
@@ -686,7 +854,7 @@ function headingAnchors(root: LayoutNode): { node: LayoutNode; hiddenOn: PopupDe
   return out;
 }
 
-const HIDDEN_DEVICES = ["desktop", "tablet", "mobile"] as const;
+const HIDDEN_DEVICES = DEVICES;
 
 /** Columns set by custom tracks or a count, or undefined when neither is set. */
 const columnCount = (tracks: unknown, columns: unknown): number | undefined =>
@@ -768,4 +936,58 @@ function tocChildren(
     })),
   });
   return children;
+}
+
+/** A language's own name for itself ("Français"), or its code when the runtime doesn't know it. */
+function autonym(locale: string): string {
+  try {
+    const name = new Intl.DisplayNames([locale], { type: "language" }).of(locale);
+    return name ? name.charAt(0).toLocaleUpperCase(locale) + name.slice(1) : locale;
+  } catch {
+    return locale;
+  }
+}
+
+/**
+ * W-937: the Language switcher's list. Hosts pass only published translations (a draft is never
+ * linked); each link carries hreflang and lang, and the page being shown is aria-current. The
+ * editor shows a note when the page has no other language yet.
+ */
+function languageLinks(
+  translations: readonly { locale: string; href: string; current: boolean }[] | undefined,
+  mode: RenderMode,
+): VNode | undefined {
+  const list = (translations ?? []).filter(
+    (t) => typeof t.locale === "string" && t.locale && sanitizeHref(t.href) !== undefined,
+  );
+  if (list.length < 2) {
+    if (mode !== "editor") return undefined;
+    return {
+      tag: "p",
+      attrs: {},
+      children: [
+        "Links to this page's other languages show here once it has a published translation.",
+      ],
+    };
+  }
+  return {
+    tag: "ul",
+    attrs: {},
+    children: list.map((t) => ({
+      tag: "li",
+      attrs: {},
+      children: [
+        {
+          tag: "a",
+          attrs: {
+            href: sanitizeHref(t.href) as string,
+            hreflang: t.locale,
+            lang: t.locale,
+            ...(t.current ? { "aria-current": "page" } : {}),
+          },
+          children: [autonym(t.locale)],
+        },
+      ],
+    })),
+  };
 }

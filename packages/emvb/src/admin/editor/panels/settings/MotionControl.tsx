@@ -5,24 +5,25 @@ import {
   MOTION_EFFECTS,
   MOTION_LIMITS,
   type MotionEffect,
-  type StyleProps,
+  type FlatStyleProps,
 } from "../../../../core/index.ts";
 import { BUTTON } from "../../../ui.ts";
 import { TransitionSelect } from "./EffectsControls.tsx";
 import { NumberField, type NumberSpec } from "./NumberRow.tsx";
 
-type Motion = NonNullable<StyleProps["scrollMotion"]>;
+type Motion = NonNullable<FlatStyleProps["scrollMotion"]>;
 type Playing = Extract<Motion, { effects: unknown }>;
 type Effect = Playing["effects"][number];
 
-const EFFECT_LABELS: Record<MotionEffect, { label: string; unit: string; neutral: number }> = {
-  fade: { label: "Opacity", unit: "%", neutral: 100 },
-  "move-x": { label: "Move sideways", unit: "px", neutral: 0 },
-  "move-y": { label: "Move up/down", unit: "px", neutral: 0 },
-  scale: { label: "Scale", unit: "%", neutral: 100 },
-  rotate: { label: "Rotate", unit: "°", neutral: 0 },
-  blur: { label: "Blur", unit: "px", neutral: 0 },
-};
+export const EFFECT_LABELS: Record<MotionEffect, { label: string; unit: string; neutral: number }> =
+  {
+    fade: { label: "Opacity", unit: "%", neutral: 100 },
+    "move-x": { label: "Move sideways", unit: "px", neutral: 0 },
+    "move-y": { label: "Move up/down", unit: "px", neutral: 0 },
+    scale: { label: "Scale", unit: "%", neutral: 100 },
+    rotate: { label: "Rotate", unit: "°", neutral: 0 },
+    blur: { label: "Blur", unit: "px", neutral: 0 },
+  };
 
 const RANGES: { value: Playing["range"]; label: string }[] = [
   { value: "enter", label: "As it comes into view" },
@@ -87,7 +88,7 @@ export const MOTION_PRESETS: { id: string; label: string; value: Playing }[] = [
   },
 ];
 
-const specFor = (type: MotionEffect): NumberSpec => {
+export const specFor = (type: MotionEffect): NumberSpec => {
   const [min, max] = MOTION_LIMITS[type];
   return {
     min,

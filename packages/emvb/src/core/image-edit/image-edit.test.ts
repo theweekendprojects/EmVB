@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { validateLayout } from "../validate.ts";
 import { upgradeLayout } from "../migrate/index.ts";
-import { LAYOUT_SCHEMA_VERSION } from "../schema/layout.ts";
 import { ImageEdit, ImageEditRecipe, IMAGE_EDIT_RECIPE_MAX_BYTES } from "./schema.ts";
 import { summarizeImageEdit } from "./summary.ts";
 
@@ -33,7 +32,7 @@ const sampleEdit = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-const page = (props: Record<string, unknown>, schemaVersion = LAYOUT_SCHEMA_VERSION) => ({
+const page = (props: Record<string, unknown>, schemaVersion = 18) => ({
   schemaVersion,
   root: {
     id: "root0001",
@@ -46,11 +45,7 @@ const page = (props: Record<string, unknown>, schemaVersion = LAYOUT_SCHEMA_VERS
 describe("image edit record (W-481)", () => {
   test("a full record is valid and survives a layout round trip", () => {
     const layout = page({ mediaId: "01EDITED", width: 1920, height: 1920, edit: sampleEdit() });
-    expect<unknown>(validateLayout(layout)).toEqual({
-      ok: true,
-      layout,
-      upgradedFrom: LAYOUT_SCHEMA_VERSION,
-    });
+    expect<unknown>(validateLayout(layout)).toEqual({ ok: true, layout, upgradedFrom: 18 });
   });
 
   test("originalMediaId and the recipe's optional parts may be left out", () => {
@@ -143,7 +138,7 @@ describe("image edit record (W-481)", () => {
     expect(upgradeLayout(newer, {}, 15)).toEqual({
       ok: false,
       reason: "newer-version",
-      version: LAYOUT_SCHEMA_VERSION,
+      version: 18,
     });
   });
 });

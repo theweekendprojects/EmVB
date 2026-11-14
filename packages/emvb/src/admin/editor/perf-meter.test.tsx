@@ -13,7 +13,7 @@ const layout: Layout = {
     type: "container",
     props: {},
     children: [
-      { id: "head0001", type: "heading", props: { text: "One", level: 1 }, label: "Hero" },
+      { id: "head0001", type: "heading", props: { text: "One", level: 1 }, editorLabel: "Hero" },
       { id: "form0001", type: "form", props: { formId: "contact" }, children: [] },
     ],
   },

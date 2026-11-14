@@ -61,6 +61,11 @@ export type ThemeDynamicData = {
   collections?: Readonly<Record<string, ThemePostFields[]>>;
   /** Site settings bound fields can read (W-307), e.g. `title`, `tagline`, `url`. */
   site?: Readonly<Record<string, string>>;
+  /**
+   * W-937: this page in each of its published languages, for the Language switcher: `href` is
+   * where that language's version lives, `current` marks the page being shown.
+   */
+  translations?: readonly { locale: string; href: string; current: boolean }[];
   /** The request's URL parameters, first value per name (W-307). */
   params?: Readonly<Record<string, string>>;
   /** The page's own origin, e.g. `https://example.com`: URL-parameter links stay on it (W-307). */
@@ -250,7 +255,7 @@ function pruneEmptyLists(nodes: VNode[]): VNode[] {
   return keep;
 }
 
-/** Collect `loop.itemPartId` values so hosts can load Loop Item templates. */
+/** Collect `loop.partId` values so hosts can load Loop Item templates. */
 export function collectLoopItemPartIds(layout: Layout): string[] {
   const ids = new Set<string>();
   forEachNode(
@@ -258,8 +263,8 @@ export function collectLoopItemPartIds(layout: Layout): string[] {
     (node) => {
       if (node.type !== "loop") return;
       const id =
-        typeof (node.props as { itemPartId?: unknown }).itemPartId === "string"
-          ? (node.props as { itemPartId: string }).itemPartId.trim()
+        typeof (node.props as { partId?: unknown }).partId === "string"
+          ? (node.props as { partId: string }).partId.trim()
           : "";
       if (id) ids.add(id);
     },
@@ -361,7 +366,7 @@ export function collectCollectionLoops(layout: Layout): CollectionLoop[] {
 export function collectSectionPartIds(layout: Layout): string[] {
   const ids = new Set<string>();
   const walk = (node: LayoutNode): void => {
-    if (node.type === "section") {
+    if (node.type === "part-ref") {
       const id =
         typeof (node.props as { partId?: unknown }).partId === "string"
           ? (node.props as { partId: string }).partId.trim()

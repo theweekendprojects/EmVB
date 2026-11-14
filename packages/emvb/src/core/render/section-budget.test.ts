@@ -8,7 +8,7 @@ const layoutOf = (children: unknown[]) => ({
 });
 const sectionRef = (id: string, partId: string) => ({
   id,
-  type: "section",
+  type: "part-ref",
   props: { partId },
   children: [],
 });

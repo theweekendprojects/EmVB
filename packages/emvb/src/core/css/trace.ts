@@ -1,9 +1,10 @@
 import type { DefaultStyleTag, DesignSystem } from "../schema/design.ts";
 import type { LayoutNode } from "../schema/layout.ts";
 import type { StyleStateName } from "../schema/state-names.ts";
-import type { StyleProps } from "../schema/style.ts";
+import { flattenMotion } from "../migrate/v18.ts";
+import type { FlatStyleProps, OwnStyle, StyleProps } from "../schema/style.ts";
 
-export type TraceDevice = "desktop" | "tablet" | "mobile";
+export type TraceDevice = "wide" | "desktop" | "laptop" | "tablet" | "mobile";
 
 /** Where one style value comes from (W-318). */
 export type StyleSource = {
@@ -38,7 +39,24 @@ export function defaultTagFor(node: LayoutNode): DefaultStyleTag | undefined {
   }
 }
 
-const LAYER = { desktop: "Desktop", tablet: "Tablet", mobile: "Mobile" } as const;
+const LAYER = {
+  wide: "Wide screen",
+  desktop: "Desktop",
+  laptop: "Laptop",
+  tablet: "Tablet",
+  mobile: "Mobile",
+} as const;
+
+/** W-959: an own style's Desktop values and its Wide screen ones (without `hidden`), apart. */
+function splitWide(style: OwnStyle | undefined): { desktop?: StyleProps; wide?: StyleProps } {
+  if (!style) return {};
+  const { wide, ...desktop } = style;
+  const { hidden: _hidden, ...values } = wide ?? {};
+  return {
+    desktop,
+    ...(Object.keys(values).length > 0 ? { wide: values } : {}),
+  };
+}
 const STATE_LABEL: Record<StyleStateName, string> = {
   hover: "Hover",
   focus: "Focus",
@@ -49,8 +67,9 @@ type Owner = {
   kind: "class" | "local";
   label: string;
   classId?: string;
-  style?: StyleProps;
-  devices?: { tablet?: StyleProps; mobile?: StyleProps };
+  desktop?: StyleProps;
+  wide?: StyleProps;
+  devices?: { laptop?: StyleProps; tablet?: StyleProps; mobile?: StyleProps };
   states?: Partial<Record<StyleStateName, StyleProps>>;
 };
 
@@ -65,7 +84,7 @@ export function styleLayers(
   design: DesignSystem,
   device: TraceDevice = "desktop",
   state: StyleStateName | "normal" = "normal",
-): { source: Omit<StyleSource, "value">; style: StyleProps }[] {
+): { source: Omit<StyleSource, "value">; style: FlatStyleProps }[] {
   const layers: { source: Omit<StyleSource, "value">; style: StyleProps }[] = [];
   const tag = defaultTagFor(node);
   const tagStyle = tag ? design.defaults?.[tag] : undefined;
@@ -83,7 +102,7 @@ export function styleLayers(
       kind: "class",
       label: `.${cls.name}`,
       classId: cls.id,
-      style: cls.style,
+      ...splitWide(cls.style),
     };
     if (cls.devices) owner.devices = cls.devices;
     if (cls.states) owner.states = cls.states;
@@ -92,7 +111,7 @@ export function styleLayers(
   owners.push({
     kind: "local",
     label: "This element",
-    ...(node.style ? { style: node.style } : {}),
+    ...(node.style ? splitWide(node.style) : {}),
     ...(node.devices ? { devices: node.devices } : {}),
     ...(node.states ? { states: node.states as Owner["states"] } : {}),
   });
@@ -102,8 +121,18 @@ export function styleLayers(
       label: owner.label,
       ...(owner.classId ? { classId: owner.classId } : {}),
     };
-    if (owner.style) layers.push({ source: { ...base, layer: LAYER.desktop }, style: owner.style });
-    if (device !== "desktop" && owner.devices?.tablet) {
+    if (owner.desktop)
+      layers.push({ source: { ...base, layer: LAYER.desktop }, style: owner.desktop });
+    if (device === "wide" && owner.wide) {
+      layers.push({ source: { ...base, layer: LAYER.wide }, style: owner.wide });
+    }
+    if (
+      (device === "laptop" || device === "tablet" || device === "mobile") &&
+      owner.devices?.laptop
+    ) {
+      layers.push({ source: { ...base, layer: LAYER.laptop }, style: owner.devices.laptop });
+    }
+    if ((device === "tablet" || device === "mobile") && owner.devices?.tablet) {
       layers.push({ source: { ...base, layer: LAYER.tablet }, style: owner.devices.tablet });
     }
     if (device === "mobile" && owner.devices?.mobile) {
@@ -125,7 +154,12 @@ export function styleLayers(
       });
     }
   }
-  return layers;
+  // W-925: traced by the flat motion keys the style rows use.
+  const traced: { source: Omit<StyleSource, "value">; style: FlatStyleProps }[] = [];
+  for (const { source, style } of layers) {
+    traced.push({ source, style: flattenMotion(style) as FlatStyleProps });
+  }
+  return traced;
 }
 
 /** Where each set property of a node comes from (W-318), by property name. */
@@ -160,10 +194,10 @@ export function inheritedStyle(
   design: DesignSystem,
   device: TraceDevice,
   state: StyleStateName | "normal",
-): StyleProps {
+): FlatStyleProps {
   const layers = styleLayers(node, design, device, state);
   // Drop the layer being edited: the element's own on this device and state.
   const editing = state !== "normal" ? STATE_LABEL[state] : LAYER[device];
   const below = layers.filter((l) => !(l.source.kind === "local" && l.source.layer === editing));
-  return Object.assign({}, ...below.map((l) => l.style)) as StyleProps;
+  return Object.assign({}, ...below.map((l) => l.style)) as FlatStyleProps;
 }

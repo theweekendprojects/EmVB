@@ -1,6 +1,12 @@
-import { describe, expect, test } from "bun:test";
+import { setGeoTrust } from "../core/geo-trust.ts";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import type { Layout, LayoutNode } from "../core/index.ts";
 import { bindingDataFor } from "./request-data.ts";
+
+// These cases send Cloudflare's country header, as the edge does (S-10, W-999: trusted on
+// Cloudflare Workers; bun isn't one, so the tests trust it explicitly).
+beforeAll(() => setGeoTrust(true));
+afterAll(() => setGeoTrust(undefined));
 
 const page = (children: LayoutNode[]): Layout =>
   ({
@@ -11,7 +17,7 @@ const page = (children: LayoutNode[]): Layout =>
 /** A page whose only element is a synced section; the section part holds the dynamic bits. */
 const synced: LayoutNode = {
   id: "sect0001",
-  type: "section",
+  type: "part-ref",
   props: { partId: "SECT0001" },
   children: [],
 } as never;

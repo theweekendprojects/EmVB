@@ -390,7 +390,7 @@ describe("a field uses the form it sits in", () => {
         type: "container",
         props: {},
         children: [
-          { id: "sec00001", type: "section", props: { partId: "SEC00001" }, children: [] },
+          { id: "sec00001", type: "part-ref", props: { partId: "SEC00001" }, children: [] },
         ],
       },
     };

@@ -4,11 +4,11 @@ import type { SavedSectionActions } from "./useSavedSections.ts";
 import * as React from "react";
 import {
   findNode,
-  toggleHidden,
+  toggleHiddenOn,
   type A11yReport,
   type ElementType,
   type LayoutNode,
-  type PopupDevice,
+  type EditorDevice,
   type ThemeDynamicData,
 } from "../../core/index.ts";
 import type { Fetcher } from "../api.ts";
@@ -18,6 +18,7 @@ import { saveEditedCopy } from "../media-api.ts";
 import { A11yDialog } from "./A11yCopilot.tsx";
 import { CommandPalette } from "./CommandPalette.tsx";
 import { ConflictDialog, DeleteSubtreeDialog, LeaveDialog, RevertDialog } from "./dialogs.tsx";
+import { ScheduleDialog } from "./ScheduleDialog.tsx";
 import type { EditorCommand } from "./editor-commands.ts";
 import { paletteItems } from "./palette-items.ts";
 import { PerfMeterDialog } from "./PerfMeter.tsx";
@@ -47,6 +48,7 @@ export const initialState = (entry: EditorEntry, design: LoadedDesign): EditorSt
     float: entry.float,
   },
   status: entry.status,
+  scheduledAt: entry.scheduledAt ?? null,
   rev: entry.rev,
   design: design.design,
   designRevision: design.revision,
@@ -69,6 +71,7 @@ const CLOSED = {
   a11y: false,
   leave: false,
   revert: false,
+  schedule: false,
   imageEditor: false,
 };
 
@@ -167,19 +170,21 @@ async function revertToPublished({
 /** Hide or show the selected element on the current device (W-096). */
 export function hideSelectedOnDevice(
   state: EditorState,
-  device: PopupDevice,
+  device: EditorDevice,
   dispatch: React.Dispatch<EditorAction>,
 ): void {
   const id = state.selectedId;
   const node = state.page.layout && id ? findNode(state.page.layout, id) : undefined;
   if (!node) return;
-  const hiddenOn = toggleHidden(node.hiddenOn, device);
   dispatch({
     type: "update-node",
     id: node.id,
     update: (current) => {
-      const next = { ...current, hiddenOn };
+      // W-959: Wide screen's hide sits in `style.wide.hidden`; the rest in `hiddenOn`.
+      const { hiddenOn, style } = toggleHiddenOn(current, device);
+      const next = { ...current, hiddenOn, style };
       if (!hiddenOn) delete next.hiddenOn;
+      if (!style) delete next.style;
       return next;
     },
   });
@@ -225,7 +230,7 @@ export function EditorDialogs({
   selectedNode: LayoutNode | null;
   formsAvailable: boolean;
   paletteActions: readonly EditorCommand[];
-  addFromPanel: (type: ElementType) => void;
+  addFromPanel: (type: ElementType | string) => void;
   addRecipe: (id: string) => void;
   deleteAsk: { id: string; label: string; count: number } | null;
   setDeleteAsk: (ask: { id: string; label: string; count: number } | null) => void;
@@ -356,6 +361,12 @@ export function EditorDialogs({
         onOpenChange={(open) => !open && saver.closeConflict()}
         onReload={() => void reloadEntry({ fetcher, collection, state, dispatch, saver })}
         onOverwrite={() => void saver.overwrite()}
+      />
+      <ScheduleDialog
+        open={chrome.flags.schedule}
+        onOpenChange={chrome.setOpen("schedule")}
+        scheduledAt={state.scheduledAt ?? null}
+        onSchedule={saver.schedule}
       />
       <RevertDialog
         open={chrome.flags.revert}

@@ -14,6 +14,7 @@ import {
   parseThemePartType,
   pickThemePartWinner,
   POPUP_CHROME_CSS,
+  sharedPartCss,
   validateConditions,
   validateFloatSettings,
   validateTriggers,
@@ -36,6 +37,7 @@ import {
 } from "../core/index.ts";
 import { THEME_PARTS_COLLECTION } from "../constants.ts";
 import { readLayout, renderStored, type RenderedPage } from "./render.ts";
+import type { WidgetRuntime } from "../core/elements/widgets.ts";
 import { designFor, formsFor, layoutFor, partsFor } from "./render-session.ts";
 import type { HostVisitor, VisitorAstro } from "./visitor.ts";
 import { bindingDataFor } from "./request-data.ts";
@@ -97,6 +99,11 @@ export type ResolvedThemeParts = {
   needsMenuRuntime: boolean;
   /** Hosts load `EmVBFormsRuntime` only when a winning part renders a form. */
   needsFormsRuntime: boolean;
+  /**
+   * W-1025: the opt-in widget scripts the winning parts need; set only when there is one. Mount
+   * `<EmVBWidgetRuntimes names={theme.runtimes} />` from `@perkyzz/emvb/astro/widgets`.
+   */
+  runtimes?: WidgetRuntime[];
   /**
    * True for an archive page past the last one (`/posts/page/9` with no posts there). Hosts
    * answer 404 (W-221). Page 1 with no posts is not a 404.
@@ -410,6 +417,12 @@ async function buildDynamicForContent(
   return undefined;
 }
 
+/** W-1025: every widget runtime the rendered parts need, once each, or nothing. */
+function partRuntimes(rendered: readonly RenderedPage[]): { runtimes?: WidgetRuntime[] } {
+  const names = [...new Set(rendered.flatMap((page) => page.runtimes ?? []))].toSorted();
+  return names.length > 0 ? { runtimes: names } : {};
+}
+
 /**
  * Resolve winning published theme parts for this request (R-062 / S7b–S7d).
  * Returns plain HTML/CSS; popup JS is optional and only when `needsPopupsRuntime`.
@@ -430,9 +443,28 @@ export async function resolveThemeParts(
      * uses EmVB's own one-row probe queries, or pass a counter (e.g. an EmDash count API).
      */
     pageCount?: boolean | PostCounter;
+    /**
+     * W-937: the page's languages, for a Language switcher in a header or footer. Pass
+     * `resolveEmVBPage(...)?.translations` (or your own list of published translations).
+     */
+    translations?: readonly { locale: string; href: string; current: boolean }[];
   } = {},
 ): Promise<ResolvedThemeParts> {
   return resolveThemePartsWith(emdashContent, astro, ctx, options);
+}
+
+/** S-02: a part that fails to render is left out, so the rest of the site still renders. */
+async function orSkip<T>(id: string, render: () => Promise<T | null>): Promise<T | null> {
+  try {
+    return await render();
+  } catch (error) {
+    // oxlint-disable-next-line no-console
+    console.error("emvb: theme part failed to render", {
+      partId: id,
+      error: error instanceof Error ? error.name : "unknown",
+    });
+    return null;
+  }
 }
 
 /** Same as `resolveThemeParts`, with a content port so tests can pass a fake (W-359). */
@@ -451,6 +483,11 @@ export async function resolveThemePartsWith(
      * uses EmVB's own one-row probe queries, or pass a counter (e.g. an EmDash count API).
      */
     pageCount?: boolean | PostCounter;
+    /**
+     * W-937: the page's languages, for a Language switcher in a header or footer. Pass
+     * `resolveEmVBPage(...)?.translations` (or your own list of published translations).
+     */
+    translations?: readonly { locale: string; href: string; current: boolean }[];
   } = {},
 ): Promise<ResolvedThemeParts> {
   const counter =
@@ -518,6 +555,8 @@ export async function resolveThemePartsWith(
 
   const byId = new Map(parts.map((part) => [part.id, part]));
   const rendered: RenderedPage[] = [];
+  // W-971: each part's scoped sheet, to write the shared rules once in `css`.
+  const sheets = new Map<string, { css: string; scope: string; baseTypes: readonly string[] }>();
   // W-307: bound fields in a part read site settings and URL parameters too.
   // W-312/W-313: synced sections and Loop items the part uses count too.
   const boundFor = (stored: StoredPart, referenced: ThemeDynamicData | undefined) =>
@@ -537,7 +576,10 @@ export async function resolveThemePartsWith(
     partDynamic: ThemeDynamicData | undefined,
     bound: Awaited<ReturnType<typeof bindingDataFor>>,
   ) => {
-    const dynamic = Object.keys(bound).length > 0 ? { ...partDynamic, ...bound } : partDynamic;
+    const withBound = Object.keys(bound).length > 0 ? { ...partDynamic, ...bound } : partDynamic;
+    const dynamic = options.translations
+      ? { ...withBound, translations: options.translations }
+      : withBound;
     const formDefinitions = await formsFor(
       astro,
       handler,
@@ -558,6 +600,8 @@ export async function resolveThemePartsWith(
       options.lang ?? astro.currentLocale,
     );
     rendered.push(page);
+    if (page.css)
+      sheets.set(stored.id, { css: page.css, scope: stored.id, baseTypes: page.baseTypes ?? [] });
     // W-216: a header or footer part is the page's banner or contentinfo landmark (hosts put it
     // straight in <body> instead of their own <header>/<footer>).
     // W-586: a part that already has its own header or footer box keeps that one as the landmark;
@@ -587,7 +631,9 @@ export async function resolveThemePartsWith(
 
   let pastLastPage = false;
   let archiveInfo: { title?: string; page: number; titleText?: string } | undefined;
-  const renderPart = async (
+  const renderPart = (winner: ThemePartCandidate | null): Promise<RenderedThemePart | null> =>
+    orSkip(winner?.id ?? "", () => renderPartOf(winner));
+  const renderPartOf = async (
     winner: ThemePartCandidate | null,
   ): Promise<RenderedThemePart | null> => {
     const stored = winner ? byId.get(winner.id) : undefined;
@@ -647,64 +693,67 @@ export async function resolveThemePartsWith(
 
   const popups = (
     await Promise.all(
-      popupMatches.map(async (match) => {
-        const stored = byId.get(match.id);
-        if (!stored) return null;
-        const { html, css } = await renderOne(
-          stored,
-          extraTemplates.get(stored.id),
-          extraBound.get(stored.id) ?? {},
-        );
-        const popup: RenderedPopup = {
-          id: stored.id,
-          title: stored.title,
-          html: wrapPopupMarkup(stored.id, html, stored.triggers, options.labels),
-          css,
-          triggers: stored.triggers,
-        };
-        return popup;
-      }),
+      popupMatches.map((match) =>
+        orSkip(match.id, async () => {
+          const stored = byId.get(match.id);
+          if (!stored) return null;
+          const { html, css } = await renderOne(
+            stored,
+            extraTemplates.get(stored.id),
+            extraBound.get(stored.id) ?? {},
+          );
+          const popup: RenderedPopup = {
+            id: stored.id,
+            title: stored.title,
+            html: wrapPopupMarkup(stored.id, html, stored.triggers, options.labels),
+            css,
+            triggers: stored.triggers,
+          };
+          return popup;
+        }),
+      ),
     )
   ).filter((popup): popup is RenderedPopup => popup !== null);
 
   const floats = (
     await Promise.all(
-      floatMatches.map(async (match) => {
-        const stored = byId.get(match.id);
-        if (!stored) return null;
-        const { html, css } = await renderOne(
-          stored,
-          extraTemplates.get(stored.id),
-          extraBound.get(stored.id) ?? {},
-        );
-        const layout = readLayout(stored.layout);
-        const surface = !layout || !floatHasOwnSurface(layout, design);
-        const item: RenderedFloat = {
-          id: stored.id,
-          title: stored.title,
-          html: wrapFloatMarkup(
-            stored.id,
-            stored.title,
-            html,
-            stored.float,
-            surface,
-            options.labels?.close,
-          ),
-          css,
-          settings: stored.float,
-        };
-        return item;
-      }),
+      floatMatches.map((match) =>
+        orSkip(match.id, async () => {
+          const stored = byId.get(match.id);
+          if (!stored) return null;
+          const { html, css } = await renderOne(
+            stored,
+            extraTemplates.get(stored.id),
+            extraBound.get(stored.id) ?? {},
+          );
+          const layout = readLayout(stored.layout);
+          const surface = !layout || !floatHasOwnSurface(layout, design);
+          const item: RenderedFloat = {
+            id: stored.id,
+            title: stored.title,
+            html: wrapFloatMarkup(
+              stored.id,
+              stored.title,
+              html,
+              stored.float,
+              surface,
+              options.labels?.close,
+            ),
+            css,
+            settings: stored.float,
+          };
+          return item;
+        }),
+      ),
     )
   ).filter((item): item is RenderedFloat => item !== null);
 
-  const cssParts = [
-    header?.css,
-    content?.css,
-    footer?.css,
-    ...popups.map((p) => p.css),
-    ...floats.map((item) => item.css),
-  ];
+  // W-971: the parts' shared rules (scope wrapper, element base rules, print) are written once.
+  const ordered = [header, content, footer, ...popups, ...floats].flatMap((part) => {
+    const sheet = part ? sheets.get(part.id) : undefined;
+    return sheet ? [sheet] : [];
+  });
+  const cssParts = [sharedPartCss(ordered)];
   if (popups.length > 0) cssParts.push(POPUP_CHROME_CSS);
   if (floats.length > 0) cssParts.push(FLOAT_CHROME_CSS);
   const css = cssParts.filter(Boolean).join("\n");
@@ -720,6 +769,7 @@ export async function resolveThemePartsWith(
     needsTabsRuntime: rendered.some((page) => page.needsTabsRuntime),
     needsMenuRuntime: rendered.some((page) => page.needsMenuRuntime),
     needsFormsRuntime: rendered.some((page) => page.needsFormsRuntime),
+    ...partRuntimes(rendered),
     notFound: pastLastPage,
     ...(design.direction ? { dir: design.direction } : {}),
     ...(archiveInfo?.title ? { archiveTitle: archiveInfo.title } : {}),

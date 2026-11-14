@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { setGeoTrust } from "../core/geo-trust.ts";
+import { editorAttributesIn } from "../core/public-attributes.ts";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { THEME_PARTS_COLLECTION } from "../constants.ts";
 import type { ContentPort } from "./content-port.ts";
 import {
@@ -10,6 +12,11 @@ import {
 } from "../core/index.ts";
 import { resolveThemePartsWith } from "./resolve-theme.ts";
 import { themeContextFrom } from "./theme-context.ts";
+
+// These cases send Cloudflare's country header, as the edge does (S-10, W-999: trusted on
+// Cloudflare Workers; bun isn't one, so the tests trust it explicitly).
+beforeAll(() => setGeoTrust(true));
+afterAll(() => setGeoTrust(undefined));
 
 type Entry = { id: string; data: Record<string, unknown> };
 let themeEntries: Entry[] = [];
@@ -151,14 +158,39 @@ describe("resolveThemeParts (R-062)", () => {
       '<header class="emvb-theme-header" data-emvb-theme-part="HEADNEW1">',
     );
     expect(resolved.header?.html).toEndWith("</header>");
+    // Public output: only the documented public hooks (layout-format.md, "Rendered output").
+    expect(editorAttributesIn(resolved.header?.html ?? "")).toEqual([]);
+    expect(editorAttributesIn(resolved.footer?.html ?? "")).toEqual([]);
     expect(resolved.header?.html).toContain("New header");
     expect(resolved.footer?.html).toStartWith('<footer class="emvb-theme-footer"');
     expect(resolved.footer?.html).toEndWith("</footer>");
     expect(resolved.footer?.html).toContain("Footer");
     expect(resolved.content).toBeNull();
     expect(resolved.popups).toEqual([]);
-    expect(resolved.css).toBe([resolved.header?.css, resolved.footer?.css].join("\n"));
+    // W-971: the shared rules are written once; each part keeps its own complete sheet.
+    const full = [resolved.header?.css, resolved.footer?.css].join("\n");
+    expect(resolved.css.length).toBeLessThan(full.length);
+    const once = (text: string) => resolved.css.split(text).length - 1;
+    expect(once(":where(.emvb-scope){display:contents}")).toBe(1);
+    expect(once("@media print{")).toBe(1);
+    expect(resolved.css).toContain(":where(.emvb-s-HEADNEW1,.emvb-s-FOOT0001) .emvb-heading{");
+    for (const rendered of [resolved.header, resolved.footer])
+      expect(rendered?.css).toContain(":where(.emvb-scope){display:contents}");
     expect(resolved.needsPopupsRuntime).toBe(false);
+  });
+
+  test("a part that fails to render is left out and the rest of the site renders (S-02)", async () => {
+    const broken = part("HEADBAD1", "header", [heading("head0001", "Broken header")]);
+    broken.data["layout"] = {
+      schemaVersion: 1,
+      get root() {
+        throw new Error("unrenderable");
+      },
+    };
+    themeEntries = [broken, part("FOOT0001", "footer", [heading("head0002", "Footer")])];
+    const resolved = await resolveThemeParts(astro("/about"));
+    expect(resolved.header).toBeNull();
+    expect(resolved.footer?.html).toContain("Footer");
   });
 
   test("a header part with its own header box isn't nested in a second header (W-586)", async () => {
@@ -314,7 +346,7 @@ describe("resolveThemeParts (R-062)", () => {
   test("a synced section shows inside a float and a popup too (W-200)", async () => {
     const synced = {
       id: "sect0001",
-      type: "section",
+      type: "part-ref",
       props: { partId: "SECT0001" },
       children: [],
     } as unknown as LayoutNode;
@@ -331,7 +363,7 @@ describe("resolveThemeParts (R-062)", () => {
   test("W-312/W-313 A/B tests and visitor rules inside a part's synced section apply", async () => {
     const synced = {
       id: "sect0001",
-      type: "section",
+      type: "part-ref",
       props: { partId: "SECT0001" },
       children: [],
     } as unknown as LayoutNode;
@@ -421,6 +453,22 @@ describe("resolveThemeParts (R-062)", () => {
     expect((await resolveThemeParts(astro("/about"))).needsTabsRuntime).toBe(true);
   });
 
+  test("W-1025: a dismissible Alert in any winning part lists the alerts runtime once", async () => {
+    const alert = (id: string, dismissible: boolean): LayoutNode =>
+      ({
+        id,
+        type: "alert",
+        props: { variant: "info", text: "Note", ...(dismissible ? { dismissible } : {}) },
+      }) as LayoutNode;
+    themeEntries = [part("HEAD0001", "header", [alert("alrt0001", false)])];
+    expect((await resolveThemeParts(astro("/about"))).runtimes).toBeUndefined();
+    themeEntries = [
+      part("HEAD0001", "header", [alert("alrt0001", true)]),
+      part("POPUP001", "popup", [alert("alrt0002", true)]),
+    ];
+    expect((await resolveThemeParts(astro("/about"))).runtimes).toEqual(["alerts"]);
+  });
+
   test("a form in a header asks for the forms runtime", async () => {
     const form = {
       id: "form0001",
@@ -472,7 +520,7 @@ describe("resolveThemeParts (R-062)", () => {
     ];
     themeEntries = [
       part("ARCHIVE1", "archive", [
-        { id: "loop0001", type: "loop", props: { itemPartId: "LOOPITEM" }, children: [] },
+        { id: "loop0001", type: "loop", props: { partId: "LOOPITEM" }, children: [] },
       ] as LayoutNode[]),
       part("LOOPITEM", "loop_item", [
         { id: "ptitle01", type: "post-title", props: { level: 3 } } as LayoutNode,
@@ -492,10 +540,10 @@ describe("resolveThemeParts (R-062)", () => {
     postEntries = [{ id: "01A", data: { id: "01A", slug: "a", title: "Alpha" } }];
     themeEntries = [
       part("ARCHIVE1", "archive", [
-        { id: "loop0001", type: "loop", props: { itemPartId: "OUTER" }, children: [] },
+        { id: "loop0001", type: "loop", props: { partId: "OUTER" }, children: [] },
       ] as LayoutNode[]),
       part("OUTER", "loop_item", [
-        { id: "loop0002", type: "loop", props: { itemPartId: "INNER" }, children: [] },
+        { id: "loop0002", type: "loop", props: { partId: "INNER" }, children: [] },
       ] as LayoutNode[]),
       part("INNER", "loop_item", [
         { id: "ptitle01", type: "post-title", props: { level: 3 } } as LayoutNode,
@@ -512,11 +560,11 @@ describe("resolveThemeParts (R-062)", () => {
     postEntries = [{ id: "01A", data: { id: "01A", slug: "a", title: "Alpha" } }];
     themeEntries = [
       part("ARCHIVE1", "archive", [
-        { id: "loop0001", type: "loop", props: { itemPartId: "SELF" }, children: [] },
+        { id: "loop0001", type: "loop", props: { partId: "SELF" }, children: [] },
       ] as LayoutNode[]),
       part("SELF", "loop_item", [
         { id: "ptitle01", type: "post-title", props: { level: 3 } } as LayoutNode,
-        { id: "loop0002", type: "loop", props: { itemPartId: "SELF" }, children: [] } as LayoutNode,
+        { id: "loop0002", type: "loop", props: { partId: "SELF" }, children: [] } as LayoutNode,
       ]),
     ];
     const resolved = await resolveThemeParts(
@@ -646,5 +694,23 @@ describe("archive pagination (W-221)", () => {
     expect(html).toContain('href="/posts/page/3" rel="next"');
     const last = (await at("/posts/page/3")).content?.html ?? "";
     expect(last).not.toContain('rel="next"');
+  });
+});
+
+describe("Language switcher in a header (W-937)", () => {
+  test("the page's translations reach the header's switcher", async () => {
+    themeEntries = [
+      part("HEADLANG", "header", [
+        { id: "lang0001", type: "language-switcher", props: {} } as unknown as LayoutNode,
+      ]),
+    ];
+    const translations = [
+      { locale: "en", href: "/about", current: true },
+      { locale: "fr", href: "/fr/a-propos", current: false },
+    ];
+    const withLinks = await resolveThemeParts(astro("/about"), undefined, { translations });
+    expect(withLinks.header?.html).toContain('href="/fr/a-propos" hreflang="fr"');
+    const without = await resolveThemeParts(astro("/about"));
+    expect(without.header?.html).not.toContain("hreflang");
   });
 });

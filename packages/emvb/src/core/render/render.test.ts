@@ -7,7 +7,7 @@ import { renderPage } from "./index.ts";
 import { isAllowedAttr, isAllowedTag, serialize } from "./vnode.ts";
 
 const design: DesignSystem = {
-  schemaVersion: 16,
+  schemaVersion: 17,
   variables: { colors: [{ id: "brand", name: "Brand", value: "#0055ff" }] },
 };
 const page = (...children: LayoutNode[]): Layout => ({
@@ -88,7 +88,7 @@ describe("safe output (R-032)", () => {
 
   test("unsafe design variable values are not emitted", () => {
     const bad = {
-      schemaVersion: 16,
+      schemaVersion: 17,
       variables: { colors: [{ id: "x", name: "X", value: "red;}body{x:y" }] },
     } as DesignSystem;
     expect(renderPage(page(), bad).css).not.toContain("body");

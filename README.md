@@ -1,3 +1,12 @@
+<p align="center">
+  <a href="https://emvb.dev">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PerkyZZ999/EmVB/main/docs/brand/logo-dark.svg">
+      <img src="https://raw.githubusercontent.com/PerkyZZ999/EmVB/main/docs/brand/logo-light.svg" alt="EmVB" width="320">
+    </picture>
+  </a>
+</p>
+
 # EmVB
 
 [![Website](https://img.shields.io/badge/website-emvb.dev-1f6feb)](https://emvb.dev) [![npm](https://img.shields.io/npm/v/@perkyzz/emvb)](https://www.npmjs.com/package/@perkyzz/emvb)
@@ -8,13 +17,13 @@ Try it without installing anything in the [playground](https://emvb.dev/playgrou
 
 ![The EmVB editor: the element tree, the canvas and the Style panel](site/public/screenshots/editor-1600.webp)
 
-**Current release:** 0.9.0. It lets your own collections hold an EmVB layout (Edit with EmVB in the entry form, Preview, Convert to EmVB, Host collections setup), and adds per-element text direction, responsive library images, and Page N of M with a Last link. Layout schema 17, design schema 16, unchanged from 0.8.0. See the [changelog](CHANGELOG.md) for every release.
+**Current release:** 1.2.0 (see the [changelog](CHANGELOG.md)). It adds the common widgets (Carousel, Gallery with lightbox, Icon box, Image box, Testimonial, Star rating, Social icons, Alert), imports more of Elementor (those widgets, sticky elements, menu links), and schedules publishing from the editor. Everything is additive: 1.0 and 1.1 pages open unchanged and the page format stays frozen for 1.x ([docs/SCHEMA.md](docs/SCHEMA.md): layout schema 18, design schema 17). Public pages load no script unless an element opts in. See the [changelog](CHANGELOG.md) for every release.
 
 ## Requirements
 
-- **EmDash 1.4.x.** EmVB 0.9.0 is built and tested against EmDash 1.4.0 (0.8.0 was tested on 1.3.1). Its peer range is `emdash` ^1.0.0.
-- **Astro 7, up to 7.3.5.** Astro 7.3.6 and later need a newer zod than EmDash pins, which breaks type checking of plugin routes. Keep `astro` at 7.3.5 until EmDash moves its pin.
-- **React 19**, `@cloudflare/kumo` 2.6.0 and `@phosphor-icons/react` ^2.1.10. An EmDash site already has these.
+- **EmDash 1.4 and 1.5.** EmVB 1.2.0 is built and tested against EmDash 1.5.0 and tested on EmDash 1.4.0 (CI runs both; every release is installed on a stock 1.4.0 and 1.5.0 site). Its peer range is `emdash` >=1.4.0 <2.
+- **Astro 7, as your EmDash site has it.** No Astro change needed: verified on a stock `create-emdash` 1.4.0 site, which installs Astro 7.4.7 (7.4.8 since 2026-11-09, also verified).
+- **React 19**, `@cloudflare/kumo` 2.6.0 (EmDash 1.4) or 2.15.0 (EmDash 1.5) and `@phosphor-icons/react` ^2.1.10. An EmDash site already has these.
 - **Optional:** `@emdash-cms/plugin-forms` ^0.2.9 for forms.
 - **AI agents need EmDash 1.2 or later** with `mcp: true`. The local bridge needs Node 20 or later on the agent's computer.
 
@@ -69,7 +78,7 @@ See the [bridge README](packages/emvb-mcp/README.md) and the [MCP guide](docs/gu
 **Editor**
 
 - Drag, drop and nest elements; edit text on the canvas; copy, paste, undo and redo.
-- Preview desktop, tablet and mobile.
+- Preview wide screen, desktop, laptop, tablet and mobile.
 - A command palette, a version timeline that restores a whole version or one section, and shareable playground links.
 
 **Elements**
@@ -87,6 +96,14 @@ See the [bridge README](packages/emvb-mcp/README.md) and the [MCP guide](docs/gu
 **Your own pages**
 
 Give entries in your own collections an EmVB layout: **Edit with EmVB** from the entry form, Preview, Apply, then the entry's own Save. **Convert to EmVB** starts from the existing body, and **Host collections** adds the field. See the [native page editing guide](docs/guides/native-page-editing.md).
+
+**Import from Elementor**
+
+Bring pages and templates over from Elementor: choose the exported `.json`, see what will be kept, changed or left out, and get a draft page or theme part. Containers, sections and the core widgets map faithfully; Pro, theme-builder and third-party widgets keep what EmVB can show. See the [Elementor import guide](docs/guides/elementor-import.md).
+
+**Export and leaving EmVB**
+
+Your pages are yours. **Export pages** downloads published pages as plain HTML and CSS you can host anywhere, or copies them into one of your collections as rich text. **Convert to rich text** does the same for an entry's layout. See [Leaving EmVB](docs/guides/leaving-emvb.md).
 
 **Saved sections**
 
@@ -134,6 +151,7 @@ To try the editor locally, sign in to the demo admin with the dev-only link <htt
 | All offline checks                               | `bun run check`                                              |
 | Unit tests only                                  | `bun run test`                                               |
 | End to end, both demos (Playwright)              | `bun run e2e`                                                |
+| Whole e2e suite, both demos at once (~17 min)    | `bun run e2e:full`                                           |
 | Public pages on production builds                | `bun run e2e:prod`                                           |
 | Seeded bugs (prove the tests catch real defects) | `bun run seeded-bugs`                                        |
 | Project site (source in `site/`)                 | `bun run site` (http://127.0.0.1:4455), `bun run site:build` |
@@ -143,12 +161,20 @@ To try the editor locally, sign in to the demo admin with the dev-only link <htt
 ## Docs
 
 - [Install in a host site](docs/guides/install-in-a-host-site.md)
+- [Upgrade from 0.9 to 1.0](docs/guides/upgrade-1.0.md)
 - [Edit your own pages](docs/guides/native-page-editing.md)
 - [AI agents (MCP)](docs/guides/mcp.md)
+- [Co-design with an AI agent](docs/guides/co-design.md)
+- [Import from Elementor](docs/guides/elementor-import.md)
+- [Languages](docs/guides/languages.md)
+- [Motion](docs/guides/motion.md)
+- [Extensions](docs/guides/extensions.md)
 - [Saved sections](docs/guides/saved-sections.md)
 - [Image editor](docs/guides/image-editor.md)
 - [Icon library](docs/guides/icon-library.md)
+- [Leaving EmVB](docs/guides/leaving-emvb.md)
 - [Layout format](docs/system/layout-format.md): how pages and the design system are stored.
+- [Schema contract](docs/SCHEMA.md), [Extensions API](docs/EXTENSIONS.md): the stored formats kept stable through 1.x, with JSON Schema exports in docs/schema/.
 - [Theme parts](docs/system/theme-parts.md): theme parts, conditions, triggers and dynamic data.
 
 ## Links

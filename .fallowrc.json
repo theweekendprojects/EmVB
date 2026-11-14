@@ -1,6 +1,6 @@
 {
   "$schema": "https://fallow.tools/schema.json",
-  "entry": ["demos/*/src/live.config.ts"],
+  "entry": ["demos/*/src/live.config.ts", "scripts/seed-probe.ts"],
   "ignorePatterns": [
     "spikes/**",
     "site/**",
@@ -13,6 +13,7 @@
     "@tabler/icons",
     "lucide-static",
     "remixicon",
+    "sharp",
     "@perkyzz/emvb-daisyui",
     "@perkyzz/emvb-provider-api"
   ],
@@ -53,5 +54,6 @@
         "allow": ["core"]
       }
     ]
-  }
+  },
+  "ignoreBinaries": ["setsid"]
 }

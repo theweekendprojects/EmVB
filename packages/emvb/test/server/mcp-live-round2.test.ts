@@ -305,7 +305,7 @@ describe("describe_page warns about hidden content (W-500)", () => {
     await ok("update_element", {
       pageId,
       nodeId: first,
-      set: { hiddenOn: ["mobile", "tablet", "desktop"] },
+      set: { hiddenOn: ["mobile", "tablet", "laptop", "desktop"] },
     });
     await ok("update_element", { pageId, nodeId: second, set: { hiddenOn: ["mobile"] } });
     const d = await ok<{ warnings?: { nodeId: string; message: string }[] }>("describe_page", {
@@ -323,7 +323,7 @@ describe("describe_page warns about hidden content (W-500)", () => {
     await ok("update_element", {
       pageId,
       nodeId: root.id,
-      set: { hiddenOn: ["desktop", "tablet", "mobile"] },
+      set: { hiddenOn: ["desktop", "laptop", "tablet", "mobile"] },
     });
     const d = await ok<{ warnings?: { nodeId: string; message: string }[] }>("describe_page", {
       pageId,
@@ -385,6 +385,8 @@ describe("describe_page warns about required form fields (W-511)", () => {
     expect(
       asked.some((line) => line.includes("/emdash-forms/definition") && line.includes('"contact"')),
     ).toBe(true);
+    // S-05 (W-995): the configured site URL, not the request's host (http://localhost here).
+    expect(asked.every((line) => line.startsWith("http://site.test/"))).toBe(true);
     expect(messages.some((m) => m.includes("“Email” is required but hidden on mobile"))).toBe(true);
     expect(d.warnings?.find((w) => w.message.includes("“Phone”"))?.nodeId).toBe(formId);
     expect(messages.some((m) => m.includes("Note"))).toBe(false);

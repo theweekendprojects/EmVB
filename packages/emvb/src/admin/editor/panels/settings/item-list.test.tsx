@@ -364,3 +364,75 @@ describe("opening the accordion item that holds the selection (W-130)", () => {
     expect(open()).toEqual([false, true, true]);
   });
 });
+
+describe("Social icons links (W-1024)", () => {
+  test("a new Social icons starts with three valid links; Add link cycles the networks", async () => {
+    const node = newElement("social-icons");
+    if (!node || node.type !== "social-icons") throw new Error("expected social icons");
+    const network = (c: LayoutNode) => (c.props as { network?: string }).network;
+    expect(kidsOf(node).map(network)).toEqual(["facebook", "instagram", "linkedin"]);
+    expect(validateLayout(layoutWith(node)).ok).toBe(true);
+    const calls = await panel(node);
+    expect(inputLabelled("Link 2 address").value).toBe("https://instagram.com/");
+    await act(async () => button("Add link").click());
+    expect(kidsOf(calls.changed.at(-1)).map(network)).toEqual([
+      "facebook",
+      "instagram",
+      "linkedin",
+      "youtube",
+    ]);
+  });
+
+  test("Add link is off once a Social icons holds 20 links", async () => {
+    const full = {
+      id: "soci0001",
+      type: "social-icons",
+      props: {},
+      children: Array.from({ length: 20 }, (_, i) => ({
+        id: `sl${String(i).padStart(6, "0")}`,
+        type: "social-link",
+        props: { network: "x", href: "https://x.com/" },
+      })),
+    } as LayoutNode;
+    await panel(full);
+    expect(button("Add link").disabled).toBe(true);
+  });
+});
+
+describe("Gallery pictures (W-1019)", () => {
+  test("the panel shows the gallery's settings, then its pictures by alt text; Add picture adds one", async () => {
+    const node = {
+      id: "gall0001",
+      type: "gallery",
+      props: {},
+      children: [{ id: "pict0001", type: "gallery-image", props: { src: "/a.jpg", alt: "Dawn" } }],
+    } as LayoutNode;
+    const calls = await panel(node);
+    expect(document.body.textContent).toContain("Open pictures large (lightbox)");
+    expect(inputLabelled("Picture 1 alt text").value).toBe("Dawn");
+    await act(async () => button("Add picture").click());
+    const added = kidsOf(calls.changed.at(-1)).at(-1);
+    expect(added?.type).toBe("gallery-image");
+    expect(added?.props).toEqual({ src: "", alt: "Image" });
+  });
+});
+
+describe("Carousel slides (W-1018)", () => {
+  test("a new Carousel starts with three slides; its panel lists them by name after its settings", async () => {
+    const node = newElement("carousel");
+    if (!node || node.type !== "carousel") throw new Error("expected a carousel");
+    expect(kidsOf(node).map((c) => kidsOf(c).map((k) => k.type))).toEqual([
+      ["heading", "text"],
+      ["heading", "text"],
+      ["heading", "text"],
+    ]);
+    expect(validateLayout(layoutWith(node)).ok).toBe(true);
+    const calls = await panel(node);
+    expect(document.body.textContent).toContain("Play automatically");
+    await type(inputLabelled("Slide 2 name"), "Our team");
+    const named = kidsOf(calls.changed.at(-1))[1]?.props as { label?: string } | undefined;
+    expect(named?.label).toBe("Our team");
+    await act(async () => button("Add slide").click());
+    expect(kidsOf(calls.changed.at(-1))).toHaveLength(4);
+  });
+});

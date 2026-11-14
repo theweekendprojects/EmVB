@@ -35,8 +35,9 @@ describe("renderTabs (W-091)", () => {
         `<input type="radio" name="${g}" id="${g}-0" class="emvb-tab-input" checked="checked">` +
         `<input type="radio" name="${g}" id="${g}-1" class="emvb-tab-input">` +
         '<div class="emvb-tab-list" role="tablist" aria-orientation="horizontal">' +
-        `<label class="emvb-tab-label" for="${g}-0" id="${g}-tab-0" role="tab" aria-selected="true" aria-controls="${g}-panel-0" tabindex="0">One</label>` +
-        `<label class="emvb-tab-label" for="${g}-1" id="${g}-tab-1" role="tab" aria-selected="false" aria-controls="${g}-panel-1" tabindex="-1">Two</label>` +
+        // W-975: the tab role sits on a span inside the label (ARIA allows no role on <label>).
+        `<label class="emvb-tab-label" for="${g}-0"><span class="emvb-tab" id="${g}-tab-0" role="tab" aria-selected="true" aria-controls="${g}-panel-0" tabindex="0">One</span></label>` +
+        `<label class="emvb-tab-label" for="${g}-1"><span class="emvb-tab" id="${g}-tab-1" role="tab" aria-selected="false" aria-controls="${g}-panel-1" tabindex="-1">Two</span></label>` +
         '</div><div class="emvb-tab-panels">' +
         `<div class="emvb-tab-panel" id="${g}-panel-0" role="tabpanel" aria-labelledby="${g}-tab-0"></div>` +
         `<div class="emvb-tab-panel" id="${g}-panel-1" role="tabpanel" aria-labelledby="${g}-tab-1"></div>` +
@@ -115,7 +116,7 @@ describe("renderLoop (W-091)", () => {
   });
 
   test("the item part id is trimmed before it picks the loop-item template", () => {
-    const { html } = renderPage(page(loop({ itemPartId: "  item-1 " })), design, {
+    const { html } = renderPage(page(loop({ partId: "  item-1 " })), design, {
       dynamic: { posts, loopTemplates: { "item-1": itemLayout } },
     });
     expect(parse(html).querySelectorAll("h3.emvb-post-title").length).toBe(2);
@@ -123,11 +124,11 @@ describe("renderLoop (W-091)", () => {
   });
 
   test("an item part id with no templates falls back to the loop's own children", () => {
-    const withPosts = renderPage(page(loop({ itemPartId: "item-1" })), design, {
+    const withPosts = renderPage(page(loop({ partId: "item-1" })), design, {
       dynamic: { posts },
     });
     expect(parse(withPosts.html).querySelectorAll("h2.emvb-post-title").length).toBe(2);
-    const editor = renderPage(page(loop({ itemPartId: "item-1" })), design, { mode: "editor" });
+    const editor = renderPage(page(loop({ partId: "item-1" })), design, { mode: "editor" });
     expect(parse(editor.html).querySelector(".emvb-loop-item h2")?.textContent).toBe(
       SAMPLE_POST.title,
     );
@@ -150,8 +151,8 @@ describe("one element rendered twice keeps its HTML ids unique (W-249)", () => {
   const twice = (part: Layout) =>
     renderPage(
       page(
-        { id: "sec00001", type: "section", props: { partId: "p1" }, children: [] } as LayoutNode,
-        { id: "sec00002", type: "section", props: { partId: "p1" }, children: [] } as LayoutNode,
+        { id: "sec00001", type: "part-ref", props: { partId: "p1" }, children: [] } as LayoutNode,
+        { id: "sec00002", type: "part-ref", props: { partId: "p1" }, children: [] } as LayoutNode,
       ),
       design,
       { dynamic: { sectionTemplates: { p1: part } } },
@@ -229,7 +230,7 @@ describe("a synced section on the page and in a popup keeps ids unique (W-527)",
   );
   const placed = page({
     id: "sec00001",
-    type: "section",
+    type: "part-ref",
     props: { partId: "p1" },
     children: [],
   } as LayoutNode);

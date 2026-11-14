@@ -1,22 +1,33 @@
 import { Button, Tabs } from "@cloudflare/kumo";
-import { DesktopIcon, DeviceMobileIcon, DeviceTabletIcon, type Icon } from "@phosphor-icons/react";
+import {
+  DesktopIcon,
+  DeviceMobileIcon,
+  DeviceTabletIcon,
+  type Icon,
+  LaptopIcon,
+  MonitorIcon,
+} from "@phosphor-icons/react";
 import * as React from "react";
-import { POPUP_DEVICES, type PopupDevice } from "../../../core/index.ts";
+import { EDITOR_DEVICES, type EditorDevice } from "../../../core/index.ts";
 
-const LABELS: Record<PopupDevice, string> = {
+const LABELS: Record<EditorDevice, string> = {
+  wide: "Wide screen",
   desktop: "Desktop",
+  laptop: "Laptop",
   tablet: "Tablet",
   mobile: "Mobile",
 };
 
-const ICONS: Record<PopupDevice, Icon> = {
+const ICONS: Record<EditorDevice, Icon> = {
+  wide: MonitorIcon,
   desktop: DesktopIcon,
+  laptop: LaptopIcon,
   tablet: DeviceTabletIcon,
   mobile: DeviceMobileIcon,
 };
 
 /** The device's icon (decorative) and its name, which stays the tab's accessible name (W-127). */
-function DeviceLabel({ device }: { device: PopupDevice }) {
+function DeviceLabel({ device }: { device: EditorDevice }) {
   const DeviceIcon = ICONS[device];
   return (
     <span className="emvb-device-label">
@@ -26,25 +37,28 @@ function DeviceLabel({ device }: { device: PopupDevice }) {
   );
 }
 
-/** Desktop, tablet or mobile. Desktop edits `style`; the others edit overrides (W-096). */
+/** Wide screen (W-959), desktop, laptop, tablet or mobile. Desktop edits `style`; the others edit overrides (W-096). */
 export function DeviceBar({
   device,
   hidden,
   canHide,
   hideLabel,
+  inherited = false,
   onDevice,
   onToggleHidden,
   zoom = "fit",
   scale = 1,
   onZoom,
 }: {
-  device: PopupDevice;
+  device: EditorDevice;
   /** Whether the selected element is hidden on `device`. */
   hidden: boolean;
   canHide: boolean;
   /** From the hide-on-device command, so the checkbox wording has one source. */
   hideLabel: string;
-  onDevice: (device: PopupDevice) => void;
+  /** W-959: Wide screen's hide still follows Desktop (no choice of its own yet). */
+  inherited?: boolean;
+  onDevice: (device: EditorDevice) => void;
   onToggleHidden: () => void;
   /** Fit or 100% (W-158), with the current on-screen scale for the readout. */
   zoom?: "fit" | "actual";
@@ -62,19 +76,26 @@ export function DeviceBar({
           variant="segmented"
           size="sm"
           className="emvb-device-tabs"
-          tabs={POPUP_DEVICES.map((item) => ({
+          tabs={EDITOR_DEVICES.map((item) => ({
             value: item,
             label: <DeviceLabel device={item} />,
           }))}
           value={device}
           onValueChange={(next) => {
-            if ((POPUP_DEVICES as readonly string[]).includes(next)) onDevice(next as PopupDevice);
+            if ((EDITOR_DEVICES as readonly string[]).includes(next))
+              onDevice(next as EditorDevice);
           }}
         />
       </div>
       <label className="emvb-device-hide">
         <input type="checkbox" checked={hidden} disabled={!canHide} onChange={onToggleHidden} />
         {hideLabel}
+        {inherited && (
+          <span className="emvb-helper" data-emvb-hide-inherited="">
+            {" "}
+            (follows Desktop)
+          </span>
+        )}
       </label>
       {onZoom && (
         <Button

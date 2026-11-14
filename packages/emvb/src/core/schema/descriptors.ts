@@ -4,13 +4,17 @@ export type FieldKind =
   | "textarea"
   | "number"
   | "int"
+  /** W-1023: a plain number with decimals (no unit), from `min` (unset 0) to `max`. */
+  | "decimal"
   | "select"
   | "boolean"
   | "href"
   | "media"
   | "icon"
   | "list-items"
-  | "image-sources";
+  | "image-sources"
+  /** W-950: formatting (bold, italic, colour, link) on words of the element's Text. */
+  | "marks";
 
 export type FieldOption = { value: string | number | boolean; label: string };
 
@@ -26,6 +30,8 @@ export type FieldDescriptor = {
   max?: number;
   /** Lowest value a whole-number field accepts; unset is 1 (W-388). */
   min?: number;
+  /** W-1023: the prop that holds this field's maximum, when another field sets it; `max` is its default. */
+  maxProp?: string;
   /** Props that hold this field's tablet and mobile values (W-139); unset follows the wider device. */
   devices?: { tablet: string; mobile: string };
 };

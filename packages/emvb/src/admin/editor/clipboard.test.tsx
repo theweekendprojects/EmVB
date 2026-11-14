@@ -16,7 +16,7 @@ import { Editor } from "./Editor.tsx";
 import { cleanup, mount, settle } from "../../../test/dom/mount.ts";
 
 const DESIGN: DesignSystem = {
-  schemaVersion: 16,
+  schemaVersion: 17,
   variables: { colors: [{ id: "brand", name: "Brand", value: "#112233" }] },
   classes: [{ id: "card", name: "Card", style: {} }],
 };
@@ -31,7 +31,7 @@ const pageLayout = (): Layout => {
       props: { text: "Body" },
       style: {
         backgroundColor: "#eeeeee",
-        transition: { duration: 150, easing: "ease", property: "colors" },
+        motion: { transition: { duration: 150, easing: "ease", property: "colors" } },
       },
       states: { hover: { backgroundColor: "#dddddd" } },
       classes: ["card"],
@@ -210,7 +210,7 @@ describe("copy and paste shortcuts (W-093)", () => {
       props: { text: "Welcome", level: 1 },
       style: {
         backgroundColor: "#eeeeee",
-        transition: { duration: 150, easing: "ease", property: "colors" },
+        motion: { transition: { duration: 150, easing: "ease", property: "colors" } },
       },
       states: { hover: { backgroundColor: "#dddddd" } },
     });

@@ -1,12 +1,14 @@
 import type * as React from "react";
 import type { Deletion } from "../restore-deleted.ts";
-import type { DesignSystem, LayoutNode, PopupDevice } from "../../../core/index.ts";
+import type { DesignSystem, LayoutNode, EditorDevice } from "../../../core/index.ts";
 import type { Fetcher } from "../../api.ts";
 import type { EditorAction, EditorState } from "../store.ts";
 import { ElementPanel } from "./ElementPanel.tsx";
 import type { ItemActions } from "./settings/ItemList.tsx";
 import type { StyleStateChoice } from "./settings/StateSwitcher.tsx";
 import { PageSettings } from "./PageSettings.tsx";
+import { LanguagesSection } from "./LanguagesSection.tsx";
+import { PAGES_COLLECTION } from "../../../constants.ts";
 import { SiteStylesDrawer } from "./SiteStylesDrawer.tsx";
 
 /** The right panel: Site styles when open, else the selected element's settings, else page settings. */
@@ -26,6 +28,7 @@ export function SettingsPanel({
   slugError,
   onSlugEdit,
   kind,
+  translatable = false,
   onStyleState,
   device = "desktop",
   items,
@@ -46,10 +49,12 @@ export function SettingsPanel({
   slugError: string | null;
   onSlugEdit: () => void;
   kind: "page" | "theme-part";
+  /** W-936: an EmVB page (not field mode) offers its other languages. */
+  translatable?: boolean;
   /** The Style tab's chosen state, for the canvas preview (W-089). */
   onStyleState?: (nodeId: string, state: StyleStateChoice) => void;
   /** Which device's styles the Style tab edits (W-096). */
-  device?: PopupDevice;
+  device?: EditorDevice;
   /** Accordion and Tabs item actions (W-130). */
   items?: ItemActions;
 }) {
@@ -115,6 +120,20 @@ export function SettingsPanel({
           slugError={slugError}
           kind={kind}
           fetcher={fetcher}
+          {...(translatable && kind === "page"
+            ? {
+                languages: (
+                  <LanguagesSection
+                    fetcher={fetcher}
+                    collection={PAGES_COLLECTION}
+                    entryId={state.id}
+                    title={state.page.title}
+                    slug={state.page.slug}
+                    layout={state.page.layout}
+                  />
+                ),
+              }
+            : {})}
           onChange={(patch) => {
             if (patch.slug !== undefined) onSlugEdit();
             dispatch({ type: "set-page", patch });
