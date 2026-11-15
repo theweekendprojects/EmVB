@@ -1,3 +1,4 @@
+import { componentProvider } from "@perkyzz/emvb-provider-api";
 import { boundedArray } from "../bounded-array.ts";
 import { z } from "zod";
 import { LIST_MARKERS } from "../css-keywords.ts";
@@ -1605,11 +1606,25 @@ export const isLayoutParentNode = (
   node.type === "menu-item" ||
   node.type === "carousel-slide";
 
+/**
+ * A provider node is a parent when its registered component declares `container: true`. The
+ * registry is read here, so a provider that is not registered (or a leaf component) is not a parent.
+ */
+const providerAcceptsChildren = (node: unknown): boolean => {
+  const { provider, component } = node as { provider?: unknown; component?: unknown };
+  return (
+    typeof provider === "string" &&
+    typeof component === "string" &&
+    componentProvider(provider)?.components.get(component)?.descriptor.container === true
+  );
+};
+
 /** Nodes that may hold children. */
 export const isParentNode = (
   node: LayoutNode,
 ): node is
   | ContainerNode
+  | (ProviderNode & { children: LayoutNode[] })
   | DivBlockNode
   | LayoutSectionNode
   | FlexboxNode
@@ -1646,7 +1661,8 @@ export const isParentNode = (
   node.type === "social-icons" ||
   node.type === "gallery" ||
   node.type === "carousel" ||
-  node.type === "carousel-slide";
+  node.type === "carousel-slide" ||
+  (node.type === "provider" && providerAcceptsChildren(node));
 
 export const isFormFieldType = (type: string): boolean =>
   (FORM_FIELD_TYPES as readonly string[]).includes(type);

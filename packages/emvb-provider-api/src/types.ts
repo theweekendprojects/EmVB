@@ -35,6 +35,8 @@ export interface ProviderComponentDescriptor {
   defaultTab: "content";
   fields: ProviderFieldDescriptor[];
   category?: string;
+  /** True when the component holds child elements: EmVB renders them inside it and lets the editor place them there. */
+  container?: boolean;
   support?: "verified" | "experimental";
   icon?: string;
   keywords?: readonly string[];

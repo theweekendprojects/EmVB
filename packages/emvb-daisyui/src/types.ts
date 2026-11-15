@@ -65,6 +65,8 @@ export interface GeneratedDaisyComponent extends ProviderComponent<DaisyComponen
     group: "content";
     defaultTab: "content";
     category?: string;
+    /** True when the component holds child elements (see ProviderComponentDescriptor). */
+    container?: boolean;
     support?: "verified" | "experimental";
     icon?: string;
     keywords?: readonly string[];

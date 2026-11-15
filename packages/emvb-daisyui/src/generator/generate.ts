@@ -49,6 +49,7 @@ export function generateComponent(definition: DaisyComponentDefinition): Generat
       name: definition.label,
       group: "content",
       defaultTab: "content",
+      container: definition.container === true,
       category: official?.category ?? definition.category,
       support: isVerifiedDaisyComponent(definition.id) ? "verified" : "experimental",
       icon: official?.icon ?? "layout",
