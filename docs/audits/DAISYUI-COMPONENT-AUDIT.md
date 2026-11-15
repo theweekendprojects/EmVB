@@ -133,3 +133,21 @@ These need a visual check in the editor, not a static render:
 6. **Check the visual items** in the "Not verified" list in the editor.
 
 Each step needs a regression test. Step 1 can use a test like the one added for the render strip fix in `contract.test.ts`.
+
+## Progress after step 1 and step 2
+
+**Step 1, containers hold children (done, `d49a4442`).** A provider component declares `container: true`; the editor and the public renderer treat it as a parent. Verified live: a Button added after a Card lands inside it.
+
+**Selection bug (done, `fd05eefd`).** Provider roots now keep their editor id, so a click on the canvas selects the element. Verified live.
+
+**Step 2 (done, `58c43d14` and `716aacf8`).**
+- Output allowlist: table family, `caption`, `kbd`, `pre`, `dialog`, `rows`, `selected`, `accept`, `inputmode`, `scope`, `popover` and `popovertarget` are allowed. The last two are checked against value rules. `style` stays refused by name (W-091).
+- Option classes: every catalog class is written as a literal string, so Tailwind generates it. Dead options went from 195 to 7 on the live stylesheet. Of those 7, 2 are false positives (escaped names that are present) and 5 were pagination's `join-*` sizes, which do not exist in daisyUI 5.7.50. Pagination now puts its size on each button as `btn-*`.
+- Images: avatar, mask and hover gallery default to no picture and show a daisyUI placeholder instead of requesting missing files.
+- Guard: every daisyUI component's default markup passes the output serializer, except `countdown` and `radial-progress`.
+
+**Still open**
+- `countdown` and `radial-progress` set an inline `style`, which is refused by name (W-091). Decision needed: allow narrow custom-property styles, which reverses W-091, or generate per-value classes.
+- Empty by default: `table` (no rows), `skeleton` (zero height), `join` and `hover-3d` (no children), `indicator` (zero height).
+- `modal` and `kbd` were not on the editor canvas. They are now allowed by the serializer, but the canvas was not re-checked.
+- The public output for the components allowed in step 2 is checked by unit tests, not on a published page.
