@@ -1113,12 +1113,18 @@ const providerElement: ElementDefinition<ProviderNode> = {
       // trees differ by design (EmVB children are rendered and passed as the 3rd arg,
       // the provider never reads node.children). Narrow to the contract node here.
       const contractNode = node as unknown as Parameters<typeof provider.render>[0];
-      return provider.render(
+      const rendered = provider.render(
         contractNode,
         { ...attrs, ...(theme ? { "data-theme": theme } : {}) },
         children,
         { mode: "public" },
       ) as VNode;
+      // A provider's build may drop the attributes it is given (daisyUI's card does). The editor id
+      // must still reach the root, or clicking the element on the canvas selects its parent instead.
+      const editorId = attrs["data-emvb-id"];
+      if (editorId && !rendered.attrs["data-emvb-id"])
+        return { ...rendered, attrs: { ...rendered.attrs, "data-emvb-id": editorId } };
+      return rendered;
     } catch {
       return {
         tag: "div",

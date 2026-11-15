@@ -66,6 +66,25 @@ const stub = {
   },
 };
 
+// A component whose build ignores the attributes it is given, as daisyUI's card does. The editor
+// id must still reach its root element, or clicking it on the canvas selects the parent.
+stub.components.set("tile", {
+  descriptor: {
+    type: "provider",
+    provider: "stubkit",
+    component: "tile",
+    name: "Tile",
+    group: "content",
+    defaultTab: "content",
+    fields: [],
+  },
+  defaults: () => ({ type: "provider", provider: "stubkit", component: "tile", props: {} }),
+  build: (_node: unknown, _attrs: unknown) => ({ tag: "div", attrs: { class: "stub-tile" }, children: ["Tile"] }),
+} as never);
+
+const tile = () =>
+  ({ id: "tile0001", type: "provider", provider: "stubkit", component: "tile", props: {} }) as unknown as LayoutNode;
+
 const panel = (children: LayoutNode[]) =>
   ({ id: "panel001", type: "provider", provider: "stubkit", component: "panel", props: {}, children }) as unknown as LayoutNode;
 const chip = (label: string) =>
@@ -88,6 +107,17 @@ describe("provider containers hold children (step 1)", () => {
   test("a child placed inside a provider container renders inside it on the public page", () => {
     const html = renderPage(page([panel([chip("Inside")])]), emptyDesign(), { mode: "public" }).html;
     expect(html).toMatch(/<section[^>]*stub-panel[^>]*><span[^>]*stub-chip[^>]*>Inside<\/span><\/section>/);
+  });
+
+  test("the editor id reaches a provider root even when its build ignores attributes", () => {
+    const html = renderPage(page([tile()]), emptyDesign(), { mode: "editor" }).html;
+    expect(html).toMatch(/<div[^>]*stub-tile[^>]*data-emvb-id="tile0001"/);
+  });
+
+  test("public output never carries the editor id", () => {
+    const html = renderPage(page([tile()]), emptyDesign(), { mode: "public" }).html;
+    expect(html).toContain("stub-tile");
+    expect(html).not.toContain("data-emvb-id");
   });
 
   test("the editor can add a child into a provider container", () => {
