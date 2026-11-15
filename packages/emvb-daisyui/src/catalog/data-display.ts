@@ -1,6 +1,15 @@
 import type { DaisyComponentDefinition, VNode } from "../types.ts";
 import { safeHref } from "../render/href.ts";
 
+/** Up to two initials from the alternative text, for a placeholder avatar. */
+const initialsOf = (alt: unknown) =>
+  String(alt ?? "")
+    .trim()
+    .split(/\s+/)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("") || "?";
 const lines = (value: unknown, max = 50) =>
   String(value ?? "")
     .split(/\r?\n/)
@@ -169,7 +178,7 @@ export const AVATAR: DaisyComponentDefinition = {
   tag: "div",
   rootClass: "avatar",
   fields: [
-    { key: "src", label: "Image URL", kind: "href", default: "/avatar.png" },
+    { key: "src", label: "Image URL", kind: "href", default: "" },
     { key: "alt", label: "Alternative text", kind: "text", default: "User avatar" },
     {
       key: "size",
@@ -199,6 +208,20 @@ export const AVATAR: DaisyComponentDefinition = {
   build(node, classes) {
     const wrapper = classes.filter((c) => !c.startsWith("w-") && !c.startsWith("rounded"));
     const image = classes.filter((c) => c.startsWith("w-") || c.startsWith("rounded"));
+    // No picture: daisyUI's placeholder avatar shows initials from the alternative text.
+    if (!String(node.props.src ?? "").trim()) {
+      return {
+        tag: "div",
+        attrs: { class: [...wrapper, "placeholder"].join(" ") },
+        children: [
+          {
+            tag: "div",
+            attrs: { class: ["bg-neutral text-neutral-content", ...image].join(" ") },
+            children: [{ tag: "span", attrs: {}, children: [initialsOf(node.props.alt)] }],
+          },
+        ],
+      };
+    }
     return {
       tag: "div",
       attrs: { class: wrapper.join(" ") },

@@ -52,6 +52,7 @@
   },
   "scripts": {
     "generate": "bun src/generator/cli.ts",
+    "classes:write": "bun src/generator/write-class-names.ts",
     "test": "bun test src",
     "conformance:css": "bun src/conformance/cli.ts",
     "build": "bun ../../scripts/build-provider-packages.ts",

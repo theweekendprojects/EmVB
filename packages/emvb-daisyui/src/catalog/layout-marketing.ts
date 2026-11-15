@@ -249,7 +249,7 @@ export const MASK: DaisyComponentDefinition = {
   tag: "img",
   rootClass: "mask",
   fields: [
-    { key: "src", label: "Image URL", kind: "href", default: "/image.jpg", attribute: "src" },
+    { key: "src", label: "Image URL", kind: "href", default: "", attribute: "src" },
     {
       key: "alt",
       label: "Alternative text",
@@ -297,6 +297,17 @@ export const MASK: DaisyComponentDefinition = {
     },
   ],
   build(node, classes) {
+    // No picture: a neutral block with the same shape, so no file is requested.
+    if (!String(node.props.src ?? "").trim())
+      return {
+        tag: "div",
+        attrs: {
+          class: [...classes, "bg-neutral"].join(" "),
+          role: "img",
+          "aria-label": String(node.props.alt),
+        },
+        children: [],
+      };
     return {
       tag: "img",
       attrs: {
