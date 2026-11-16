@@ -377,7 +377,11 @@ function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
     name: generated.descriptor.name,
     group: "content",
     defaultTab: "content",
-    fields: generated.descriptor.fields.filter((field) => !hidden?.has(field.key)),
+    // A provider's "number" is a plain number. The panel's own "number" kind saves a length
+    // object ({ value, unit }), which a provider node's props refuse, so the page cannot save.
+    fields: generated.descriptor.fields
+      .filter((field) => !hidden?.has(field.key))
+      .map((field) => (field.kind === "number" ? { ...field, kind: "decimal" as const } : field)),
   };
 }
 
