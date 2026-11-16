@@ -143,8 +143,11 @@ export const TIMELINE: DaisyComponentDefinition = {
     return {
       tag: "ul",
       attrs: { class: classes.join(" "), "aria-label": String(node.props.label) },
-      children: lines(node.props.items, 30).map((entry, index) => {
+      children: lines(node.props.items, 30).map((entry, index, all) => {
         const [date, title, description = ""] = entry.split("|");
+        // daisyUI joins the items with a line on each side of the marker: every item but the last
+        // ends with one, and every item but the first starts with one (the official examples).
+        const last = index === all.length - 1;
         return {
           tag: "li",
           attrs: {},
@@ -158,12 +161,15 @@ export const TIMELINE: DaisyComponentDefinition = {
             },
             {
               tag: "div",
-              attrs: { class: "timeline-end timeline-box" },
+              // daisyUI's box paints base-100, which is white in the light theme this provider
+              // ships; the text inherits from the page, so the box is transparent like a card.
+              attrs: { class: "timeline-end timeline-box bg-transparent" },
               children: [
                 { tag: "strong", attrs: {}, children: [title || "Milestone"] },
                 { tag: "p", attrs: {}, children: [description] },
               ],
             },
+            last ? "" : { tag: "hr", attrs: {}, children: [] },
           ].filter(Boolean) as Array<VNode | string>,
         };
       }),
