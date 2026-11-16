@@ -97,6 +97,14 @@ describe("site sections for non-technical owners", () => {
     }
   });
 
+  test("the call to action keeps its button at natural width, not stretched across the card", () => {
+    const [cta] = build("section-cta");
+    expect(cta?.props.align).toBe("start");
+    expect(serialize(daisyUIProvider.render(cta!, {}, [], { mode: "public" }) as never)).toContain(
+      'class="card-body items-start"',
+    );
+  });
+
   test("the footer's links are real, safe paths", () => {
     const [footer] = build("section-footer");
     expect(footer?.props.links).toContain("|/about");

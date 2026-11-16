@@ -98,7 +98,7 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "A band that asks the visitor to take one step, with a button.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Ready to start?", body: "Take the next step in one click." }, [
+      node("card", id, { title: "Ready to start?", body: "Take the next step in one click.", align: "start" }, [
         node("button", id, { label: "Contact us", tone: "primary" }),
       ]),
     ],
