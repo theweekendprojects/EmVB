@@ -31,6 +31,8 @@ export interface DaisyFieldDefinition {
   kind: DaisyFieldKind;
   default: DaisyFieldValue;
   options?: readonly string[];
+  /** Panel text for an option; unset options show their value in title case. */
+  optionLabels?: Readonly<Record<string, string>>;
   classMap?: Readonly<Record<string, string>>;
   attribute?: string;
   textContent?: boolean;
@@ -52,6 +54,8 @@ export interface DaisyComponentDefinition {
   fields: readonly DaisyFieldDefinition[];
   container?: boolean;
   role?: string;
+  /** Props computed each time a node is created, on top of the fields' static defaults. */
+  initial?: () => DaisyProps;
   build?: (node: DaisyComponentNode, classes: string[], children: VNode[]) => VNode;
 }
 

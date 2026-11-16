@@ -1,4 +1,5 @@
 import type { DaisyComponentNode, DaisyProps } from "../types.ts";
+import { targetIn } from "../catalog/countdown.ts";
 
 export type DaisyRecipeId =
   | "pricing"
@@ -10,7 +11,12 @@ export type DaisyRecipeId =
   | "blog-grid"
   | "team-grid"
   | "dashboard-stats"
-  | "navigation-shell";
+  | "navigation-shell"
+  | "countdown-launch"
+  | "countdown-sale"
+  | "countdown-event"
+  | "countdown-flash"
+  | "countdown-earlybird";
 
 export interface DaisyRecipe {
   id: DaisyRecipeId;
@@ -154,6 +160,102 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     create: (id) => [
       node("navbar", id, { brand: "Brand" }, [node("menu", id, { items: "Home,Products,About" })]),
       node("footer", id, {}),
+    ],
+  },
+  {
+    id: "countdown-launch",
+    name: "Launch countdown",
+    description: "Big boxed countdown to a launch, with a notify button.",
+    category: "Marketing",
+    create: (id) => [
+      node("card", id, { title: "We launch soon", body: "Be first in line when we go live.", size: "lg" }, [
+        node("countdown", id, {
+          target: targetIn(14, 9, true),
+          zone: "UTC",
+          layout: "boxes",
+          units: "dhms",
+          size: "lg",
+          expired: "We are live!",
+        }),
+        node("button", id, { label: "Notify me", tone: "primary" }),
+      ]),
+    ],
+  },
+  {
+    id: "countdown-sale",
+    name: "Sale ends countdown",
+    description: "Plain countdown to the end of a sale, on each visitor's own clock.",
+    category: "Marketing",
+    create: (id) => [
+      node("card", id, { title: "Summer sale", body: "Everything is 30% off until the timer ends.", size: "sm" }, [
+        node("countdown", id, {
+          target: targetIn(4, 0),
+          zone: "viewer",
+          layout: "plain",
+          units: "dhms",
+          size: "md",
+          expired: "This sale has ended.",
+        }),
+        node("button", id, { label: "Shop now", tone: "primary" }),
+      ]),
+    ],
+  },
+  {
+    id: "countdown-event",
+    name: "Event starts in",
+    description: "Days, hours and minutes to a fixed-time event, with a sign-up button.",
+    category: "Marketing",
+    create: (id) => [
+      node("card", id, { title: "Live webinar", body: "Free live session with questions and answers.", size: "md" }, [
+        node("countdown", id, {
+          target: targetIn(10, 18, true),
+          zone: "UTC",
+          layout: "boxes",
+          units: "dhm",
+          size: "md",
+          expired: "The event has started.",
+        }),
+        node("button", id, { label: "Reserve my seat", tone: "primary" }),
+      ]),
+    ],
+  },
+  {
+    id: "countdown-flash",
+    name: "Flash sale clock",
+    description: "Hours, minutes and seconds as a clock, for a short sale.",
+    category: "Marketing",
+    create: (id) => [
+      node("card", id, { title: "Flash sale", body: "Prices go back up when the clock runs out.", size: "sm" }, [
+        node("countdown", id, {
+          target: targetIn(2, 12),
+          zone: "viewer",
+          layout: "clock",
+          units: "hms",
+          size: "xl",
+          expired: "Sale ended",
+        }),
+        node("button", id, { label: "Shop the sale", tone: "primary" }),
+      ]),
+    ],
+  },
+  {
+    id: "countdown-earlybird",
+    name: "Early-bird days left",
+    description: "Just the days left until early-bird pricing ends.",
+    category: "Marketing",
+    create: (id) => [
+      node("card", id, { title: "Early-bird pricing", body: "Lock in the lower price before the timer ends.", size: "sm" }, [
+        node("countdown", id, {
+          target: targetIn(21, 23),
+          zone: "viewer",
+          layout: "plain",
+          units: "d",
+          size: "lg",
+          labels: "days left",
+          expired: "Early-bird pricing has ended.",
+        }),
+        node("button", id, { label: "Get the early-bird price", tone: "primary" }),
+      ]),
     ],
   },
 ] as const;

@@ -4,7 +4,7 @@ import { daisyUIProvider } from "../provider.ts";
 export type EditorIntegrationMode = "direct" | "compound" | "textless";
 export const COMPOUND_EDITOR_COMPONENTS = ["accordion", "carousel", "menu", "table", "tabs"] as const;
 export const INTENTIONALLY_TEXTLESS_COMPONENTS = ["aura", "divider", "indicator", "join", "loading", "mask", "skeleton", "stack", "status", "swap", "theme-controller"] as const;
-const editableKinds = new Set(["text", "textarea", "number", "select", "boolean", "href"]);
+const editableKinds = new Set(["text", "textarea", "number", "select", "boolean", "href", "datetime"]);
 export interface EditorIntegrationAudit { id: string; mode: EditorIntegrationMode; ok: boolean; reason: string; }
 export function editorIntegrationAudit(): EditorIntegrationAudit[] {
   return OFFICIAL_DAISYUI_COMPONENTS.map(({ id }) => {

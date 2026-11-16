@@ -60,7 +60,7 @@ async function type(field: string, text: string) {
 }
 
 describe("a provider's number field saves a plain number", () => {
-  test("typing a Value keeps the page savable (it used to save { value, unit })", async () => {
+  test("typing a number keeps the page savable (it used to save { value, unit })", async () => {
     await mount(<Harness start={countdown()} />);
     await type("value", "50");
     const saved = nodes.at(-1);
@@ -68,10 +68,29 @@ describe("a provider's number field saves a plain number", () => {
     expect(ProviderNode.safeParse(saved).success).toBe(true);
   });
 
+  test("a date-time field is a real date picker and saves a plain string", async () => {
+    await mount(<Harness start={countdown()} />);
+    const input = document.querySelector<HTMLInputElement>('[data-emvb-field="target"]');
+    expect(input?.type).toBe("datetime-local");
+    await type("target", "2030-05-06T07:08");
+    const saved = nodes.at(-1);
+    expect(saved?.props).toMatchObject({ target: "2030-05-06T07:08" });
+    expect(ProviderNode.safeParse(saved).success).toBe(true);
+    await type("target", "");
+    expect(nodes.at(-1)?.props).not.toHaveProperty("target");
+    expect(ProviderNode.safeParse(nodes.at(-1)).success).toBe(true);
+  });
+
+  test("the Time zone, Show and Layout choices read as words, not codes", async () => {
+    await mount(<Harness start={countdown()} />);
+    const text = document.body.textContent ?? "";
+    for (const label of ["Time zone", "Show", "Layout", "Ends at"]) expect(text).toContain(label);
+  });
+
   test("the field has no pixel unit in its label", async () => {
     await mount(<Harness start={countdown()} />);
-    const labels = [...document.querySelectorAll("label, span")].map((el) => el.textContent);
-    expect(labels).toContain("Value");
-    expect(labels).not.toContain("Value (px)");
+    const labels = [...document.querySelectorAll("label, span")].map((el) => el.textContent ?? "");
+    expect(labels).toContain("Fixed number (only when no date is set)");
+    expect(labels.filter((text) => text.includes("(px)"))).toEqual([]);
   });
 });

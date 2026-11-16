@@ -11,7 +11,7 @@ const ids = () => {
 };
 
 describe("WP10 recipes", () => {
-  test("ships ten named recipes", () => expect(DAISY_RECIPES).toHaveLength(10));
+  test("ships fifteen named recipes", () => expect(DAISY_RECIPES).toHaveLength(15));
   test("every recipe creates unique, registered component nodes", () => {
     for (const recipe of DAISY_RECIPES) {
       const nodes = createRecipe(recipe.id, ids());

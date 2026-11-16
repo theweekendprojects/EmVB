@@ -1,4 +1,12 @@
-export type ProviderFieldKind = "text" | "textarea" | "number" | "select" | "boolean" | "href";
+export type ProviderFieldKind =
+  | "text"
+  | "textarea"
+  | "number"
+  | "select"
+  | "boolean"
+  | "href"
+  /** A date and time picker. The value is a wall-clock string such as `2026-12-31T18:00`. */
+  | "datetime";
 export type ProviderFieldValue = string | number | boolean;
 export type ProviderProps = Record<string, ProviderFieldValue | undefined>;
 

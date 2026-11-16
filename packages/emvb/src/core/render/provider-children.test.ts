@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { addNode } from "../arrange.ts";
+import { addNode, addSectionNear } from "../arrange.ts";
 import { isParentNode, LAYOUT_SCHEMA_VERSION, type Layout, type LayoutNode } from "../schema/layout.ts";
 import { emptyDesign } from "../schema/design.ts";
 import { renderPage } from "./index.ts";
@@ -127,5 +127,22 @@ describe("provider containers hold children (step 1)", () => {
     if (!result.ok) return;
     const placed = (result.layout.root.children?.[0] as { children?: LayoutNode[] }).children ?? [];
     expect(placed.map((node) => node.id)).toContain("chip0001");
+  });
+
+  test("a section recipe lands after a selected provider container, never inside it", () => {
+    const layout = page([panel([chip("Inside")])]);
+    const recipe = { ...panel([]), id: "recipe01" } as LayoutNode;
+    const result = addSectionNear(layout, recipe, "panel001");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.parentId).toBe("root0001");
+    expect(result.layout.root.children?.map((node) => node.id)).toEqual(["panel001", "recipe01"]);
+  });
+
+  test("also when the selection is deep inside that container", () => {
+    const layout = page([panel([chip("Deep")])]);
+    const recipe = { ...panel([]), id: "recipe02" } as LayoutNode;
+    const result = addSectionNear(layout, recipe, "chip0001");
+    expect(result.ok && result.parentId).toBe("root0001");
   });
 });

@@ -59,14 +59,17 @@ export function generateComponent(definition: DaisyComponentDefinition): Generat
         key: field.key,
         kind: field.kind,
         label: field.label,
-        options: field.options?.map((value) => ({ value, label: titleCase(value) })),
+        options: field.options?.map((value) => ({
+          value,
+          label: field.optionLabels?.[value] ?? titleCase(value),
+        })),
       })),
     },
     defaults: () => ({
       type: "provider",
       provider: "daisyui",
       component: definition.id,
-      props: fieldDefaults(definition),
+      props: { ...fieldDefaults(definition), ...definition.initial?.() },
       ...(definition.container ? { children: [] } : {}),
     }),
     build(node, attrs = {}, children: VNode[] = []) {

@@ -469,6 +469,7 @@ export const CATALOG_CLASS_NAMES = [
   "tabs-lift",
   "text-3xl",
   "text-5xl",
+  "text-7xl",
   "text-accent",
   "text-accent-content",
   "text-center",
