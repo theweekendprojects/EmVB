@@ -88,6 +88,15 @@ describe("site sections for non-technical owners", () => {
     }
   });
 
+  test("features, reviews and key numbers are one three-column grid, not a stack", () => {
+    for (const id of ["section-features", "section-reviews", "section-numbers"] as const) {
+      const [grid] = build(id);
+      expect(grid?.component, id).toBe("columns");
+      expect(grid?.props.columns, id).toBe("3");
+      expect(grid?.children?.length, id).toBe(3);
+    }
+  });
+
   test("the footer's links are real, safe paths", () => {
     const [footer] = build("section-footer");
     expect(footer?.props.links).toContain("|/about");

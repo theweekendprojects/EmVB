@@ -421,6 +421,30 @@ export const CODE_MOCKUP: DaisyComponentDefinition = {
     };
   },
 };
+// Lays children side by side on wide screens and stacks them on phones. The recipes use it for
+// rows of cards and numbers; the Columns setting is the number of columns on a wide screen.
+export const COLUMNS: DaisyComponentDefinition = {
+  id: "columns",
+  label: "Columns",
+  category: "Layout",
+  tag: "div",
+  rootClass: "grid w-full gap-4",
+  container: true,
+  fields: [
+    {
+      key: "columns",
+      label: "Columns on a wide screen",
+      kind: "select",
+      default: "3",
+      options: ["2", "3", "4"],
+      classMap: { "2": "md:grid-cols-2", "3": "md:grid-cols-3", "4": "md:grid-cols-4" },
+    },
+  ],
+  build(_node, classes, children) {
+    return { tag: "div", attrs: { class: classes.join(" ") }, children };
+  },
+};
+
 export const LAYOUT_MARKETING_DAISY_COMPONENTS = [
   HERO,
   STACK,

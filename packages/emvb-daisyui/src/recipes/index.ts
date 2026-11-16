@@ -67,7 +67,7 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
   // Sections for site owners: plain placeholder words to replace with their own. Listed first.
   {
     id: "section-hero",
-    name: "Hero",
+    name: "daisyUI Hero",
     description: "A large headline, a short message and one button. Replace the words with yours.",
     category: "Marketing",
     create: (id) => [
@@ -81,18 +81,20 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
   },
   {
     id: "section-features",
-    name: "Features",
-    description: "Three short boxes that explain what you offer.",
+    name: "daisyUI Features",
+    description: "Three short boxes side by side that explain what you offer.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Easy to use", body: "Describe this benefit in one sentence." }),
-      node("card", id, { title: "Works everywhere", body: "Describe this benefit in one sentence." }),
-      node("card", id, { title: "Built to last", body: "Describe this benefit in one sentence." }),
+      node("columns", id, { columns: "3" }, [
+        node("card", id, { title: "Easy to use", body: "Describe this benefit in one sentence." }),
+        node("card", id, { title: "Works everywhere", body: "Describe this benefit in one sentence." }),
+        node("card", id, { title: "Built to last", body: "Describe this benefit in one sentence." }),
+      ]),
     ],
   },
   {
     id: "section-cta",
-    name: "Call to action",
+    name: "daisyUI Call to action",
     description: "A band that asks the visitor to take one step, with a button.",
     category: "Marketing",
     create: (id) => [
@@ -103,38 +105,41 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
   },
   {
     id: "section-reviews",
-    name: "Customer reviews",
-    description: "Three short quotes from customers. Replace the names and words.",
+    name: "daisyUI Customer reviews",
+    description: "Three short quotes from customers, side by side. Replace the names and words.",
     category: "Marketing",
-    create: (id) =>
-      ["Customer name", "Customer name", "Customer name"].map((name) =>
-        node("card", id, {
-          title: name,
-          body: "Put a short quote from a happy customer here.",
-        }),
+    create: (id) => [
+      node("columns", id, { columns: "3" },
+        ["Customer name", "Customer name", "Customer name"].map((name) =>
+          node("card", id, { title: name, body: "Put a short quote from a happy customer here." }),
+        ),
       ),
+    ],
   },
   {
     id: "section-numbers",
-    name: "Key numbers",
+    name: "daisyUI Key numbers",
     description: "Three numbers that show your results. Replace them with real figures.",
     category: "Marketing",
     create: (id) => [
-      node("stats", id, { title: "Customers", value: "1,200", description: "Served so far" }),
-      node("stats", id, { title: "Projects", value: "340", description: "Completed" }),
-      node("stats", id, { title: "Rating", value: "4.9", description: "Average review" }),
+      node("columns", id, { columns: "3" }, [
+        node("stats", id, { title: "Customers", value: "1,200", description: "Served so far" }),
+        node("stats", id, { title: "Projects", value: "340", description: "Completed" }),
+        node("stats", id, { title: "Rating", value: "4.9", description: "Average review" }),
+      ]),
     ],
   },
   {
     id: "section-footer",
-    name: "Footer",
-    description: "Your name, a short line and links to the main pages.",
+    name: "daisyUI Footer",
+    description: "Your name, a short line and links to the main pages, centred.",
     category: "Navigation",
     create: (id) => [
       node("footer", id, {
         brand: "Your business name",
         description: "A short line about what you do.",
         links: "About|/about\nContact|/contact\nPrivacy|/privacy",
+        layout: "vertical",
       }),
     ],
   },
