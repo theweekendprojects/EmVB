@@ -28,6 +28,7 @@ import { adminExtensionDefaults } from "./extension-manifests.ts";
 import { newElement, withLoopPostTitleLevel, withPageHeadingLevel } from "./dnd/new-element.ts";
 import { componentProvider } from "@perkyzz/emvb-provider-api";
 import { ELEMENT_NAMES } from "./element-chrome.ts";
+import { revealInCanvas } from "./canvas/reveal-in-canvas.ts";
 import type { ItemActions } from "./panels/settings/ItemList.tsx";
 import type { EditorAction, EditorState } from "./store.ts";
 
@@ -216,6 +217,7 @@ export function useNodeActions({
     // W-968: a Post title placed inside a Loop starts as an H2.
     const placed = withLoopPostTitleLevel(result.layout, node.id, latest.current.page.partType);
     dispatch({ type: "apply-arranged", layout: placed, selected: result.selected });
+    revealInCanvas(result.selected);
     const nameOf = (id: string) => ELEMENT_NAMES[findNode(layout, id)?.type ?? "container"];
     if (result.fallback) {
       // Added next to the nearest ancestor that takes it, rather than refused (W-175).
