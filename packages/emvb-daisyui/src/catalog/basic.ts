@@ -156,7 +156,8 @@ export const CARD: DaisyComponentDefinition = {
       key: "bordered",
       label: "Border",
       kind: "boolean",
-      default: true,
+      // Off by default, as daisyUI's own card is; a border is a choice the owner makes.
+      default: false,
       classMap: { true: "card-border", false: "" },
     },
     {
