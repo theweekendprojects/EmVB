@@ -251,6 +251,7 @@ export const CATALOG_CLASS_NAMES = [
   "footer",
   "footer-center",
   "footer-vertical",
+  "grid-flow-row",
   "hero",
   "hover-3d",
   "hover-gallery",

@@ -99,9 +99,9 @@ describe("site sections for non-technical owners", () => {
 
   test("the call to action keeps its button at natural width, not stretched across the card", () => {
     const [cta] = build("section-cta");
-    expect(cta?.props.align).toBe("start");
+    expect(cta?.props.align).toBe("center");
     expect(serialize(daisyUIProvider.render(cta!, {}, [], { mode: "public" }) as never)).toContain(
-      'class="card-body items-start"',
+      'class="card-body items-center text-center"',
     );
   });
 

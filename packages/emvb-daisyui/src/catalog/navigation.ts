@@ -352,7 +352,8 @@ export const FOOTER: DaisyComponentDefinition = {
       classMap: {
         horizontal: "sm:footer-horizontal",
         vertical: "footer-vertical",
-        center: "footer-center",
+        // daisyUI switches the footer to columns from the small breakpoint up; keep brand and links stacked.
+        center: "footer-center grid-flow-row",
       },
     },
   ],

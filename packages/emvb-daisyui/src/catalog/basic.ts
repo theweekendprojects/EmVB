@@ -168,14 +168,14 @@ export const CARD: DaisyComponentDefinition = {
       options: sizes,
       classMap: sizeMap("card"),
     },
-    // Stretch fills the card's width (the default). Start keeps a button at its natural width.
+    // Stretch fills the card's width (the default). Start and center keep a button at its natural width.
     {
       key: "align",
       label: "Content width",
       kind: "select",
       default: "stretch",
-      options: ["stretch", "start"],
-      optionLabels: { stretch: "Full width", start: "Natural width" },
+      options: ["stretch", "start", "center"],
+      optionLabels: { stretch: "Full width", start: "Left, natural width", center: "Centred, natural width" },
     },
   ],
   build(node, classes, children) {
@@ -184,7 +184,8 @@ export const CARD: DaisyComponentDefinition = {
       { tag: "p", attrs: {}, children: [String(node.props.body)] },
       ...children,
     ];
-    const start = node.props.align === "start" ? " items-start" : "";
+    const start =
+      node.props.align === "start" ? " items-start" : node.props.align === "center" ? " items-center text-center" : "";
     return {
       tag: "article",
       attrs: { class: classes.filter(Boolean).join(" ") },

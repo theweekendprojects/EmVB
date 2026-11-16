@@ -56,12 +56,16 @@ const node = (
   };
 };
 
-const cards = (id: () => string, labels: string[], tone = "primary") =>
-  labels.map((label) =>
-    node("card", id, { title: label, body: `${label} content` }, [
-      node("button", id, { label: "Learn more", tone }),
-    ]),
-  );
+// Three cards side by side, text centred, buttons at their natural width.
+const cards = (id: () => string, labels: string[], tone = "primary") => [
+  node("columns", id, { columns: "3" },
+    labels.map((label) =>
+      node("card", id, { title: label, body: `${label} content`, align: "center" }, [
+        node("button", id, { label: "Learn more", tone }),
+      ]),
+    ),
+  ),
+];
 
 export const DAISY_RECIPES: readonly DaisyRecipe[] = [
   // Sections for site owners: plain placeholder words to replace with their own. Listed first.
@@ -98,7 +102,7 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "A band that asks the visitor to take one step, with a button.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Ready to start?", body: "Take the next step in one click.", align: "start" }, [
+      node("card", id, { title: "Ready to start?", body: "Take the next step in one click.", align: "center" }, [
         node("button", id, { label: "Contact us", tone: "primary" }),
       ]),
     ],
@@ -139,7 +143,7 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
         brand: "Your business name",
         description: "A short line about what you do.",
         links: "About|/about\nContact|/contact\nPrivacy|/privacy",
-        layout: "vertical",
+        layout: "center",
       }),
     ],
   },
@@ -253,7 +257,7 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Big boxed countdown to a launch, with a notify button.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "We launch soon", body: "Be first in line when we go live.", size: "lg" }, [
+      node("card", id, { title: "We launch soon", body: "Be first in line when we go live.", size: "lg", align: "center" }, [
         node("countdown", id, {
           target: targetIn(14, 9, true),
           zone: "UTC",
@@ -272,7 +276,7 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Plain countdown to the end of a sale, on each visitor's own clock.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Summer sale", body: "Everything is 30% off until the timer ends.", size: "sm" }, [
+      node("card", id, { title: "Summer sale", body: "Everything is 30% off until the timer ends.", size: "sm", align: "center" }, [
         node("countdown", id, {
           target: targetIn(4, 0),
           zone: "viewer",
@@ -291,7 +295,7 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Days, hours and minutes to a fixed-time event, with a sign-up button.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Live webinar", body: "Free live session with questions and answers.", size: "md" }, [
+      node("card", id, { title: "Live webinar", body: "Free live session with questions and answers.", size: "md", align: "center" }, [
         node("countdown", id, {
           target: targetIn(10, 18, true),
           zone: "UTC",
@@ -310,7 +314,7 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Hours, minutes and seconds as a clock, for a short sale.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Flash sale", body: "Prices go back up when the clock runs out.", size: "sm" }, [
+      node("card", id, { title: "Flash sale", body: "Prices go back up when the clock runs out.", size: "sm", align: "center" }, [
         node("countdown", id, {
           target: targetIn(2, 12),
           zone: "viewer",
@@ -329,7 +333,7 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Just the days left until early-bird pricing ends.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Early-bird pricing", body: "Lock in the lower price before the timer ends.", size: "sm" }, [
+      node("card", id, { title: "Early-bird pricing", body: "Lock in the lower price before the timer ends.", size: "sm", align: "center" }, [
         node("countdown", id, {
           target: targetIn(21, 23),
           zone: "viewer",
