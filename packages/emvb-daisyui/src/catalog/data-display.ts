@@ -555,7 +555,7 @@ function dateCountdown(label: unknown, target: string, classes: readonly string[
     children: UNITS.map(
       ([unit, name]): VNode => ({
         tag: "div",
-        attrs: { class: "flex flex-col" },
+        attrs: { class: "flex flex-col items-center" },
         children: [
           {
             tag: "span",

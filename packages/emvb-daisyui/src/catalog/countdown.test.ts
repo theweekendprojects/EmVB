@@ -25,6 +25,7 @@ describe("countdown", () => {
     expect(html).toContain('data-daisy-countdown="2099-12-31T00:00:00.000Z"');
     for (const unit of ["d", "h", "m", "s"]) expect(html).toContain(`data-daisy-unit="${unit}"`);
     expect(html).toContain("[--digits:2]");
+    expect(html).toContain("flex flex-col items-center");
   });
 
   test("a target that is not a date falls back to the fixed number", () => {
