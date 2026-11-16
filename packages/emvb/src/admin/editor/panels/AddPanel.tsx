@@ -117,6 +117,28 @@ export function AddPanel({
         }}
         placeholder="Search elements…"
       />
+      {/* Sections first: site owners start from whole sections; single parts follow below. */}
+      {onRecipe && recipes.length > 0 && (
+        <div className="emvb-add-group" data-emvb-recipes="">
+          <h3 className="emvb-add-group-title">Sections</h3>
+          <p className="emvb-helper">Insert a whole section, then change its words.</p>
+          <div className="emvb-recipe-list" aria-label="Sections">
+            {recipes.map((recipe) => (
+              <button
+                key={recipe.insertId}
+                type="button"
+                className="emvb-recipe-tile"
+                data-emvb-recipe={recipe.insertId}
+                onClick={() => onRecipe(recipe.insertId)}
+              >
+                <span className="emvb-recipe-name">{recipe.name}</span>
+                <span className="emvb-recipe-provider">{recipe.provider}</span>
+                <span className="emvb-recipe-desc">{recipe.description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {matched.length === 0 &&
       recipes.length === 0 &&
       (!saved || matchingSections(saved, query).length === 0) ? (
@@ -202,29 +224,6 @@ export function AddPanel({
               >
                 <PuzzlePieceIcon size={20} aria-hidden="true" />
                 <span>{tile.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      {onRecipe && recipes.length > 0 && (
-        <div className="emvb-add-group" data-emvb-recipes="">
-          <h3 className="emvb-add-group-title">Section recipes</h3>
-          <p className="emvb-helper">
-            Whole sections that use your Site styles colours, sizes and classes.
-          </p>
-          <div className="emvb-recipe-list" aria-label="Section recipes">
-            {recipes.map((recipe) => (
-              <button
-                key={recipe.insertId}
-                type="button"
-                className="emvb-recipe-tile"
-                data-emvb-recipe={recipe.insertId}
-                onClick={() => onRecipe(recipe.insertId)}
-              >
-                <span className="emvb-recipe-name">{recipe.name}</span>
-                <span className="emvb-recipe-provider">{recipe.provider}</span>
-                <span className="emvb-recipe-desc">{recipe.description}</span>
               </button>
             ))}
           </div>

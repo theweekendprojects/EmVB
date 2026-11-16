@@ -16,7 +16,13 @@ export type DaisyRecipeId =
   | "countdown-sale"
   | "countdown-event"
   | "countdown-flash"
-  | "countdown-earlybird";
+  | "countdown-earlybird"
+  | "section-hero"
+  | "section-features"
+  | "section-cta"
+  | "section-reviews"
+  | "section-numbers"
+  | "section-footer";
 
 export interface DaisyRecipe {
   id: DaisyRecipeId;
@@ -58,6 +64,80 @@ const cards = (id: () => string, labels: string[], tone = "primary") =>
   );
 
 export const DAISY_RECIPES: readonly DaisyRecipe[] = [
+  // Sections for site owners: plain placeholder words to replace with their own. Listed first.
+  {
+    id: "section-hero",
+    name: "Hero",
+    description: "A large headline, a short message and one button. Replace the words with yours.",
+    category: "Marketing",
+    create: (id) => [
+      node("hero", id, {
+        title: "Your headline goes here",
+        body: "Say in one or two sentences what you offer and who it is for.",
+        action: "Get started",
+        href: "#",
+      }),
+    ],
+  },
+  {
+    id: "section-features",
+    name: "Features",
+    description: "Three short boxes that explain what you offer.",
+    category: "Marketing",
+    create: (id) => [
+      node("card", id, { title: "Easy to use", body: "Describe this benefit in one sentence." }),
+      node("card", id, { title: "Works everywhere", body: "Describe this benefit in one sentence." }),
+      node("card", id, { title: "Built to last", body: "Describe this benefit in one sentence." }),
+    ],
+  },
+  {
+    id: "section-cta",
+    name: "Call to action",
+    description: "A band that asks the visitor to take one step, with a button.",
+    category: "Marketing",
+    create: (id) => [
+      node("card", id, { title: "Ready to start?", body: "Take the next step in one click." }, [
+        node("button", id, { label: "Contact us", tone: "primary" }),
+      ]),
+    ],
+  },
+  {
+    id: "section-reviews",
+    name: "Customer reviews",
+    description: "Three short quotes from customers. Replace the names and words.",
+    category: "Marketing",
+    create: (id) =>
+      ["Customer name", "Customer name", "Customer name"].map((name) =>
+        node("card", id, {
+          title: name,
+          body: "Put a short quote from a happy customer here.",
+        }),
+      ),
+  },
+  {
+    id: "section-numbers",
+    name: "Key numbers",
+    description: "Three numbers that show your results. Replace them with real figures.",
+    category: "Marketing",
+    create: (id) => [
+      node("stats", id, { title: "Customers", value: "1,200", description: "Served so far" }),
+      node("stats", id, { title: "Projects", value: "340", description: "Completed" }),
+      node("stats", id, { title: "Rating", value: "4.9", description: "Average review" }),
+    ],
+  },
+  {
+    id: "section-footer",
+    name: "Footer",
+    description: "Your name, a short line and links to the main pages.",
+    category: "Navigation",
+    create: (id) => [
+      node("footer", id, {
+        brand: "Your business name",
+        description: "A short line about what you do.",
+        links: "About|/about\nContact|/contact\nPrivacy|/privacy",
+      }),
+    ],
+  },
   {
     id: "pricing",
     name: "Pricing section",

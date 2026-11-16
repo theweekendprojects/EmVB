@@ -26,6 +26,13 @@ describe("W-320 recipes in the Add panel and palette", () => {
     expect(root.textContent).not.toContain("No elements match");
   });
 
+  test("sections come first in the Add panel, before the single parts", async () => {
+    const root = await mount(<AddPanel onAdd={() => {}} onRecipe={() => {}} />);
+    const headings = [...root.querySelectorAll(".emvb-add-group-title")].map((h) => h.textContent);
+    expect(headings[0]).toBe("Sections");
+    expect(headings.slice(1)).not.toContain("Sections");
+  });
+
   test("W-320 no recipe handler, no recipes", async () => {
     const root = await mount(<AddPanel onAdd={() => {}} />);
     expect(root.querySelector("[data-emvb-recipes]")).toBeNull();
