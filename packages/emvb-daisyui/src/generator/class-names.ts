@@ -1,4 +1,5 @@
 import type { DaisyComponentDefinition } from "../types.ts";
+import { DIGITS_2_CLASS, VALUE_CLASS_NAMES } from "../catalog/value-class.ts";
 
 /**
  * Every class name the catalog can emit: each component's root class and every option's class map
@@ -16,6 +17,9 @@ export function catalogClassNames(catalog: readonly DaisyComponentDefinition[]):
         for (const token of String(value).split(/\s+/)) if (token) names.add(token);
     }
   }
+  // Classes a build function adds itself rather than through an option.
+  for (const name of VALUE_CLASS_NAMES) names.add(name);
+  names.add(DIGITS_2_CLASS);
   return [...names].sort();
 }
 

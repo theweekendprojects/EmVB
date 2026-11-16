@@ -25,7 +25,8 @@ export function createDaisyUIProvider(
     recipes,
     cssEntryPoints: ["@perkyzz/emvb-daisyui/styles.css"],
     runtimeEntryPoints: ["@perkyzz/emvb-daisyui/runtime"],
-    needsRuntime: (node) => ["modal", "tabs", "drawer", "dropdown", "carousel"].includes(node.component),
+    needsRuntime: (node) =>
+      ["modal", "tabs", "drawer", "dropdown", "carousel", "countdown"].includes(node.component),
     // Do NOT force a page-level data-theme: that pinned daisyUI's `light` base (white) over the
     // host's own light/dark, so a dark site got a white EmVB region. Set data-theme on the wrapper
     // ONLY if a node explicitly asked for one via providerMeta.theme (handled per-node in core's

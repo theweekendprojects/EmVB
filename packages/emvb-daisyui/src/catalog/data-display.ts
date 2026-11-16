@@ -1,5 +1,6 @@
 import type { DaisyComponentDefinition, VNode } from "../types.ts";
 import { safeHref } from "../render/href.ts";
+import { DIGITS_2_CLASS, valueClass } from "./value-class.ts";
 
 /** Up to two initials from the alternative text, for a placeholder avatar. */
 const initialsOf = (alt: unknown) =>
@@ -474,6 +475,12 @@ export const COUNTDOWN: DaisyComponentDefinition = {
   rootClass: "countdown font-mono",
   fields: [
     { key: "label", label: "Accessible label", kind: "text", default: "Time remaining" },
+    {
+      key: "target",
+      label: "Count down to (e.g. 2026-12-31T00:00:00Z); empty shows the fixed value",
+      kind: "text",
+      default: "",
+    },
     { key: "value", label: "Value", kind: "number", default: 42 },
     { key: "max", label: "Maximum", kind: "number", default: 99 },
     { key: "suffix", label: "Suffix", kind: "text", default: " seconds" },
@@ -487,6 +494,8 @@ export const COUNTDOWN: DaisyComponentDefinition = {
     },
   ],
   build(node, classes) {
+    const target = countdownTarget(node.props.target);
+    if (target !== undefined) return dateCountdown(node.props.label, target, classes);
     const max = clamp(node.props.max, 1, 999);
     const value = clamp(node.props.value, 0, max);
     return {
@@ -497,12 +506,77 @@ export const COUNTDOWN: DaisyComponentDefinition = {
         "aria-label": `${node.props.label}: ${value}${node.props.suffix}`,
       },
       children: [
-        { tag: "span", attrs: { style: `--value:${value}` }, children: [String(value)] },
+        {
+          tag: "span",
+          // The class is the first paint (up to 100); the runtime sets the variable for any value.
+          attrs: { class: valueClass(value), "data-daisy-value": String(value) },
+          children: [String(value)],
+        },
         String(node.props.suffix),
       ],
     };
   },
 };
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
+
+/** The target as a normalized ISO instant, or undefined when it is empty or not a date. */
+function countdownTarget(raw: unknown): string | undefined {
+  const text = String(raw ?? "").trim();
+  if (!ISO_DATE.test(text)) return undefined;
+  const ms = Date.parse(text);
+  return Number.isNaN(ms) ? undefined : new Date(ms).toISOString();
+}
+
+const UNITS = [
+  ["d", "days"],
+  ["h", "hours"],
+  ["m", "min"],
+  ["s", "sec"],
+] as const;
+
+/** Days, hours, minutes and seconds in four boxes. The runtime keeps the numbers ticking. */
+function dateCountdown(label: unknown, target: string, classes: readonly string[]): VNode {
+  const left = Math.max(0, Math.floor((Date.parse(target) - Date.now()) / 1000));
+  const parts = {
+    d: Math.floor(left / 86400),
+    h: Math.floor((left % 86400) / 3600),
+    m: Math.floor((left % 3600) / 60),
+    s: left % 60,
+  };
+  return {
+    tag: "div",
+    attrs: {
+      class: "grid auto-cols-max grid-flow-col gap-5 text-center",
+      role: "timer",
+      "aria-label": String(label),
+      "data-daisy-countdown": target,
+    },
+    children: UNITS.map(
+      ([unit, name]): VNode => ({
+        tag: "div",
+        attrs: { class: "flex flex-col" },
+        children: [
+          {
+            tag: "span",
+            attrs: { class: classes.join(" ") },
+            children: [
+              {
+                tag: "span",
+                attrs: {
+                  class: unit === "d" ? valueClass(parts[unit]) : `${valueClass(parts[unit])} ${DIGITS_2_CLASS}`,
+                  "data-daisy-unit": unit,
+                },
+                children: [String(parts[unit])],
+              },
+            ],
+          },
+          name,
+        ],
+      }),
+    ),
+  };
+}
 
 export const DATA_DISPLAY_DAISY_COMPONENTS = [
   TABLE,
