@@ -175,7 +175,11 @@ export const CARD: DaisyComponentDefinition = {
       kind: "select",
       default: "stretch",
       options: ["stretch", "start", "center"],
-      optionLabels: { stretch: "Full width", start: "Left, natural width", center: "Centred, natural width" },
+      optionLabels: {
+        stretch: "Full width",
+        start: "Left, natural width",
+        center: "Centred, natural width",
+      },
     },
   ],
   build(node, classes, children) {
@@ -185,7 +189,11 @@ export const CARD: DaisyComponentDefinition = {
       ...children,
     ];
     const start =
-      node.props.align === "start" ? " items-start" : node.props.align === "center" ? " items-center text-center" : "";
+      node.props.align === "start"
+        ? " items-start"
+        : node.props.align === "center"
+          ? " items-center text-center"
+          : "";
     return {
       tag: "article",
       attrs: { class: classes.filter(Boolean).join(" ") },
@@ -227,7 +235,15 @@ export const PROGRESS: DaisyComponentDefinition = {
         "aria-valuemax": String(max),
         "aria-valuenow": String(Math.min(value, max)),
       },
-      children: node.props.visibleLabel ? [{ tag: "span", attrs: { class: "progress-label" }, children: [String(node.props.visibleLabel)] }] : [],
+      children: node.props.visibleLabel
+        ? [
+            {
+              tag: "span",
+              attrs: { class: "progress-label" },
+              children: [String(node.props.visibleLabel)],
+            },
+          ]
+        : [],
     };
   },
 };

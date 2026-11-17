@@ -14,7 +14,9 @@ type AnyComponentProvider = ComponentProvider<any>;
 // registered by one (e.g. the server import) would be invisible to another (the page render) and
 // the component would fall back to "Unknown provider". A single globalThis-keyed map fixes that.
 const REGISTRY_KEY = Symbol.for("emvb:component-providers");
-const globalRegistry = globalThis as unknown as { [REGISTRY_KEY]?: Map<string, AnyComponentProvider> };
+const globalRegistry = globalThis as unknown as {
+  [REGISTRY_KEY]?: Map<string, AnyComponentProvider>;
+};
 const providers: Map<string, AnyComponentProvider> =
   globalRegistry[REGISTRY_KEY] ?? (globalRegistry[REGISTRY_KEY] = new Map());
 

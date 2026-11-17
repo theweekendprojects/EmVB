@@ -83,7 +83,9 @@ describe("site sections for non-technical owners", () => {
           children: [],
         });
         expect(parsed.success, `${id}: ${JSON.stringify(parsed.error?.issues[0])}`).toBe(true);
-        expect(() => serialize(daisyUIProvider.render(node, {}, [], { mode: "public" }) as never)).not.toThrow();
+        expect(() =>
+          serialize(daisyUIProvider.render(node, {}, [], { mode: "public" }) as never),
+        ).not.toThrow();
       }
     }
   });

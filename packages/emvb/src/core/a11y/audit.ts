@@ -45,7 +45,8 @@ export type A11yIssue = {
     | "empty-heading"
     | "landmark-name"
     | "motion"
-    | "empty-alert";
+    | "empty-alert"
+    | "counter-title";
   severity: "error" | "warning";
   message: string;
   /** The one-click fix, when there is a safe one. */
@@ -150,7 +151,8 @@ function px(value: unknown, design?: DesignSystem): number | undefined {
 const HEADING_PX = [32, 24, 18.72, 16, 13.28, 10.72];
 
 const headingLevel = (node: LayoutNode): number | undefined => {
-  if (node.type !== "heading") return undefined;
+  // W-1046: an Animated headline is a heading too.
+  if (node.type !== "heading" && node.type !== "headline") return undefined;
   const level = (node.props as { level?: unknown }).level;
   return typeof level === "number" && level >= 1 && level <= 6 ? level : 2;
 };
@@ -309,7 +311,8 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     } else if (
       // W-1021: an image box's picture needs real alt text as an Image does, once it has one.
       (node.type === "image" ||
-        ((node.type === "image-box" || node.type === "gallery-image") && spoken(props["src"]))) &&
+        ((node.type === "image-box" || node.type === "gallery-image" || node.type === "hotspots") &&
+          spoken(props["src"]))) &&
       props["decorative"] !== true
     ) {
       const alt = typeof props["alt"] === "string" ? spoken(props["alt"]) : "";
@@ -558,6 +561,26 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
         message: "This alert has no title or text, so it shows an empty box and says nothing.",
       });
     }
+    // W-1039: a bar without a title is a meter screen readers can't name.
+    if (node.type === "progress" && !spoken(props["label"]) && !node.bind) {
+      add({
+        nodeId: node.id,
+        rule: "control-name",
+        severity: "warning",
+        message:
+          'This progress bar has no title, so screen readers can\'t say what it measures. Add a title such as "Design".',
+      });
+    }
+    // W-1038: a Counter's number alone ("1,200+") doesn't say what was counted.
+    if (node.type === "counter" && !spoken(props["title"]) && !node.bind) {
+      add({
+        nodeId: node.id,
+        rule: "counter-title",
+        severity: "warning",
+        message:
+          'This counter has no title, so its number doesn\'t say what it counts. Add a title such as "Happy clients".',
+      });
+    }
     // W-419: an empty heading still shows up in screen readers' heading list, with nothing to say.
     if (node.type === "heading" && !spoken(props["text"]) && !node.bind) {
       add({
@@ -567,7 +590,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
         message: "This heading is empty; screen readers list it as a heading with no words.",
       });
     }
-    if (node.type === "heading") {
+    if (node.type === "heading" || node.type === "headline") {
       const level = typeof props["level"] === "number" ? props["level"] : 2;
       if (level === 1) {
         h1s = h1s.map((count, i) => count + (shownOn[i] ? 1 : 0));
@@ -743,7 +766,7 @@ export function applyAllA11yFixes(layout: Layout, issues: A11yIssue[]): Layout {
   const levels = new Map<string, number>();
   let last = 0;
   const walk = (node: LayoutNode) => {
-    if (node.type === "heading") {
+    if (node.type === "heading" || node.type === "headline") {
       const own = typeof node.props["level"] === "number" ? node.props["level"] : 2;
       const level = order.has(node.id) ? Math.min(own, Math.max(2, last + 1)) : own;
       if (level !== own) levels.set(node.id, level);

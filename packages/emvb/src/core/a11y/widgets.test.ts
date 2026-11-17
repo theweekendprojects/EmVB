@@ -183,3 +183,55 @@ describe("Carousel (W-1018)", () => {
     expect(audit(carousel({ autoplay: true, interval: 3 }))).toEqual(["motion:warning:caro0001"]);
   });
 });
+
+describe("Counter (W-1038)", () => {
+  const counter = (title?: string) => ({
+    id: "cntr0001",
+    type: "counter",
+    props: { value: 1200, ...(title === undefined ? {} : { title }) },
+  });
+
+  test("a counter without a title warns that its number says nothing", () => {
+    expect(audit(counter("Happy clients"))).toEqual([]);
+    expect(audit(counter())).toEqual(["counter-title:warning:cntr0001"]);
+    expect(audit(counter("  "))).toEqual(["counter-title:warning:cntr0001"]);
+  });
+});
+
+describe("Progress bar (W-1039)", () => {
+  test("a bar without a title warns that screen readers can't name it", () => {
+    const bar = (label?: string) => ({
+      id: "prog0001",
+      type: "progress",
+      props: { value: 50, ...(label === undefined ? {} : { label }) },
+    });
+    expect(audit(bar("Design"))).toEqual([]);
+    expect(audit(bar())).toEqual(["control-name:warning:prog0001"]);
+  });
+});
+
+describe("Animated headline (W-1046)", () => {
+  test("counts as a heading: a second H1 and a skipped level are reported", () => {
+    const line = (level: number) => ({
+      id: `hdln000${level}`,
+      type: "headline",
+      props: { highlight: "fast", level },
+    });
+    expect(audit(line(1))).toEqual(["multiple-h1:warning:hdln0001"]);
+    expect(audit(line(4)).some((issue) => issue.startsWith("heading-order"))).toBe(true);
+    expect(audit(line(2))).toEqual([]);
+  });
+});
+
+describe("Hotspots (W-1048)", () => {
+  test("a Hotspots picture without alt text is reported like an image", () => {
+    const pic = (alt: string) => ({
+      id: "spot0001",
+      type: "hotspots",
+      props: { src: "/a.jpg", alt },
+      children: [],
+    });
+    expect(audit(pic("A car"))).toEqual([]);
+    expect(audit(pic(" "))).toEqual(["image-alt:error:spot0001"]);
+  });
+});

@@ -73,7 +73,12 @@ export function validateDaisyTree(nodes: readonly DaisyComponentNode[]): DaisyVa
         node.children?.forEach((child, index) => walk(child, `${path}.children[${index}]`));
         return;
       }
-      issues.push({ code: "unknown-component", nodeId: node.id, path, message: `Unknown daisyUI component ${node.component}.` });
+      issues.push({
+        code: "unknown-component",
+        nodeId: node.id,
+        path,
+        message: `Unknown daisyUI component ${node.component}.`,
+      });
       return;
     }
     const fields = new Map(generated.definition.fields.map((field) => [field.key, field]));
@@ -128,7 +133,13 @@ export function validateDaisyTree(nodes: readonly DaisyComponentNode[]): DaisyVa
   };
   nodes.forEach((node, index) => walk(node, `[${index}]`));
   const collectCompound = (node: DaisyComponentNode): void => {
-    for (const issue of validateCompoundTree(node)) issues.push({ code: "invalid-nesting", nodeId: issue.nodeId, path: node.id, message: issue.message });
+    for (const issue of validateCompoundTree(node))
+      issues.push({
+        code: "invalid-nesting",
+        nodeId: issue.nodeId,
+        path: node.id,
+        message: issue.message,
+      });
     node.children?.forEach(collectCompound);
   };
   nodes.forEach(collectCompound);

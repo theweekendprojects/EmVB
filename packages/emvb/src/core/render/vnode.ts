@@ -42,7 +42,17 @@ const TAGS = new Set([
   "summary",
   "time",
   // daisyUI tables and key hints. Inert: no script, no event handlers.
-  "table", "caption", "thead", "tbody", "tfoot", "tr", "th", "td", "kbd", "pre", "dialog",
+  "table",
+  "caption",
+  "thead",
+  "tbody",
+  "tfoot",
+  "tr",
+  "th",
+  "td",
+  "kbd",
+  "pre",
+  "dialog",
   // Post Content formatting (W-328)
   "strong",
   "em",
@@ -80,7 +90,7 @@ const TAGS = new Set([
 const VOID = new Set(["hr", "img", "input", "br"]);
 // iframe/video are not void — they need closing tags.
 const ATTR_NAME =
-  /^(?:class|id|href|src|srcset|sizes|alt|width|height|loading|decoding|fetchpriority|dir|lang|hreflang|role|type|checked|target|rel|aria-[a-z][a-z0-9-]*|title|allow|referrerpolicy|preload|controls|allowfullscreen|sandbox|xmlns|viewBox|fill|stroke|stroke-width|stroke-linecap|stroke-linejoin|stroke-dasharray|stroke-opacity|fill-opacity|opacity|transform|focusable|d|cx|cy|r|x|y|x1|y1|x2|y2|points|rx|ry|xlink:href|preserveAspectRatio|gradientUnits|gradientTransform|offset|stop-color|stop-opacity|clipPathUnits|maskUnits|maskContentUnits|patternUnits|patternContentUnits|patternTransform|markerUnits|markerWidth|markerHeight|refX|refY|orient|font-size|font-family|font-weight|text-anchor|dominant-baseline|dx|dy|clip-path|mask|method|action|name|value|placeholder|for|tabindex|rows|selected|accept|inputmode|scope|popovertarget|popover|autocomplete|open|datetime|muted|loop|playsinline|autoplay|required|novalidate|minlength|maxlength|min|max|pattern|step|start|data-[a-z][a-z0-9-]*)$/;
+  /^(?:class|id|href|src|srcset|sizes|alt|width|height|loading|decoding|fetchpriority|dir|lang|hreflang|role|type|checked|target|rel|aria-[a-z][a-z0-9-]*|title|allow|referrerpolicy|preload|controls|allowfullscreen|sandbox|xmlns|viewBox|fill|stroke|stroke-width|stroke-linecap|stroke-linejoin|stroke-dasharray|stroke-opacity|fill-opacity|opacity|transform|focusable|d|cx|cy|r|x|y|x1|y1|x2|y2|points|rx|ry|xlink:href|preserveAspectRatio|gradientUnits|gradientTransform|offset|stop-color|stop-opacity|clipPathUnits|maskUnits|maskContentUnits|patternUnits|patternContentUnits|patternTransform|markerUnits|markerWidth|markerHeight|refX|refY|orient|font-size|font-family|font-weight|text-anchor|dominant-baseline|dx|dy|clip-path|mask|method|action|name|value|placeholder|for|tabindex|rows|selected|accept|inputmode|scope|autocomplete|open|popover|popovertarget|popovertargetaction|datetime|muted|loop|playsinline|autoplay|required|novalidate|minlength|maxlength|min|max|pattern|step|start|data-[a-z][a-z0-9-]*)$/;
 
 /**
  * Attributes whose value is checked, not just their name. `popovertarget` must be a plain element

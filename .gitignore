@@ -35,6 +35,7 @@ demos/*/emdash-env.d.ts
 # Playwright auth state (local dev sessions)
 e2e/.auth/
 e2e/.results/
+e2e/.data/
 .seeded-bug-cache.json
 upgrade-check.json
 

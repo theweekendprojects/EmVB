@@ -31,8 +31,12 @@ describe("default images are placeholders, not missing files", () => {
   });
 
   test("a set picture still renders its own address", () => {
-    expect(render("avatar", { src: "https://example.com/face.png" })).toContain("https://example.com/face.png");
-    expect(render("mask", { src: "https://example.com/shape.jpg" })).toContain("https://example.com/shape.jpg");
+    expect(render("avatar", { src: "https://example.com/face.png" })).toContain(
+      "https://example.com/face.png",
+    );
+    expect(render("mask", { src: "https://example.com/shape.jpg" })).toContain(
+      "https://example.com/shape.jpg",
+    );
   });
 
   test("new inserts use empty picture defaults", () => {

@@ -50,7 +50,7 @@ import SectionIntro from "./SectionIntro.astro";
       <div class="add-groups">
         {
           addPanel.map((group) => (
-            <div class="add-group" data-add-group>
+            <div class={`add-group add-${group.id}`} data-add-group>
               <h4>{group.label}</h4>
               <ul>
                 {group.items.map((item) => (
@@ -100,9 +100,10 @@ import SectionIntro from "./SectionIntro.astro";
 </script>
 
 <style>
+  /* Four groups of four or five features, two to a row, so the cards come out about level. */
   .groups {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-5);
   }
 
@@ -207,10 +208,40 @@ import SectionIntro from "./SectionIntro.astro";
     box-shadow: 0 0 0 3px var(--accent-wash);
   }
 
+  /*
+   * Content has far more elements than the other groups. It sits second at six tiles a row, and
+   * Layout, Dynamic and Form beside it at two, so all four end about level.
+   */
   .add-groups {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: 2fr 6fr 2fr 2fr;
+    grid-template-areas: "layout content dynamic form";
+    align-items: start;
     gap: var(--space-6) var(--space-5);
+  }
+
+  .add-layout {
+    grid-area: layout;
+  }
+
+  .add-dynamic {
+    grid-area: dynamic;
+  }
+
+  .add-form {
+    grid-area: form;
+  }
+
+  .add-content {
+    grid-area: content;
+  }
+
+  .add-group ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .add-group.add-content ul {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   .add-group[hidden],
@@ -230,7 +261,6 @@ import SectionIntro from "./SectionIntro.astro";
 
   .add-group ul {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-2);
     margin: 0;
     padding: 0;
@@ -277,7 +307,10 @@ import SectionIntro from "./SectionIntro.astro";
 
   @media (max-width: 1100px) {
     .add-groups {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-areas:
+        "layout dynamic form"
+        "content content content";
     }
   }
 
@@ -293,12 +326,17 @@ import SectionIntro from "./SectionIntro.astro";
       grid-template-columns: minmax(0, 1fr);
     }
 
+    .add-groups {
+      grid-template-areas: "layout" "content" "dynamic" "form";
+    }
+
     .group,
     .add {
       padding: var(--space-5);
     }
 
-    .add-group ul {
+    .add-group ul,
+    .add-group.add-content ul {
       grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
     }
 

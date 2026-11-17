@@ -19,7 +19,9 @@ describe("WP10 recipes", () => {
       expect(validateDaisyTree(nodes)).toEqual([]);
       const seen = new Set<string>();
       const walk = (node: DaisyComponentNode) => {
-        expect(daisyUIProvider.components.has(node.component) || isCompoundPart(node.component)).toBe(true);
+        expect(
+          daisyUIProvider.components.has(node.component) || isCompoundPart(node.component),
+        ).toBe(true);
         expect(seen.has(node.id)).toBe(false);
         seen.add(node.id);
         node.children?.forEach(walk);

@@ -10,8 +10,13 @@ import type {
   RatingNode,
   CarouselNode,
   CarouselSlideNode,
+  CountdownNode,
+  CounterNode,
   GalleryImageNode,
   GalleryNode,
+  HeadlineNode,
+  MapNode,
+  ShareButtonsNode,
   SocialIconsNode,
   SocialLinkNode,
   TestimonialNode,
@@ -119,13 +124,33 @@ function ratingStars(props: RatingNode["props"], attrs: Record<string, string>):
   };
 }
 
-/** W-1025: the opt-in public scripts the 1.2 widgets use; a page loads only the ones it needs. */
-export type WidgetRuntime = "alerts" | "carousel" | "lightbox";
+/** W-1025: the opt-in public scripts the widgets use (W-1038: the Counter's count-up); a page loads only the ones it needs. */
+export type WidgetRuntime =
+  | "alerts"
+  | "carousel"
+  | "countdown"
+  | "counter"
+  | "headline"
+  | "lightbox"
+  | "map"
+  | "share";
 
 /** The widget runtime one element needs, if any: only when it opts in. */
 export function nodeRuntime(node: LayoutNode): WidgetRuntime | undefined {
   if (node.type === "alert" && (node as AlertNode).props.dismissible) return "alerts";
   if (node.type === "gallery" && (node as GalleryNode).props.lightbox) return "lightbox";
+  if (node.type === "counter" && (node as CounterNode).props.countUp) return "counter";
+  if (node.type === "countdown" && (node as CountdownNode).props.ticking) return "countdown";
+  if (node.type === "share-buttons" && (node as ShareButtonsNode).props.nativeShare) return "share";
+  if (node.type === "headline") {
+    const { rotating, rotate } = (node as HeadlineNode).props;
+    if (rotating && (rotate ?? []).some((word) => word.trim())) return "headline";
+  }
+  if (node.type === "map") {
+    // W-1041: OpenStreetMap embeds need coordinates; Google embeds the address.
+    const { embed, provider, lat, lng } = (node as MapNode).props;
+    if (embed && (provider === "google" || (lat !== undefined && lng !== undefined))) return "map";
+  }
   if (node.type === "carousel") {
     const { arrows, dots, autoplay } = (node as CarouselNode).props;
     if (arrows || dots || autoplay) return "carousel";
@@ -589,7 +614,7 @@ export const SOCIAL_COLORS: Record<Network, string> = {
 };
 
 /** A preset's icon as an aria-hidden SVG one em square. */
-function socialSvg(network: Network): VNode | undefined {
+export function socialSvg(network: Network): VNode | undefined {
   const icon = SOCIAL_ICONS[network];
   const svg = sanitizeSvgMarkup(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${icon.viewBox}">${icon.body}</svg>`,

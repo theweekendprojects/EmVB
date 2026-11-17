@@ -4,7 +4,11 @@ import { serialize, type VNode } from "./vnode.ts";
 // Step 2: the output allowlist must carry what daisyUI's markup needs, and nothing that can run
 // script or restyle the page. Tags and attributes below are inert; `style` and `popovertarget`
 // are allowed only in the narrow forms daisyUI uses.
-const el = (tag: string, attrs: Record<string, string> = {}, children: (VNode | string)[] = []): VNode => ({
+const el = (
+  tag: string,
+  attrs: Record<string, string> = {},
+  children: (VNode | string)[] = [],
+): VNode => ({
   tag,
   attrs,
   children,
@@ -12,13 +16,19 @@ const el = (tag: string, attrs: Record<string, string> = {}, children: (VNode | 
 
 describe("allowlist carries daisyUI's inert markup", () => {
   test.each([
-    ["table", el("table", {}, [el("thead", {}, [el("tr", {}, [el("th", { scope: "col" }, ["Name"])])])]),],
+    [
+      "table",
+      el("table", {}, [el("thead", {}, [el("tr", {}, [el("th", { scope: "col" }, ["Name"])])])]),
+    ],
     ["table body", el("table", {}, [el("tbody", {}, [el("tr", {}, [el("td", {}, ["Cell"])])])])],
     ["kbd", el("kbd", {}, ["Ctrl"])],
     ["pre", el("pre", {}, ["code"])],
     ["dialog", el("dialog", { id: "m1" }, ["Body"])],
     ["textarea rows", el("textarea", { rows: "4", name: "field" })],
-    ["select selected option", el("select", { name: "pick" }, [el("option", { value: "a", selected: "" }, ["A"])])],
+    [
+      "select selected option",
+      el("select", { name: "pick" }, [el("option", { value: "a", selected: "" }, ["A"])]),
+    ],
     ["file input accept", el("input", { type: "file", accept: "image/*" })],
     ["input inputmode", el("input", { type: "text", inputmode: "numeric" })],
     ["th scope", el("th", { scope: "row" }, ["Row"])],

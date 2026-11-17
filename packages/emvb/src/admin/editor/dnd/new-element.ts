@@ -113,6 +113,48 @@ export function newCarouselSlide(n: number, random?: () => number): LayoutNode {
   };
 }
 
+/** W-1043: the rows a new Price list starts with, then its Add item cycles through them. */
+const STARTER_PRICES = [
+  ["Espresso", "$3", "A double shot, served short."],
+  ["Cappuccino", "$4.50", "Espresso, steamed milk and foam."],
+  ["Croissant", "$3.75", "Baked every morning."],
+] as const;
+
+/** W-1043: a Price list item for a new Price list or its Add item. */
+export function newPriceListItem(n: number, random?: () => number): LayoutNode {
+  const [title, price, description] =
+    STARTER_PRICES[(n - 1) % STARTER_PRICES.length] ?? STARTER_PRICES[0];
+  return { id: newNodeId(random), type: "price-list-item", props: { title, price, description } };
+}
+
+/** W-1047: the services new Share links cycle through. */
+const STARTER_SHARES = ["facebook", "x", "linkedin", "email", "whatsapp", "bluesky"] as const;
+
+/** W-1047: a Share link for new Share buttons or their Add link. */
+export function newShareLink(n: number, random?: () => number): LayoutNode {
+  const network = STARTER_SHARES[(n - 1) % STARTER_SHARES.length] ?? STARTER_SHARES[0];
+  return { id: newNodeId(random), type: "share-link", props: { network } };
+}
+
+/** W-1048: where new Hotspots land, so markers added one after another don't overlap. */
+const STARTER_SPOTS = [
+  [25, 35],
+  [60, 25],
+  [45, 70],
+  [80, 60],
+  [15, 80],
+] as const;
+
+/** W-1048: a Hotspot for a new Hotspots picture or its Add marker. */
+export function newHotspot(n: number, random?: () => number): LayoutNode {
+  const [x, y] = STARTER_SPOTS[(n - 1) % STARTER_SPOTS.length] ?? STARTER_SPOTS[0];
+  return {
+    id: newNodeId(random),
+    type: "hotspot",
+    props: { title: `Point ${n}`, text: `What point ${n} shows.`, x, y },
+  };
+}
+
 /** W-1019: an empty Gallery image for a Gallery's Add picture; its panel picks the picture. */
 export function newGalleryImage(random?: () => number): LayoutNode {
   return { id: newNodeId(random), type: "gallery-image", props: { src: "", alt: "Image" } };
@@ -193,6 +235,24 @@ export function newElement(
     return {
       ...defaultElement("carousel", newNodeId(random)),
       children: [1, 2, 3].map((n) => newCarouselSlide(n, random)),
+    };
+  }
+  if (type === "hotspots") {
+    return {
+      ...defaultElement("hotspots", newNodeId(random)),
+      children: [1, 2, 3].map((n) => newHotspot(n, random)),
+    };
+  }
+  if (type === "share-buttons") {
+    return {
+      ...defaultElement("share-buttons", newNodeId(random)),
+      children: [1, 2, 3, 4].map((n) => newShareLink(n, random)),
+    };
+  }
+  if (type === "price-list") {
+    return {
+      ...defaultElement("price-list", newNodeId(random)),
+      children: [1, 2, 3].map((n) => newPriceListItem(n, random)),
     };
   }
   if (type === "social-icons") {

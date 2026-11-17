@@ -1,7 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { canDrop, moveNode, REASONS } from "./arrange.ts";
 import { defaultElement } from "./index.ts";
-import { MAX_CAROUSEL_SLIDES, MAX_GALLERY_IMAGES, MAX_SOCIAL_LINKS } from "./limits.ts";
+import {
+  MAX_CAROUSEL_SLIDES,
+  MAX_GALLERY_IMAGES,
+  MAX_HOTSPOTS,
+  MAX_PRICE_ITEMS,
+  MAX_SHARE_LINKS,
+  MAX_SOCIAL_LINKS,
+} from "./limits.ts";
 import { nestingIssues } from "./nesting.ts";
 import type { Layout, LayoutNode } from "./schema/layout.ts";
 
@@ -85,5 +92,71 @@ describe("Carousel arrange rules (W-1018)", () => {
       canDrop(layout, { kind: "new", node: defaultElement("heading", "head0001") }, "cs000000").ok,
     ).toBe(true);
     expect(moveNode(layout, "cs000000", "caro0001", MAX_CAROUSEL_SLIDES).ok).toBe(true);
+  });
+});
+
+describe("Price list arrange rules (W-1043)", () => {
+  test("a full Price list refuses a 51st item; items drop only into a price list, which takes nothing else", () => {
+    const items = Array.from({ length: MAX_PRICE_ITEMS }, (_, i) =>
+      defaultElement("price-list-item", `pi${String(i).padStart(6, "0")}`),
+    );
+    const layout = layoutWith([{ ...defaultElement("price-list", "plst0001"), children: items }]);
+    const item = defaultElement("price-list-item", "new00001");
+    expect(canDrop(layout, { kind: "new", node: item }, "plst0001")).toEqual({
+      ok: false,
+      reason: REASONS.tooManyPriceItems,
+    });
+    expect(canDrop(layout, { kind: "new", node: item }, "root0001")).toEqual({
+      ok: false,
+      reason: REASONS.itemOutsidePriceList,
+    });
+    expect(
+      canDrop(layout, { kind: "new", node: defaultElement("heading", "head0001") }, "plst0001"),
+    ).toEqual({ ok: false, reason: REASONS.onlyPriceItems });
+    expect(moveNode(layout, "pi000000", "plst0001", MAX_PRICE_ITEMS).ok).toBe(true);
+  });
+});
+
+describe("Share buttons arrange rules (W-1047)", () => {
+  test("a full Share buttons refuses a 13th link; share links drop only into Share buttons", () => {
+    const shareLinks = Array.from({ length: MAX_SHARE_LINKS }, (_, i) =>
+      defaultElement("share-link", `sh${String(i).padStart(6, "0")}`),
+    );
+    const layout = layoutWith([
+      { ...defaultElement("share-buttons", "shar0001"), children: shareLinks },
+    ]);
+    const link = defaultElement("share-link", "new00001");
+    expect(canDrop(layout, { kind: "new", node: link }, "shar0001")).toEqual({
+      ok: false,
+      reason: REASONS.tooManyShareLinks,
+    });
+    expect(canDrop(layout, { kind: "new", node: link }, "root0001")).toEqual({
+      ok: false,
+      reason: REASONS.shareOutsideButtons,
+    });
+    expect(
+      canDrop(layout, { kind: "new", node: defaultElement("heading", "head0001") }, "shar0001"),
+    ).toEqual({ ok: false, reason: REASONS.onlyShareLinks });
+  });
+});
+
+describe("Hotspots arrange rules (W-1048)", () => {
+  test("a full Hotspots picture refuses a 21st marker; markers drop only onto a Hotspots picture", () => {
+    const markers = Array.from({ length: MAX_HOTSPOTS }, (_, i) =>
+      defaultElement("hotspot", `hs${String(i).padStart(6, "0")}`),
+    );
+    const layout = layoutWith([{ ...defaultElement("hotspots", "spot0001"), children: markers }]);
+    const marker = defaultElement("hotspot", "new00001");
+    expect(canDrop(layout, { kind: "new", node: marker }, "spot0001")).toEqual({
+      ok: false,
+      reason: REASONS.tooManyHotspots,
+    });
+    expect(canDrop(layout, { kind: "new", node: marker }, "root0001")).toEqual({
+      ok: false,
+      reason: REASONS.hotspotOutsidePicture,
+    });
+    expect(
+      canDrop(layout, { kind: "new", node: defaultElement("heading", "head0001") }, "spot0001"),
+    ).toEqual({ ok: false, reason: REASONS.onlyHotspots });
   });
 });

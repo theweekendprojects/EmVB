@@ -7,9 +7,12 @@ import { emvb } from "@perkyzz/emvb";
 import emdash from "emdash/astro";
 import tailwindcss from "@tailwindcss/vite";
 
+/** W-1035: e2e runs give the demo a fresh folder for local D1 and R2 (default .wrangler/state). */
+const data = process.env["EMVB_DEMO_DATA"];
+
 export default defineConfig({
   output: "server",
-  adapter: cloudflare(),
+  adapter: cloudflare(data ? { persistState: { path: data } } : {}),
   vite: { plugins: [tailwindcss()] },
   image: {
     layout: "constrained",

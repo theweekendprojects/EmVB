@@ -134,3 +134,103 @@ test("W-1025: a page with a dismissible Alert loads the alerts script; others lo
   });
   expect(plain).not.toContain("<script");
 });
+
+test("W-1038: a page with a counting Counter loads the counter script only", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "cntr0001",
+      type: "counter",
+      props: { value: 1200, title: "Clients", countUp: true },
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN);
+  expect(runtimes).toEqual(["counter"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBCounterRuntime");
+  expect(output).not.toContain("EmVBAlertsRuntime");
+});
+
+test("W-1040: a page with a ticking Countdown loads the countdown script only", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "cdwn0001",
+      type: "countdown",
+      props: { target: "2027-01-01T00:00Z", ticking: true },
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN);
+  expect(runtimes).toEqual(["countdown"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBCountdownRuntime");
+});
+
+test("W-1041: a page with a Map that loads on request gets the map script only", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "mapp0001",
+      type: "map",
+      props: { address: "Main St", lat: 45.5, lng: -73.56, embed: true },
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN);
+  expect(runtimes).toEqual(["map"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBMapRuntime");
+  expect(output.includes("<iframe")).toBe(false);
+});
+
+test("W-1046: a page with rotating headline words loads the headline script only", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "hdln0001",
+      type: "headline",
+      props: { highlight: "fast", rotate: ["safe"], rotating: true },
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN);
+  expect(runtimes).toEqual(["headline"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBHeadlineRuntime");
+});
+
+test("W-1047: Share buttons with the device's Share button load the share script only", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "shar0001",
+      type: "share-buttons",
+      props: { nativeShare: true },
+      children: [{ id: "shl00001", type: "share-link", props: { network: "x" } }],
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN, {
+    dynamic: { pageUrl: "https://example.com/" },
+  });
+  expect(runtimes).toEqual(["share"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBShareRuntime");
+});

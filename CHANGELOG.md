@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-14
+
+The marketing widgets and the second part of the Elementor import. Everything is additive: new element types only, so pages saved by 1.2 open and save unchanged (layout schema 18, design schema 17), and an older EmVB keeps the new elements on save without showing them. Public pages still load no script unless an element opts in, and moving widgets respect reduced motion and can be paused. It installs on stock EmDash 1.4 with no change to your site and is tested on EmDash 1.4 and 1.5. If you already mount `<EmVBWidgetRuntimes names={theme.runtimes} />` for theme parts, the new widgets' scripts come through it too.
+
+### Added
+
+- **Counter (W-1038).** A new element in Add → Content: a number to show off, such as "1,200+ happy clients", with text before and after it, a title, decimals and a thousands separator. It is plain text on the page. "Count up when scrolled into view" adds a small script, loaded only on pages that use it, that counts from a start number in at most 5 seconds; visitors who prefer reduced motion see the final number at once, and screen readers hear only the final number. The accessibility check warns about a counter without a title. Agents can add it over MCP.
+- **Progress bar (W-1039).** A labelled bar filled to a value out of a maximum, in the element's text colour, with the percentage beside its title if you like. Screen readers hear it as a meter (a skill level) or a progress bar (how far a task has got), with its title and value. "Grow in when scrolled into view" animates the fill with CSS only, in browsers that support scroll-driven animations and not for visitors who prefer reduced motion. No script. The accessibility check warns about a bar without a title. Agents can add it over MCP.
+- **Countdown (W-1040).** A deadline such as "Ends 1 Dec 2026, 09:00 UTC−5", written as a date the page can be read without any script. "Show a live countdown" adds days, hours, minutes and seconds that tick, with a Pause button; screen readers keep reading the date instead of hearing every second. When time is up it shows your ended text, as a link if you like, or hides itself. The script loads only on pages with a live countdown. Agents can add it over MCP.
+- **Map (W-1041).** An address with a link to the place on OpenStreetMap or Google Maps, at exact coordinates if you give them. "Visitors can load the map on the page" adds a Show the map button: the map service is contacted only when a visitor presses it, so pages stay private and fast. Sites with a Content Security Policy allow `frame-src https://www.openstreetmap.org https://www.google.com`. Agents can add it over MCP.
+- **Price table (W-1042).** A plan card: title, description, price with currency and period, a regular price struck through when on sale, what is and isn't included (one per line), a button and an optional Featured ribbon. Screen readers hear which price is the sale price and which features aren't included. No script. Agents can add it over MCP.
+- **Price list (W-1043).** A menu-style list: each row has a title, a dotted leader and the price on one line, an optional description below and an optional picture and link. A new list starts with three rows; the panel lists them by title and adds more (up to 50). No script. Agents can add it over MCP.
+- **Call to action (W-1044).** A box with a picture, title, text and button, the picture behind the words (under a dark overlay) or above or beside them, and an optional ribbon. With a link, the whole box opens it through its title, so screen readers hear one link, not two. No script. Agents can add it over MCP.
+- **Flip box (W-1045).** A card with a front and a back that turns over on hover, when keyboard focus reaches the back's link, or with its Turn over tick box on touch screens, all without script. Screen readers read both faces. Visitors who prefer reduced motion see the faces swap without the turn. Agents can add it over MCP.
+- **Animated headline (W-1046).** A heading with highlighted words that get an underline, circle or strike drawn once in CSS (already drawn for visitors who prefer reduced motion). "Rotate the words" swaps the highlight through other words for a few rounds with a Pause button, then stops on the first; screen readers read one steady sentence. The script loads only on pages with rotating words. The accessibility check counts it as a heading. Agents can add it over MCP.
+- **Share buttons (W-1047).** Links that share the current page on Facebook, X, LinkedIn, WhatsApp, Telegram, Reddit, Bluesky, Threads or by email, with the same icons and shapes as Social icons and named for screen readers ("Share on X"). They are plain links to each service's own share page: no tracking script, no third-party request until a visitor clicks. "Add the device's Share button" adds a Share… button for the phone's or browser's own share sheet where it has one, with a small script loaded only on those pages. `resolveEmVBPage` gives the page its address; the HTML export, which doesn't know your site's address, leaves the links out. Agents can add it over MCP.
+- **Hotspots (W-1048).** A picture with numbered markers placed in percent across and down it, with their own places on tablets and phones if you like. Each marker is a button named by its title that opens its note with the browser's own popover: no script, Escape or a click outside closes it, and keyboards and screen readers reach every marker. Where the browser supports it the note appears next to its marker. Agents can add it over MCP.
+- **Elementor import part 2 (W-1049).** Counter, Progress Bar, Countdown (due date), Google Maps, Price Table, Price List, Call to Action, Flip Box, Animated Headline, Share Buttons and Hotspot now import as the new 1.3 elements instead of text, links or plain layouts, and Slides and Testimonial Carousel become a Carousel of slides instead of a stack. The import report and the Elementor import guide say what is kept and what is approximated.
+
+### Changed
+
+- **A warning for collections missing from `canvasCollections` (W-1036).** `resolveEmVBPage(Astro, { collection })` on a collection the site doesn't list in `emvb({ canvasCollections })` now logs one warning per collection naming the option, and still renders the layout. EmVB 2.0 will not render it; add the collection to the option.
+
 ## [1.2.0] - 2026-11-13
 
 The common widgets, the first part of a fuller Elementor import, scheduled publishing, and EmDash 1.5 as the development base. Everything is additive: new element types and options only, so pages saved by 1.1 open and save unchanged (layout schema 18, design schema 17), and an older EmVB keeps the new elements on save without showing them. Public pages still load no script unless an element opts in. It installs on stock EmDash 1.4 with no change to your site and is tested on EmDash 1.4 and 1.5. One optional step: to use dismissible Alerts, lightbox Galleries or Carousel controls inside theme parts, add `<EmVBWidgetRuntimes names={theme.runtimes} />` to your site layout once.
@@ -792,7 +815,8 @@ The first release, published on npm as [`@perkyzz/emvb`](https://www.npmjs.com/p
 - Video embeds use privacy-friendly domains and never autoplay (W-026).
 - The editor canvas is a sandboxed iframe (W-009), and an XSS test corpus runs against the editor and published pages in a real browser (W-042).
 
-[Unreleased]: https://github.com/PerkyZZ999/EmVB/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/PerkyZZ999/EmVB/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/PerkyZZ999/EmVB/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/PerkyZZ999/EmVB/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/PerkyZZ999/EmVB/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/PerkyZZ999/EmVB/compare/v1.1.0...v1.1.1

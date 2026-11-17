@@ -436,3 +436,67 @@ describe("Carousel slides (W-1018)", () => {
     expect(kidsOf(calls.changed.at(-1))).toHaveLength(4);
   });
 });
+
+describe("Price list items (W-1043)", () => {
+  test("a new Price list starts with three rows; its panel lists them by title; Add item adds one", async () => {
+    const node = newElement("price-list");
+    if (!node || node.type !== "price-list") throw new Error("expected a price list");
+    expect(kidsOf(node).map((c) => (c.props as { title?: string }).title)).toEqual([
+      "Espresso",
+      "Cappuccino",
+      "Croissant",
+    ]);
+    expect(validateLayout(layoutWith(node)).ok).toBe(true);
+    const calls = await panel(node);
+    expect(document.body.textContent).toContain("List name");
+    await type(inputLabelled("Item 2 title"), "Flat white");
+    expect((kidsOf(calls.changed.at(-1))[1]?.props as { title?: string } | undefined)?.title).toBe(
+      "Flat white",
+    );
+    await act(async () => button("Add item").click());
+    const added = kidsOf(calls.changed.at(-1)).at(-1);
+    expect(added?.type).toBe("price-list-item");
+    expect((added?.props as { title?: string } | undefined)?.title).toBe("Espresso");
+  });
+});
+
+describe("Share links (W-1047)", () => {
+  test("new Share buttons start with four links; the panel names each one", async () => {
+    const node = newElement("share-buttons");
+    if (!node || node.type !== "share-buttons") throw new Error("expected share buttons");
+    expect(kidsOf(node).map((c) => (c.props as { network?: string }).network)).toEqual([
+      "facebook",
+      "x",
+      "linkedin",
+      "email",
+    ]);
+    expect(validateLayout(layoutWith(node)).ok).toBe(true);
+    const calls = await panel(node);
+    await type(inputLabelled("Link 2 name"), "Post it on X");
+    expect((kidsOf(calls.changed.at(-1))[1]?.props as { label?: string } | undefined)?.label).toBe(
+      "Post it on X",
+    );
+    await act(async () => button("Add link").click());
+    const added = kidsOf(calls.changed.at(-1)).at(-1);
+    expect((added?.props as { network?: string } | undefined)?.network).toBe("whatsapp");
+  });
+});
+
+describe("Hotspot markers (W-1048)", () => {
+  test("a new Hotspots picture starts with three markers apart; the panel lists them by title", async () => {
+    const node = newElement("hotspots");
+    if (!node || node.type !== "hotspots") throw new Error("expected hotspots");
+    const places = kidsOf(node).map((c) => {
+      const p = c.props as { x: number; y: number };
+      return `${p.x},${p.y}`;
+    });
+    expect(new Set(places).size).toBe(3);
+    const calls = await panel(node);
+    await type(inputLabelled("Marker 1 title"), "Steering wheel");
+    expect((kidsOf(calls.changed.at(-1))[0]?.props as { title?: string } | undefined)?.title).toBe(
+      "Steering wheel",
+    );
+    await act(async () => button("Add marker").click());
+    expect(kidsOf(calls.changed.at(-1))).toHaveLength(4);
+  });
+});

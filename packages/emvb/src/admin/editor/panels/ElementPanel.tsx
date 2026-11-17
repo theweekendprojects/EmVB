@@ -369,7 +369,11 @@ function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
   const generated = component ? provider?.components.get(component) : undefined;
   if (!generated) return undefined;
   const compoundHidden: Record<string, ReadonlySet<string>> = {
-    accordion: new Set(["items", "open"]), carousel: new Set(["slides", "current"]), menu: new Set(["items"]), tabs: new Set(["items", "active"]), table: new Set(["headers", "rows"]),
+    accordion: new Set(["items", "open"]),
+    carousel: new Set(["slides", "current"]),
+    menu: new Set(["items"]),
+    tabs: new Set(["items", "active"]),
+    table: new Set(["headers", "rows"]),
   };
   const hidden = component ? compoundHidden[component] : undefined;
   return {

@@ -68,6 +68,21 @@ const ADDED_IN_1X: Record<string, string> = {
   "gallery-image": "1.2 (W-1019): src/core/elements/widgets.test.ts",
   carousel: "1.2 (W-1018): src/core/elements/widgets.test.ts",
   "carousel-slide": "1.2 (W-1018): src/core/elements/widgets.test.ts",
+  provider: "daisyUI fork (packages/emvb-daisyui): src/core/render/provider-children.test.ts",
+  counter: "1.3 (W-1038): src/core/elements/marketing.test.ts",
+  progress: "1.3 (W-1039): src/core/elements/marketing.test.ts",
+  countdown: "1.3 (W-1040): src/core/elements/marketing.test.ts",
+  map: "1.3 (W-1041): src/core/elements/marketing.test.ts",
+  "price-table": "1.3 (W-1042): src/core/elements/marketing.test.ts",
+  "price-list": "1.3 (W-1043): src/core/elements/marketing.test.ts",
+  "price-list-item": "1.3 (W-1043): src/core/elements/marketing.test.ts",
+  cta: "1.3 (W-1044): src/core/elements/marketing.test.ts",
+  "flip-box": "1.3 (W-1045): src/core/elements/marketing.test.ts",
+  headline: "1.3 (W-1046): src/core/elements/marketing.test.ts",
+  "share-buttons": "1.3 (W-1047): src/core/elements/marketing.test.ts",
+  "share-link": "1.3 (W-1047): src/core/elements/marketing.test.ts",
+  hotspots: "1.3 (W-1048): src/core/elements/marketing.test.ts",
+  hotspot: "1.3 (W-1048): src/core/elements/marketing.test.ts",
 };
 
 /** Style keys added after 0.9.0, so no released page has them: where each one is tested. */

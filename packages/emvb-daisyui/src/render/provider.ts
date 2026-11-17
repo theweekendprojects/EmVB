@@ -34,7 +34,11 @@ export function createDaisyUIProvider(
     // <html> to mirror the EmDash light/dark choice).
     rootAttributes: (nodes) => {
       const chosen = nodes
-        .map((node) => (node.providerMeta && typeof node.providerMeta.theme === "string" ? node.providerMeta.theme : ""))
+        .map((node) =>
+          node.providerMeta && typeof node.providerMeta.theme === "string"
+            ? node.providerMeta.theme
+            : "",
+        )
         .find((theme) => theme);
       return chosen ? themeAttributes(chosen) : {};
     },

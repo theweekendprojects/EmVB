@@ -30,7 +30,7 @@ export const DOC_GROUPS: DocGroup[] = [
         slug: "widgets",
         title: "Widgets",
         summary:
-          "Star rating, alert, icon and image boxes, testimonial, social icons, gallery, carousel.",
+          "Star rating, alert, boxes, testimonial, social icons, gallery, carousel, and since 1.3 counters, progress bars, countdowns, maps, price tables and lists, calls to action, flip boxes, animated headlines, share buttons and hotspots.",
       },
       {
         slug: "saved-sections",
@@ -45,7 +45,7 @@ export const DOC_GROUPS: DocGroup[] = [
       {
         slug: "icon-library",
         title: "Icon library",
-        summary: "About 14,400 open-source icons, plus your own uploads.",
+        summary: "About 15,000 open-source icons, plus your own uploads.",
       },
       {
         slug: "image-editor",

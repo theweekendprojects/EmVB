@@ -13,14 +13,26 @@ describe("WP25 categorized palette metadata", () => {
     }
   });
   test("uses the documented daisyUI palette families", () => {
-    const categories = new Set([...daisyUIProvider.components.values()].map((item) => item.descriptor.category));
-    for (const category of ["Actions", "Data input", "Data display", "Navigation", "Feedback", "Layout", "Mockup"]) expect(categories.has(category), category).toBe(true);
+    const categories = new Set(
+      [...daisyUIProvider.components.values()].map((item) => item.descriptor.category),
+    );
+    for (const category of [
+      "Actions",
+      "Data input",
+      "Data display",
+      "Navigation",
+      "Feedback",
+      "Layout",
+      "Mockup",
+    ])
+      expect(categories.has(category), category).toBe(true);
   });
 });
 
 describe("WP26 component icons", () => {
   test("every implemented component has an allowlisted icon identifier", () => {
-    for (const generated of daisyUIProvider.components.values()) expect(generated.descriptor.icon).toMatch(/^[a-z][a-z0-9-]*$/);
+    for (const generated of daisyUIProvider.components.values())
+      expect(generated.descriptor.icon).toMatch(/^[a-z][a-z0-9-]*$/);
   });
 });
 

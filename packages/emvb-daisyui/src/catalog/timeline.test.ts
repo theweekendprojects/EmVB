@@ -10,13 +10,17 @@ describe("timeline lines join the items, as in daisyUI's examples", () => {
     node.props.items = items;
     return serialize(daisyUIProvider.render(node) as never);
   };
-  const lis = (html: string) => html.split("<li>").slice(1).map((item) => item.split("</li>")[0] ?? "");
+  const lis = (html: string) =>
+    html
+      .split("<li>")
+      .slice(1)
+      .map((item) => item.split("</li>")[0] ?? "");
 
   test("each item but the last ends with a line; each item but the first starts with one", () => {
     const html = build("2024|A|a\n2025|B|b\n2026|C|c\n2027|D|d");
     const items = lis(html);
     expect(items).toHaveLength(4);
-    expect(items[0]!.startsWith("<div class=\"timeline-start\"")).toBe(true);
+    expect(items[0]!.startsWith('<div class="timeline-start"')).toBe(true);
     expect(items[0]!.endsWith("<hr></li>") || items[0]!.endsWith("<hr>")).toBe(true);
     for (const item of items.slice(1)) expect(item.startsWith("<hr>")).toBe(true);
     expect(items[3]!.endsWith("<hr>")).toBe(false);

@@ -27,7 +27,13 @@ function shapeKeys(schema: unknown): Set<string> {
  */
 function isOpenRecordSchema(schema: unknown): boolean {
   if (!schema || typeof schema !== "object") return false;
-  const s = schema as { shape?: unknown; keyType?: unknown; valueType?: unknown; def?: { typeName?: string }; _def?: { typeName?: string } };
+  const s = schema as {
+    shape?: unknown;
+    keyType?: unknown;
+    valueType?: unknown;
+    def?: { typeName?: string };
+    _def?: { typeName?: string };
+  };
   if (s.shape) return false;
   if (s.keyType !== undefined && s.valueType !== undefined) return true;
   const typeName = s.def?.typeName ?? s._def?.typeName;

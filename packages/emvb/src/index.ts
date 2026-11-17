@@ -63,9 +63,10 @@ export function emvb(options: EmVBOptions = {}): PluginDescriptor {
   const canvasStyles = canvasStyleUrls(options.canvasStyles);
   const canvasCollections = canvasCollectionSlugs(options.canvasCollections);
   const providers = providerSpecifiers(options.providers);
-  const adminEntry = typeof options.adminEntry === "string" && options.adminEntry.trim()
-    ? options.adminEntry.trim()
-    : ADMIN_ENTRY;
+  const adminEntry =
+    typeof options.adminEntry === "string" && options.adminEntry.trim()
+      ? options.adminEntry.trim()
+      : ADMIN_ENTRY;
   const extensions = rememberExtensions(options.extensions);
   return {
     id: PLUGIN_ID,

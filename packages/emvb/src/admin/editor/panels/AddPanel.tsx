@@ -66,14 +66,22 @@ export function AddPanel({
     )
     .toSorted(
       (left, right) =>
-        Number(right.verified) - Number(left.verified) || left.order - right.order || left.name.localeCompare(right.name),
+        Number(right.verified) - Number(left.verified) ||
+        left.order - right.order ||
+        left.name.localeCompare(right.name),
     );
   const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(
     (d) =>
       d.type !== "tab-panel" &&
       d.type !== "daisy" &&
       (formsAvailable || d.group !== "form") &&
-      matchesSearch(query, d.name, d.group, "category" in d ? d.category : "", "keywords" in d ? d.keywords.join(" ") : ""),
+      matchesSearch(
+        query,
+        d.name,
+        d.group,
+        "category" in d ? d.category : "",
+        "keywords" in d ? d.keywords.join(" ") : "",
+      ),
   );
   const extensionElements = useExtensionElements().filter((el) =>
     matchesSearch(query, el.label, el.name, "extension"),
@@ -153,10 +161,17 @@ export function AddPanel({
       ) : (
         [
           ...GROUPS,
-          ...[...new Set(providerDescriptors.map((descriptor) => descriptor.category))].map((category) => ({ id: `daisyui:${category}`, label: `daisyUI · ${category}` })),
+          ...[...new Set(providerDescriptors.map((descriptor) => descriptor.category))].map(
+            (category) => ({ id: `daisyui:${category}`, label: `daisyUI · ${category}` }),
+          ),
         ].map((group) => {
           const tiles = group.id.startsWith("daisyui:")
-            ? matched.filter((descriptor) => descriptor.group === "daisyui" && "category" in descriptor && descriptor.category === group.id.slice("daisyui:".length))
+            ? matched.filter(
+                (descriptor) =>
+                  descriptor.group === "daisyui" &&
+                  "category" in descriptor &&
+                  descriptor.category === group.id.slice("daisyui:".length),
+              )
             : matched.filter((descriptor) => descriptor.group === group.id);
           if (tiles.length === 0) return null;
           return (
@@ -164,9 +179,10 @@ export function AddPanel({
               <h3 className="emvb-add-group-title">{group.label}</h3>
               <div className="emvb-add-tiles" aria-label={group.label}>
                 {tiles.map((tile) => {
-                  const Icon = tile.type.startsWith("provider:") && "icon" in tile
-                    ? providerIcon(tile.icon)
-                    : elementIcon(tile.type);
+                  const Icon =
+                    tile.type.startsWith("provider:") && "icon" in tile
+                      ? providerIcon(tile.icon)
+                      : elementIcon(tile.type);
                   return (
                     <button
                       key={tile.type}

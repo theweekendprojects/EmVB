@@ -1,7 +1,7 @@
 import { isShadowingId } from "../shadowing-ids.ts";
 import { renderableDesign, renderableDynamic, renderableLayout } from "../contract.ts";
 import { markColors } from "../text-marks.ts";
-import type { TextMark } from "../schema/layout.ts";
+import type { HotspotNode, ShareLinkNode, TextMark } from "../schema/layout.ts";
 import { LIST_MARKERS } from "../css-keywords.ts";
 import { MAX_NODES } from "../limits.ts";
 import { loneAbTests, variantShows } from "../audience/variants.ts";
@@ -17,6 +17,7 @@ import {
 } from "../css/scope.ts";
 import { ELEMENTS } from "../elements/index.ts";
 import { nodeRuntime, type WidgetRuntime } from "../elements/widgets.ts";
+import { hotspotPlace, shareLinkVNode } from "../elements/marketing.ts";
 import { controlId } from "../elements/field-id.ts";
 import { layoutHasForm } from "../forms/binding.ts";
 import { nodeChildren, someNode } from "../tree-ops.ts";
@@ -489,6 +490,13 @@ export function renderPage(
         declarations.push({ property: "gap", value: `${gap}px` });
       }
     }
+    if (node.type === "hotspot") {
+      // W-1048: each marker sits at its own place on the picture, per device.
+      const place = hotspotPlace(node.props as HotspotNode["props"]);
+      declarations.push(...placeAt(place.desktop));
+      if (place.tablet.length > 0) tablet.declarations.unshift(...placeAt(place.tablet));
+      if (place.mobile.length > 0) mobile.declarations.unshift(...placeAt(place.mobile));
+    }
     const queryStyle = node.query ? styleDeclarations(node.query.style) : undefined;
     for (const key of queryStyle?.rejected ?? []) {
       warnings.push({ nodeId, code: "rejected-style", detail: key });
@@ -686,6 +694,12 @@ export function renderPage(
       );
     }
     if (isTabsNode(node)) return finish(node, renderTabs(node, id, attrs, ctx, dynamic));
+    // W-1047: share links point at this page; a public page without its address shows none.
+    if (node.type === "share-link") {
+      const url = dynamic?.pageUrl ?? (mode === "editor" ? "https://example.com/" : undefined);
+      if (!url) return undefined;
+      return finish(node, shareLinkVNode(node as ShareLinkNode, attrs, url));
+    }
     if (node.type === "language-switcher") {
       const links = languageLinks(dynamic?.translations, mode);
       // W-937: a page in one language has nothing to switch to; the public page shows nothing.
@@ -776,7 +790,8 @@ export function renderPage(
   const collectProviders = (node: LayoutNode): void => {
     // UnknownNode also has a string `type`; assert ProviderNode after the runtime check.
     if (node.type === "provider") providerNodes.push(node as ProviderNode);
-    if ("children" in node && Array.isArray(node.children)) for (const child of node.children) collectProviders(child);
+    if ("children" in node && Array.isArray(node.children))
+      for (const child of node.children) collectProviders(child);
   };
   collectProviders(layout.root);
   for (const provider of componentProviders()) {
@@ -865,6 +880,12 @@ const columnCount = (tracks: unknown, columns: unknown): number | undefined =>
       : undefined;
 
 /** A grid's column count on desktop, tablet and mobile; unset follows the next wider device. */
+/** W-1048: a Hotspot marker's left and top. */
+const placeAt = ([left, top]: string[]) => [
+  { property: "left", value: left ?? "50%" },
+  { property: "top", value: top ?? "50%" },
+];
+
 function gridColumnCounts(grid: LayoutNode): [number, number, number] {
   const props = grid.props as Record<string, unknown>;
   const desktop = columnCount(props["columnTracks"], props["columns"]) ?? 1;

@@ -7,6 +7,10 @@ import hello from "emvb-ext-hello";
 import emdash, { local } from "emdash/astro";
 import { sqlite } from "emdash/db";
 import tailwindcss from "@tailwindcss/vite";
+import { join } from "node:path";
+
+/** W-1035: e2e runs give the demo a fresh data folder of its own; by default it keeps ./data.db. */
+const data = process.env["EMVB_DEMO_DATA"];
 
 export default defineConfig({
   output: "server",
@@ -28,9 +32,9 @@ export default defineConfig({
     emdash({
       // W-929: EmDash's MCP endpoint, so e2e can drive the EmVB tools with the bridge's client.
       mcp: true,
-      database: sqlite({ url: "file:./data.db" }),
+      database: sqlite({ url: `file:${data ? join(data, "data.db") : "./data.db"}` }),
       storage: local({
-        directory: "./uploads",
+        directory: data ? join(data, "uploads") : "./uploads",
         baseUrl: "/_emdash/api/media/file",
       }),
       plugins: [

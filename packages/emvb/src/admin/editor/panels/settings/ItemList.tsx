@@ -10,6 +10,9 @@ import {
 import {
   MAX_CAROUSEL_SLIDES,
   MAX_GALLERY_IMAGES,
+  MAX_HOTSPOTS,
+  MAX_PRICE_ITEMS,
+  MAX_SHARE_LINKS,
   MAX_SOCIAL_LINKS,
   MAX_TABS,
   type FieldDescriptor,
@@ -20,6 +23,9 @@ import {
   newAccordionItem,
   newCarouselSlide,
   newGalleryImage,
+  newHotspot,
+  newPriceListItem,
+  newShareLink,
   newSocialLink,
   newTabPanel,
 } from "../../dnd/new-element.ts";
@@ -72,6 +78,33 @@ const KINDS: Record<string, Kind> = {
     field: (n) => ({ key: "label", kind: "text", label: `Slide ${n} name`, optional: true }),
     make: (n) => newCarouselSlide(n),
     max: MAX_CAROUSEL_SLIDES,
+  },
+  // W-1043: each row edits the item's title; its price and the rest are in its own panel.
+  "price-list": {
+    noun: "item",
+    field: (n) => ({ key: "title", kind: "text", label: `Item ${n} title` }),
+    make: (n) => newPriceListItem(n),
+    max: MAX_PRICE_ITEMS,
+  },
+  // W-1047: each row names its link for screen readers; Edit picks the service in its panel.
+  "share-buttons": {
+    noun: "link",
+    field: (n) => ({
+      key: "label",
+      kind: "text",
+      label: `Link ${n} name`,
+      optional: true,
+      message: "Leave it empty for Share on and the service's name.",
+    }),
+    make: (n) => newShareLink(n),
+    max: MAX_SHARE_LINKS,
+  },
+  // W-1048: each row edits the marker's title; its place and note are in its own panel.
+  hotspots: {
+    noun: "marker",
+    field: (n) => ({ key: "title", kind: "text", label: `Marker ${n} title` }),
+    make: (n) => newHotspot(n),
+    max: MAX_HOTSPOTS,
   },
 };
 

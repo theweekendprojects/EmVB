@@ -9,7 +9,9 @@ const provider = createDaisyUIProvider(DAISY_COMPONENT_CATALOG);
 describe("pagination size reaches the buttons", () => {
   test("lg puts btn-lg on each page and no join size class", () => {
     const node = provider.createNode("pagination", "pag00001");
-    const out = JSON.stringify(provider.render({ ...node, props: { ...node.props, size: "lg" } } as never));
+    const out = JSON.stringify(
+      provider.render({ ...node, props: { ...node.props, size: "lg" } } as never),
+    );
     expect(out).toContain("btn-lg");
     expect(out).not.toMatch(/join-(xs|sm|md|lg|xl)\b/);
   });

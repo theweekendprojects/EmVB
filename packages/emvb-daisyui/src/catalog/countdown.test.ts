@@ -70,7 +70,14 @@ describe("fixed number mode", () => {
   });
 
   test("a target that is not a date falls back to the fixed number", () => {
-    for (const target of ["tomorrow", "2026-13-45", "2026-02-30", "<script>", "  ", "2026-12-31T25:00"]) {
+    for (const target of [
+      "tomorrow",
+      "2026-13-45",
+      "2026-02-30",
+      "<script>",
+      "  ",
+      "2026-12-31T25:00",
+    ]) {
       const html = serialize(vnode({ target, value: 7 }) as never);
       expect(html, target).not.toContain("data-daisy-countdown");
       expect(html, target).toContain("[--value:7]");
@@ -100,19 +107,40 @@ describe("a new countdown works at once", () => {
 describe("what Ends at means", () => {
   test("a reading with Z or an offset is that exact instant, whatever the zone", () => {
     const want = Date.UTC(2026, 11, 31, 17, 0, 0);
-    for (const text of ["2026-12-31T17:00:00Z", "2026-12-31 17:00Z", "2026-12-31T18:00:00+01:00", "2026-12-31T18:00+0100", "2026-12-31T17:00:00.000Z"])
+    for (const text of [
+      "2026-12-31T17:00:00Z",
+      "2026-12-31 17:00Z",
+      "2026-12-31T18:00:00+01:00",
+      "2026-12-31T18:00+0100",
+      "2026-12-31T17:00:00.000Z",
+    ])
       expect(parseTarget(text, "Asia/Tokyo"), text).toEqual({ kind: "instant", ms: want });
   });
 
   test("a bare reading is read in the chosen zone", () => {
-    expect(parseTarget("2026-12-31T18:00", "UTC")).toEqual({ kind: "instant", ms: Date.UTC(2026, 11, 31, 18) });
-    expect(parseTarget("2026-12-31T18:00", "Europe/Berlin")).toEqual({ kind: "instant", ms: Date.UTC(2026, 11, 31, 17) });
-    expect(parseTarget("2026-12-31", "UTC")).toEqual({ kind: "instant", ms: Date.UTC(2026, 11, 31) });
+    expect(parseTarget("2026-12-31T18:00", "UTC")).toEqual({
+      kind: "instant",
+      ms: Date.UTC(2026, 11, 31, 18),
+    });
+    expect(parseTarget("2026-12-31T18:00", "Europe/Berlin")).toEqual({
+      kind: "instant",
+      ms: Date.UTC(2026, 11, 31, 17),
+    });
+    expect(parseTarget("2026-12-31", "UTC")).toEqual({
+      kind: "instant",
+      ms: Date.UTC(2026, 11, 31),
+    });
   });
 
   test("for the visitor's own zone it stays a wall time for the browser to place", () => {
-    expect(parseTarget("2026-12-31T18:00", "viewer")).toEqual({ kind: "local", wall: "2026-12-31T18:00:00" });
-    expect(parseTarget("2026-12-31T18:00", undefined)).toEqual({ kind: "local", wall: "2026-12-31T18:00:00" });
+    expect(parseTarget("2026-12-31T18:00", "viewer")).toEqual({
+      kind: "local",
+      wall: "2026-12-31T18:00:00",
+    });
+    expect(parseTarget("2026-12-31T18:00", undefined)).toEqual({
+      kind: "local",
+      wall: "2026-12-31T18:00:00",
+    });
   });
 
   test("an unknown zone is refused instead of guessed", () => {
@@ -163,9 +191,17 @@ describe("units", () => {
     expect(remaining(2000 * DAY, ["h", "m", "s"]).h).toBe(999);
   });
   test("each Show option renders exactly its units", () => {
-    const want: Record<string, string[]> = { dhms: ["d", "h", "m", "s"], dhm: ["d", "h", "m"], hms: ["h", "m", "s"], d: ["d"] };
+    const want: Record<string, string[]> = {
+      dhms: ["d", "h", "m", "s"],
+      dhm: ["d", "h", "m"],
+      hms: ["h", "m", "s"],
+      d: ["d"],
+    };
     for (const [show, expected] of Object.entries(want))
-      expect(Object.keys(units(dom({ target: inFuture(left), zone: "UTC", units: show }))), show).toEqual(expected);
+      expect(
+        Object.keys(units(dom({ target: inFuture(left), zone: "UTC", units: show }))),
+        show,
+      ).toEqual(expected);
   });
 });
 
@@ -202,8 +238,10 @@ describe("layouts", () => {
 
 describe("when time is up", () => {
   const message = "The sale has ended.";
-  const done = (window: Window) => window.document.querySelector("[data-daisy-done]") as HTMLElement | null;
-  const live = (window: Window) => window.document.querySelector("[data-daisy-live]") as HTMLElement;
+  const done = (window: Window) =>
+    window.document.querySelector("[data-daisy-done]") as HTMLElement | null;
+  const live = (window: Window) =>
+    window.document.querySelector("[data-daisy-live]") as HTMLElement;
 
   test("already over: the message shows and the clock is hidden, before any script runs", () => {
     const window = dom({ target: "2000-01-01T00:00:00Z", expired: message });
@@ -245,7 +283,10 @@ describe("the runtime ticks the markup the server wrote", () => {
     for (const show of ["dhms", "dhm", "hms", "d"]) {
       const window = dom({ target: inFuture(secondsLeft), zone: "UTC", units: show });
       run(window);
-      const expected = remaining(secondsLeft, Object.keys(units(window)) as ("d" | "h" | "m" | "s")[]);
+      const expected = remaining(
+        secondsLeft,
+        Object.keys(units(window)) as ("d" | "h" | "m" | "s")[],
+      );
       for (const [unit, value] of Object.entries(cssValues(window)))
         expect(value, `${show} ${unit}`).toBe(String(expected[unit as "d"]));
     }
@@ -275,14 +316,22 @@ describe("the runtime ticks the markup the server wrote", () => {
     expect(done.className).toContain("hidden");
     await new Promise((resolve) => setTimeout(resolve, 2400));
     expect(done.className).not.toContain("hidden");
-    expect((window.document.querySelector("[data-daisy-live]") as HTMLElement).className).toContain("hidden");
-    expect(window.document.querySelector("[data-daisy-countdown]")?.getAttribute("role")).toBe("status");
+    expect((window.document.querySelector("[data-daisy-live]") as HTMLElement).className).toContain(
+      "hidden",
+    );
+    expect(window.document.querySelector("[data-daisy-countdown]")?.getAttribute("role")).toBe(
+      "status",
+    );
   });
 
   test("a fixed number above the class range is set by the runtime", () => {
     const window = dom({ target: "", value: 365, max: 999 });
     run(window);
-    expect((window.document.querySelector("[data-daisy-value]") as HTMLElement).style.getPropertyValue("--value")).toBe("365");
+    expect(
+      (window.document.querySelector("[data-daisy-value]") as HTMLElement).style.getPropertyValue(
+        "--value",
+      ),
+    ).toBe("365");
   });
 });
 
@@ -290,9 +339,14 @@ describe("recipes", () => {
   const countdownRecipes = DAISY_RECIPES.filter((recipe) => recipe.id.startsWith("countdown-"));
   const create = (id: string) => {
     let n = 0;
-    return countdownRecipes.find((recipe) => recipe.id === id)!.create(() => `rc${String(++n).padStart(6, "0")}`);
+    return countdownRecipes
+      .find((recipe) => recipe.id === id)!
+      .create(() => `rc${String(++n).padStart(6, "0")}`);
   };
-  const find = (nodes: ReturnType<typeof create>, component: string): ReturnType<typeof create>[number] | undefined => {
+  const find = (
+    nodes: ReturnType<typeof create>,
+    component: string,
+  ): ReturnType<typeof create>[number] | undefined => {
     for (const node of nodes) {
       if (node.component === component) return node;
       const inner = node.children ? find(node.children, component) : undefined;
@@ -322,22 +376,36 @@ describe("recipes", () => {
     for (const recipe of countdownRecipes) {
       for (const node of create(recipe.id)) {
         const parsed = ProviderNode.safeParse(strip(node));
-        expect(parsed.success, `${recipe.id}: ${JSON.stringify(parsed.error?.issues[0])}`).toBe(true);
-        expect(() => serialize(daisyUIProvider.render(node, {}, [], { mode: "public" }) as never)).not.toThrow();
+        expect(parsed.success, `${recipe.id}: ${JSON.stringify(parsed.error?.issues[0])}`).toBe(
+          true,
+        );
+        expect(() =>
+          serialize(daisyUIProvider.render(node, {}, [], { mode: "public" }) as never),
+        ).not.toThrow();
       }
     }
   });
 
   test("the variants really differ", () => {
-    const layouts = countdownRecipes.map((recipe) => find(create(recipe.id), "countdown")!.props.layout);
+    const layouts = countdownRecipes.map(
+      (recipe) => find(create(recipe.id), "countdown")!.props.layout,
+    );
     expect(new Set(layouts)).toEqual(new Set(["boxes", "plain", "clock"]));
-    const showing = countdownRecipes.map((recipe) => find(create(recipe.id), "countdown")!.props.units);
+    const showing = countdownRecipes.map(
+      (recipe) => find(create(recipe.id), "countdown")!.props.units,
+    );
     expect(new Set(showing)).toEqual(new Set(["dhms", "dhm", "hms", "d"]));
   });
 });
 
 // A node as the layout stores it: no children typing concerns for the provider-props check.
-function strip(node: { id: string; type: string; component: string; props: Props; children?: unknown[] }) {
+function strip(node: {
+  id: string;
+  type: string;
+  component: string;
+  props: Props;
+  children?: unknown[];
+}) {
   return {
     id: node.id,
     type: node.type,
@@ -355,6 +423,8 @@ describe("class list", () => {
     expect(valueClass(999)).toBe("[--value:100]");
   });
   test("the runtime is requested for countdown", () => {
-    expect(daisyUIProvider.needsRuntime?.(daisyUIProvider.createNode("countdown", "cd000002"))).toBe(true);
+    expect(
+      daisyUIProvider.needsRuntime?.(daisyUIProvider.createNode("countdown", "cd000002")),
+    ).toBe(true);
   });
 });

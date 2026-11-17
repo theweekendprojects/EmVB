@@ -45,7 +45,13 @@ const pad = (n: number) => String(n).padStart(2, "0");
 /** `YYYY-MM-DDTHH:mm` for a date, read in UTC or in the machine's own zone. */
 export function pickerTime(date: Date, utc = false): string {
   const [y, mo, d, h, mi] = utc
-    ? [date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes()]
+    ? [
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        date.getUTCHours(),
+        date.getUTCMinutes(),
+      ]
     : [date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes()];
   return `${y}-${pad(mo! + 1)}-${pad(d!)}T${pad(h!)}:${pad(mi!)}`;
 }
@@ -55,7 +61,10 @@ export function targetIn(days: number, hour: number, utc = false): string {
   const at = new Date();
   if (utc) at.setUTCDate(at.getUTCDate() + days);
   else at.setDate(at.getDate() + days);
-  return pickerTime(utc ? new Date(at.setUTCHours(hour, 0, 0, 0)) : new Date(at.setHours(hour, 0, 0, 0)), utc);
+  return pickerTime(
+    utc ? new Date(at.setUTCHours(hour, 0, 0, 0)) : new Date(at.setHours(hour, 0, 0, 0)),
+    utc,
+  );
 }
 
 /** How far a zone's clock is ahead of UTC at an instant, in ms. Throws RangeError for a bad zone. */
@@ -185,7 +194,9 @@ function fixedNumber(node: DaisyComponentNode, classes: string[]): VNode {
         children: [String(value)],
       },
       // Its own span with a margin: a space at the start of text inside a flex row is dropped.
-      ...(suffix ? [{ tag: "span", attrs: { class: "ms-2" }, children: [suffix] } satisfies VNode] : []),
+      ...(suffix
+        ? [{ tag: "span", attrs: { class: "ms-2" }, children: [suffix] } satisfies VNode]
+        : []),
     ],
   };
 }
@@ -199,7 +210,9 @@ function dateCountdown(
   const units = UNIT_SETS[String(p.units)] ?? UNIT_SETS.dhms!;
   const layout = p.layout === "plain" || p.layout === "clock" ? p.layout : "boxes";
   const [justify, textAlign] = ALIGN[String(p.align)] ?? ALIGN.center!;
-  const message = String(p.expired ?? "").trim().slice(0, 200);
+  const message = String(p.expired ?? "")
+    .trim()
+    .slice(0, 200);
   // A visitor-clock reading cannot be placed on the server, so the first paint reads it as UTC.
   const ms = target.kind === "instant" ? target.ms : Date.parse(`${target.wall}Z`);
   const now = Date.now();
@@ -212,7 +225,8 @@ function dateCountdown(
   const number = (unit: Unit): VNode => ({
     tag: "span",
     attrs: {
-      class: unit === "d" ? valueClass(values[unit]) : `${valueClass(values[unit])} ${DIGITS_2_CLASS}`,
+      class:
+        unit === "d" ? valueClass(values[unit]) : `${valueClass(values[unit])} ${DIGITS_2_CLASS}`,
       "data-daisy-unit": unit,
     },
     children: [String(values[unit])],
@@ -228,7 +242,11 @@ function dateCountdown(
     },
     children: [
       { tag: "span", attrs: { class: classes.join(" ") }, children: [number(unit)] },
-      { tag: "span", attrs: { class: "text-xs opacity-80" }, children: [labels[ALL_UNITS.indexOf(unit)]!] },
+      {
+        tag: "span",
+        attrs: { class: "text-xs opacity-80" },
+        children: [labels[ALL_UNITS.indexOf(unit)]!],
+      },
     ],
   });
 
@@ -241,7 +259,9 @@ function dateCountdown(
             {
               tag: "span",
               attrs: { class: classes.join(" ") },
-              children: units.flatMap((unit, i) => (i === 0 ? [number(unit)] : [":", number(unit)])),
+              children: units.flatMap((unit, i) =>
+                i === 0 ? [number(unit)] : [":", number(unit)],
+              ),
             },
           ],
         }
@@ -263,7 +283,11 @@ function dateCountdown(
         : { "data-daisy-countdown-local": target.wall }),
     },
     children: [
-      { tag: "div", attrs: { "data-daisy-live": "", ...(done ? { class: "hidden" } : {}) }, children: [face] },
+      {
+        tag: "div",
+        attrs: { "data-daisy-live": "", ...(done ? { class: "hidden" } : {}) },
+        children: [face],
+      },
       ...(message
         ? [
             {
@@ -333,8 +357,18 @@ export const COUNTDOWN: DaisyComponentDefinition = {
       options: ["sm", "md", "lg", "xl"],
       classMap: SIZES,
     },
-    { key: "labels", label: "Unit labels, separated by |", kind: "text", default: "days|hours|min|sec" },
-    { key: "expired", label: "Message when time is up (empty keeps zeros)", kind: "text", default: "" },
+    {
+      key: "labels",
+      label: "Unit labels, separated by |",
+      kind: "text",
+      default: "days|hours|min|sec",
+    },
+    {
+      key: "expired",
+      label: "Message when time is up (empty keeps zeros)",
+      kind: "text",
+      default: "",
+    },
     { key: "value", label: "Fixed number (only when no date is set)", kind: "number", default: 42 },
     { key: "max", label: "Fixed number maximum", kind: "number", default: 99 },
     { key: "suffix", label: "Fixed number suffix", kind: "text", default: " seconds" },

@@ -3,6 +3,9 @@ import {
   MAX_DEPTH,
   MAX_GALLERY_IMAGES,
   MAX_NODES,
+  MAX_HOTSPOTS,
+  MAX_PRICE_ITEMS,
+  MAX_SHARE_LINKS,
   MAX_SOCIAL_LINKS,
   MAX_TABS,
 } from "./limits.ts";
@@ -80,6 +83,15 @@ export const REASONS = {
   slideOutsideCarousel: "Slides can only go inside a Carousel.",
   onlySlides: "A carousel can only hold slides.",
   tooManySlides: `A carousel can hold up to ${MAX_CAROUSEL_SLIDES} slides.`,
+  itemOutsidePriceList: "Price list items can only go inside a Price list.",
+  onlyPriceItems: "A price list can only hold price list items.",
+  tooManyPriceItems: `A price list can hold up to ${MAX_PRICE_ITEMS} items.`,
+  shareOutsideButtons: "Share links can only go inside Share buttons.",
+  onlyShareLinks: "Share buttons can only hold share links.",
+  tooManyShareLinks: `Share buttons can hold up to ${MAX_SHARE_LINKS} links.`,
+  hotspotOutsidePicture: "Hotspots can only go inside a Hotspots picture.",
+  onlyHotspots: "A Hotspots picture can only hold hotspots.",
+  tooManyHotspots: `A Hotspots picture can hold up to ${MAX_HOTSPOTS} markers.`,
   emptyOutsideLoop: "An Empty state can only go inside a Loop.",
 } as const;
 
@@ -175,6 +187,22 @@ export function parentChildRefusal(
     return REASONS.slideOutsideCarousel;
   }
   if (parent.type === "carousel" && child.type !== "carousel-slide") return REASONS.onlySlides;
+  if (child.type === "price-list-item" && parent.type !== "price-list") {
+    return REASONS.itemOutsidePriceList;
+  }
+  if (parent.type === "price-list" && child.type !== "price-list-item") {
+    return REASONS.onlyPriceItems;
+  }
+  if (child.type === "share-link" && parent.type !== "share-buttons") {
+    return REASONS.shareOutsideButtons;
+  }
+  if (parent.type === "share-buttons" && child.type !== "share-link") {
+    return REASONS.onlyShareLinks;
+  }
+  if (child.type === "hotspot" && parent.type !== "hotspots") {
+    return REASONS.hotspotOutsidePicture;
+  }
+  if (parent.type === "hotspots" && child.type !== "hotspot") return REASONS.onlyHotspots;
   if (isFormNode(child) && inForm) return REASONS.nestedForm;
   if (isFormFieldType(child.type) && !inForm) return REASONS.fieldOutsideForm;
   return undefined;
@@ -214,6 +242,30 @@ const DROP_RULES: [breaks: (drop: Drop) => boolean, reason: string][] = [
       !nodeChildren(into.node).some((child) => child.id === node.id) &&
       nodeChildren(into.node).length >= MAX_CAROUSEL_SLIDES,
     REASONS.tooManySlides,
+  ],
+  // W-1043: a full Price list takes no new item; moving within it is fine.
+  [
+    ({ node, into }) =>
+      into.node.type === "price-list" &&
+      !nodeChildren(into.node).some((child) => child.id === node.id) &&
+      nodeChildren(into.node).length >= MAX_PRICE_ITEMS,
+    REASONS.tooManyPriceItems,
+  ],
+  // W-1047: a full Share buttons takes no new link; moving within it is fine.
+  [
+    ({ node, into }) =>
+      into.node.type === "share-buttons" &&
+      !nodeChildren(into.node).some((child) => child.id === node.id) &&
+      nodeChildren(into.node).length >= MAX_SHARE_LINKS,
+    REASONS.tooManyShareLinks,
+  ],
+  // W-1048: a full Hotspots picture takes no new marker; moving within it is fine.
+  [
+    ({ node, into }) =>
+      into.node.type === "hotspots" &&
+      !nodeChildren(into.node).some((child) => child.id === node.id) &&
+      nodeChildren(into.node).length >= MAX_HOTSPOTS,
+    REASONS.tooManyHotspots,
   ],
   [({ node, into }) => into.depth + height(node) > MAX_DEPTH, REASONS.tooDeep],
   [

@@ -58,7 +58,10 @@ const node = (
 
 // Three cards side by side, text centred, buttons at their natural width.
 const cards = (id: () => string, labels: string[], tone = "primary") => [
-  node("columns", id, { columns: "3" },
+  node(
+    "columns",
+    id,
+    { columns: "3" },
     labels.map((label) =>
       node("card", id, { title: label, body: `${label} content`, align: "center" }, [
         node("button", id, { label: "Learn more", tone }),
@@ -91,8 +94,14 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     create: (id) => [
       node("columns", id, { columns: "3" }, [
         node("card", id, { title: "Easy to use", body: "Describe this benefit in one sentence." }),
-        node("card", id, { title: "Works everywhere", body: "Describe this benefit in one sentence." }),
-        node("card", id, { title: "Built to last", body: "Describe this benefit in one sentence." }),
+        node("card", id, {
+          title: "Works everywhere",
+          body: "Describe this benefit in one sentence.",
+        }),
+        node("card", id, {
+          title: "Built to last",
+          body: "Describe this benefit in one sentence.",
+        }),
       ]),
     ],
   },
@@ -102,9 +111,12 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "A band that asks the visitor to take one step, with a button.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Ready to start?", body: "Take the next step in one click.", align: "center" }, [
-        node("button", id, { label: "Contact us", tone: "primary" }),
-      ]),
+      node(
+        "card",
+        id,
+        { title: "Ready to start?", body: "Take the next step in one click.", align: "center" },
+        [node("button", id, { label: "Contact us", tone: "primary" })],
+      ),
     ],
   },
   {
@@ -113,7 +125,10 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Three short quotes from customers, side by side. Replace the names and words.",
     category: "Marketing",
     create: (id) => [
-      node("columns", id, { columns: "3" },
+      node(
+        "columns",
+        id,
+        { columns: "3" },
         ["Customer name", "Customer name", "Customer name"].map((name) =>
           node("card", id, { title: name, body: "Put a short quote from a happy customer here." }),
         ),
@@ -161,8 +176,22 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     category: "Content",
     create: (id) => [
       node("accordion", id, {}, [
-        { id: id(), type: "provider", provider: "daisyui", component: "accordion-item", props: { label: "How does it work?" }, children: [node("card", id, { body: "Choose a plan and publish." })] },
-        { id: id(), type: "provider", provider: "daisyui", component: "accordion-item", props: { label: "Can I cancel?" }, children: [node("card", id, { body: "Yes, at any time." })] },
+        {
+          id: id(),
+          type: "provider",
+          provider: "daisyui",
+          component: "accordion-item",
+          props: { label: "How does it work?" },
+          children: [node("card", id, { body: "Choose a plan and publish." })],
+        },
+        {
+          id: id(),
+          type: "provider",
+          provider: "daisyui",
+          component: "accordion-item",
+          props: { label: "Can I cancel?" },
+          children: [node("card", id, { body: "Yes, at any time." })],
+        },
       ]),
     ],
   },
@@ -257,17 +286,27 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Big boxed countdown to a launch, with a notify button.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "We launch soon", body: "Be first in line when we go live.", size: "lg", align: "center" }, [
-        node("countdown", id, {
-          target: targetIn(14, 9, true),
-          zone: "UTC",
-          layout: "boxes",
-          units: "dhms",
+      node(
+        "card",
+        id,
+        {
+          title: "We launch soon",
+          body: "Be first in line when we go live.",
           size: "lg",
-          expired: "We are live!",
-        }),
-        node("button", id, { label: "Notify me", tone: "primary" }),
-      ]),
+          align: "center",
+        },
+        [
+          node("countdown", id, {
+            target: targetIn(14, 9, true),
+            zone: "UTC",
+            layout: "boxes",
+            units: "dhms",
+            size: "lg",
+            expired: "We are live!",
+          }),
+          node("button", id, { label: "Notify me", tone: "primary" }),
+        ],
+      ),
     ],
   },
   {
@@ -276,17 +315,27 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Plain countdown to the end of a sale, on each visitor's own clock.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Summer sale", body: "Everything is 30% off until the timer ends.", size: "sm", align: "center" }, [
-        node("countdown", id, {
-          target: targetIn(4, 0),
-          zone: "viewer",
-          layout: "plain",
-          units: "dhms",
-          size: "md",
-          expired: "This sale has ended.",
-        }),
-        node("button", id, { label: "Shop now", tone: "primary" }),
-      ]),
+      node(
+        "card",
+        id,
+        {
+          title: "Summer sale",
+          body: "Everything is 30% off until the timer ends.",
+          size: "sm",
+          align: "center",
+        },
+        [
+          node("countdown", id, {
+            target: targetIn(4, 0),
+            zone: "viewer",
+            layout: "plain",
+            units: "dhms",
+            size: "md",
+            expired: "This sale has ended.",
+          }),
+          node("button", id, { label: "Shop now", tone: "primary" }),
+        ],
+      ),
     ],
   },
   {
@@ -295,17 +344,27 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Days, hours and minutes to a fixed-time event, with a sign-up button.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Live webinar", body: "Free live session with questions and answers.", size: "md", align: "center" }, [
-        node("countdown", id, {
-          target: targetIn(10, 18, true),
-          zone: "UTC",
-          layout: "boxes",
-          units: "dhm",
+      node(
+        "card",
+        id,
+        {
+          title: "Live webinar",
+          body: "Free live session with questions and answers.",
           size: "md",
-          expired: "The event has started.",
-        }),
-        node("button", id, { label: "Reserve my seat", tone: "primary" }),
-      ]),
+          align: "center",
+        },
+        [
+          node("countdown", id, {
+            target: targetIn(10, 18, true),
+            zone: "UTC",
+            layout: "boxes",
+            units: "dhm",
+            size: "md",
+            expired: "The event has started.",
+          }),
+          node("button", id, { label: "Reserve my seat", tone: "primary" }),
+        ],
+      ),
     ],
   },
   {
@@ -314,17 +373,27 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Hours, minutes and seconds as a clock, for a short sale.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Flash sale", body: "Prices go back up when the clock runs out.", size: "sm", align: "center" }, [
-        node("countdown", id, {
-          target: targetIn(2, 12),
-          zone: "viewer",
-          layout: "clock",
-          units: "hms",
-          size: "xl",
-          expired: "Sale ended",
-        }),
-        node("button", id, { label: "Shop the sale", tone: "primary" }),
-      ]),
+      node(
+        "card",
+        id,
+        {
+          title: "Flash sale",
+          body: "Prices go back up when the clock runs out.",
+          size: "sm",
+          align: "center",
+        },
+        [
+          node("countdown", id, {
+            target: targetIn(2, 12),
+            zone: "viewer",
+            layout: "clock",
+            units: "hms",
+            size: "xl",
+            expired: "Sale ended",
+          }),
+          node("button", id, { label: "Shop the sale", tone: "primary" }),
+        ],
+      ),
     ],
   },
   {
@@ -333,18 +402,28 @@ export const DAISY_RECIPES: readonly DaisyRecipe[] = [
     description: "Just the days left until early-bird pricing ends.",
     category: "Marketing",
     create: (id) => [
-      node("card", id, { title: "Early-bird pricing", body: "Lock in the lower price before the timer ends.", size: "sm", align: "center" }, [
-        node("countdown", id, {
-          target: targetIn(21, 23),
-          zone: "viewer",
-          layout: "plain",
-          units: "d",
-          size: "lg",
-          labels: "days left",
-          expired: "Early-bird pricing has ended.",
-        }),
-        node("button", id, { label: "Get the early-bird price", tone: "primary" }),
-      ]),
+      node(
+        "card",
+        id,
+        {
+          title: "Early-bird pricing",
+          body: "Lock in the lower price before the timer ends.",
+          size: "sm",
+          align: "center",
+        },
+        [
+          node("countdown", id, {
+            target: targetIn(21, 23),
+            zone: "viewer",
+            layout: "plain",
+            units: "d",
+            size: "lg",
+            labels: "days left",
+            expired: "Early-bird pricing has ended.",
+          }),
+          node("button", id, { label: "Get the early-bird price", tone: "primary" }),
+        ],
+      ),
     ],
   },
 ] as const;

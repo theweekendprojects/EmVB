@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { addNode, addSectionNear } from "../arrange.ts";
-import { isParentNode, LAYOUT_SCHEMA_VERSION, type Layout, type LayoutNode } from "../schema/layout.ts";
+import {
+  isParentNode,
+  LAYOUT_SCHEMA_VERSION,
+  type Layout,
+  type LayoutNode,
+} from "../schema/layout.ts";
 import { emptyDesign } from "../schema/design.ts";
 import { renderPage } from "./index.ts";
 import { registerComponentProvider } from "@perkyzz/emvb-provider-api";
@@ -25,7 +30,13 @@ const stub = {
           fields: [],
           container: true,
         },
-        defaults: () => ({ type: "provider", provider: "stubkit", component: "panel", props: {}, children: [] }),
+        defaults: () => ({
+          type: "provider",
+          provider: "stubkit",
+          component: "panel",
+          props: {},
+          children: [],
+        }),
         build: (_node: unknown, attrs: Record<string, string> = {}, children: unknown[] = []) => ({
           tag: "section",
           attrs: { ...attrs, class: "stub-panel" },
@@ -45,7 +56,12 @@ const stub = {
           defaultTab: "content",
           fields: [{ key: "label", kind: "text", label: "Label" }],
         },
-        defaults: () => ({ type: "provider", provider: "stubkit", component: "chip", props: { label: "Chip" } }),
+        defaults: () => ({
+          type: "provider",
+          provider: "stubkit",
+          component: "chip",
+          props: { label: "Chip" },
+        }),
         build: (node: { props: { label: string } }, attrs: Record<string, string> = {}) => ({
           tag: "span",
           attrs: { ...attrs, class: "stub-chip" },
@@ -58,7 +74,11 @@ const stub = {
   createNode(component: string, id: string) {
     return { id, ...this.components.get(component)!.defaults() } as never;
   },
-  render(node: { component: string; props: Record<string, unknown> }, attrs?: Record<string, string>, children?: unknown[]) {
+  render(
+    node: { component: string; props: Record<string, unknown> },
+    attrs?: Record<string, string>,
+    children?: unknown[],
+  ) {
     const component = this.components.get(node.component) as unknown as {
       build: (node: unknown, attrs?: Record<string, string>, children?: unknown[]) => unknown;
     };
@@ -79,18 +99,44 @@ stub.components.set("tile", {
     fields: [],
   },
   defaults: () => ({ type: "provider", provider: "stubkit", component: "tile", props: {} }),
-  build: (_node: unknown, _attrs: unknown) => ({ tag: "div", attrs: { class: "stub-tile" }, children: ["Tile"] }),
+  build: (_node: unknown, _attrs: unknown) => ({
+    tag: "div",
+    attrs: { class: "stub-tile" },
+    children: ["Tile"],
+  }),
 } as never);
 
 const tile = () =>
-  ({ id: "tile0001", type: "provider", provider: "stubkit", component: "tile", props: {} }) as unknown as LayoutNode;
+  ({
+    id: "tile0001",
+    type: "provider",
+    provider: "stubkit",
+    component: "tile",
+    props: {},
+  }) as unknown as LayoutNode;
 
 const panel = (children: LayoutNode[]) =>
-  ({ id: "panel001", type: "provider", provider: "stubkit", component: "panel", props: {}, children }) as unknown as LayoutNode;
+  ({
+    id: "panel001",
+    type: "provider",
+    provider: "stubkit",
+    component: "panel",
+    props: {},
+    children,
+  }) as unknown as LayoutNode;
 const chip = (label: string) =>
-  ({ id: "chip0001", type: "provider", provider: "stubkit", component: "chip", props: { label } }) as unknown as LayoutNode;
+  ({
+    id: "chip0001",
+    type: "provider",
+    provider: "stubkit",
+    component: "chip",
+    props: { label },
+  }) as unknown as LayoutNode;
 const page = (children: LayoutNode[]): Layout =>
-  ({ schemaVersion: LAYOUT_SCHEMA_VERSION, root: { id: "root0001", type: "container", props: {}, children } }) as Layout;
+  ({
+    schemaVersion: LAYOUT_SCHEMA_VERSION,
+    root: { id: "root0001", type: "container", props: {}, children },
+  }) as Layout;
 
 let dispose: () => void;
 beforeAll(() => {
@@ -105,8 +151,12 @@ describe("provider containers hold children (step 1)", () => {
   });
 
   test("a child placed inside a provider container renders inside it on the public page", () => {
-    const html = renderPage(page([panel([chip("Inside")])]), emptyDesign(), { mode: "public" }).html;
-    expect(html).toMatch(/<section[^>]*stub-panel[^>]*><span[^>]*stub-chip[^>]*>Inside<\/span><\/section>/);
+    const html = renderPage(page([panel([chip("Inside")])]), emptyDesign(), {
+      mode: "public",
+    }).html;
+    expect(html).toMatch(
+      /<section[^>]*stub-panel[^>]*><span[^>]*stub-chip[^>]*>Inside<\/span><\/section>/,
+    );
   });
 
   test("the editor id reaches a provider root even when its build ignores attributes", () => {

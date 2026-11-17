@@ -17609,7 +17609,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/constants.ts",
-          "search": "export const PLUGIN_VERSION = \"1.2.0\";",
+          "search": "export const PLUGIN_VERSION = \"1.3.0\";",
           "replace": "export const PLUGIN_VERSION = \"0.0.0\";"
         }
       ],
@@ -17623,7 +17623,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/constants.ts",
-          "search": "export const PLUGIN_VERSION = \"1.2.0\";",
+          "search": "export const PLUGIN_VERSION = \"1.3.0\";",
           "replace": "export const PLUGIN_VERSION = \"0.0.0\";"
         }
       ],
@@ -29048,7 +29048,7 @@
       "edits": [
         {
           "file": "packages/emvb/package.json",
-          "search": "\"@perkyzz/emvb-icons\": \"1.2.0\"",
+          "search": "\"@perkyzz/emvb-icons\": \"1.3.0\"",
           "replace": "\"@perkyzz/emvb-icons\": \"0.1.1\""
         }
       ],
@@ -30476,7 +30476,7 @@
       "edits": [
         {
           "file": "packages/emvb-mcp/src/bridge.ts",
-          "search": "export const BRIDGE_VERSION = \"1.2.0\";",
+          "search": "export const BRIDGE_VERSION = \"1.3.0\";",
           "replace": "export const BRIDGE_VERSION = \"0.4.9\";"
         }
       ],
@@ -47406,7 +47406,7 @@
       "edits": [
         {
           "file": "demos/cloudflare/package.json",
-          "search": "\"astro\": \"7.4.11\"",
+          "search": "\"astro\": \"7.4.12\"",
           "replace": "\"astro\": \"7.3.5\""
         }
       ],
@@ -47584,12 +47584,12 @@
     {
       "id": "W-1017/minor-without-pages",
       "requirement": "W-1017",
-      "description": "A minor release is recorded without adding its pages to the corpus.",
+      "description": "A minor release is recorded without adding its pages to the corpus (9.9.0 never has pages).",
       "edits": [
         {
           "file": "packages/emvb/test/compat/compat.test.ts",
           "search": "  \"1.1.2\": 18,\n",
-          "replace": "  \"1.1.2\": 18,\n  \"1.3.0\": 18,\n"
+          "replace": "  \"1.1.2\": 18,\n  \"9.9.0\": 18,\n"
         }
       ],
       "command": ["bun", "test", "packages/emvb/test/compat/compat.test.ts"],
@@ -47969,8 +47969,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/a11y/audit.ts",
-          "search": "(node.type === \"image-box\" || node.type === \"gallery-image\") && spoken(props[\"src\"])",
-          "replace": "node.type === \"gallery-image\" && spoken(props[\"src\"])"
+          "search": "(node.type === \"image-box\" || node.type === \"gallery-image\" || node.type === \"hotspots\")",
+          "replace": "(node.type === \"gallery-image\" || node.type === \"hotspots\")"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/core/a11y/widgets.test.ts"],
@@ -48882,6 +48882,1457 @@
       ],
       "command": ["bun", "test", "test/site/core-web-vitals.test.ts"],
       "expect": "\\(fail\\).*W-1031"
+    },
+    {
+      "id": "W-1032/remixicon-past-apache",
+      "requirement": "W-1032",
+      "description": "Remix Icon moves to 4.9+, whose license doesn't allow shipping it in another icon library.",
+      "edits": [
+        {
+          "file": "package.json",
+          "search": "\"remixicon\": \"4.8.0\"",
+          "replace": "\"remixicon\": \"4.9.1\""
+        }
+      ],
+      "command": ["bun", "test", "scripts/dependabot.test.ts"],
+      "expect": "\\(fail\\).*W-1032"
+    },
+    {
+      "id": "W-1032/dependabot-bumps-remix",
+      "requirement": "W-1032",
+      "description": "Dependabot is free to propose Remix Icon 4.9+.",
+      "edits": [
+        {
+          "file": ".github/dependabot.yml",
+          "search": "        versions: [\">=4.9.0\"]",
+          "replace": "        versions: [\">=9.0.0\"]"
+        }
+      ],
+      "command": ["bun", "test", "scripts/dependabot.test.ts"],
+      "expect": "\\(fail\\).*W-1032"
+    },
+    {
+      "id": "W-1035/e2e-reuses-dev-demo",
+      "requirement": "W-1035",
+      "description": "Outside CI, Playwright reuses a running demo again, with the developer's data.",
+      "edits": [
+        {
+          "file": "playwright.shared.ts",
+          "search": "  reuseExistingServer: process.env[\"EMVB_REUSE_SERVER\"] === \"1\",",
+          "replace": "  reuseExistingServer: !process.env[\"CI\"] || process.env[\"EMVB_REUSE_SERVER\"] === \"1\","
+        }
+      ],
+      "command": ["bun", "test", "test/e2e-demo-data.test.ts"],
+      "expect": "\\(fail\\).*W-1035"
+    },
+    {
+      "id": "W-1035/node-demo-ignores-data",
+      "requirement": "W-1035",
+      "description": "The node demo keeps using ./data.db when e2e gives it a data folder.",
+      "edits": [
+        {
+          "file": "demos/node/astro.config.mjs",
+          "search": "url: `file:${data ? join(data, \"data.db\") : \"./data.db\"}`",
+          "replace": "url: \"file:./data.db\""
+        }
+      ],
+      "command": ["bun", "test", "test/e2e-demo-data.test.ts"],
+      "expect": "\\(fail\\).*W-1035"
+    },
+    {
+      "id": "W-1035/run-data-left-behind",
+      "requirement": "W-1035",
+      "description": "A run's data folder stays after the run.",
+      "edits": [
+        {
+          "file": "e2e/support/demo-data.ts",
+          "search": "  if (dir && process.env[\"EMVB_E2E_DATA_OWNED\"] === \"1\")\n    rmSync(dir, { recursive: true, force: true });",
+          "replace": "  if (dir && process.env[\"EMVB_E2E_DATA_OWNED\"] === \"2\")\n    rmSync(dir, { recursive: true, force: true });"
+        }
+      ],
+      "command": ["bun", "test", "test/e2e-demo-data.test.ts"],
+      "expect": "\\(fail\\).*W-1035"
+    },
+    {
+      "id": "W-1035/prune-removes-current-run",
+      "requirement": "W-1035",
+      "description": "Pruning old runs also removes the folder of the run in progress.",
+      "edits": [
+        {
+          "file": "e2e/support/demo-data.ts",
+          "search": "if (!name.startsWith(\"run-\") || dir === current) continue;",
+          "replace": "if (!name.startsWith(\"run-\") || dir === `${current}-`) continue;"
+        }
+      ],
+      "command": ["bun", "test", "test/e2e-demo-data.test.ts"],
+      "expect": "\\(fail\\).*W-1035"
+    },
+    {
+      "id": "W-1037/desktop-shots-no-phone-size",
+      "requirement": "W-1037",
+      "description": "Desktop screenshots start at 1600 px again, so phones download the large one.",
+      "edits": [
+        {
+          "file": "site/src/data/shots.ts",
+          "search": "const desktopWidths = [800, 1600, 2400] as const;",
+          "replace": "const desktopWidths = [1600, 2400] as const;"
+        }
+      ],
+      "command": ["bun", "test", "test/site/core-web-vitals.test.ts"],
+      "expect": "\\(fail\\).*W-1037"
+    },
+    {
+      "id": "W-1037/width-without-file",
+      "requirement": "W-1037",
+      "description": "A width is listed for phone shots that no file exists for.",
+      "edits": [
+        {
+          "file": "site/src/data/shots.ts",
+          "search": "const phoneWidths = [390, 780, 1170] as const;",
+          "replace": "const phoneWidths = [360, 780, 1170] as const;"
+        }
+      ],
+      "command": ["bun", "test", "test/site/core-web-vitals.test.ts"],
+      "expect": "\\(fail\\).*W-1037"
+    },
+    {
+      "id": "W-1036/never-warns",
+      "requirement": "W-1036",
+      "description": "Rendering a layout from a collection the site doesn't list in canvasCollections stays silent.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/canvas-collections.ts",
+          "search": "  if (warned.has(collection)) return false;\n  warned.add(collection);\n  return true;",
+          "replace": "  if (warned.has(collection)) return false;\n  warned.add(collection);\n  return false;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/resolve.test.ts"],
+      "expect": "\\(fail\\).*canvasCollections warns once"
+    },
+    {
+      "id": "W-1036/warns-every-render",
+      "requirement": "W-1036",
+      "description": "The canvasCollections warning repeats on every render instead of once per collection.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/canvas-collections.ts",
+          "search": "  if (warned.has(collection)) return false;\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/resolve.test.ts"],
+      "expect": "\\(fail\\).*canvasCollections warns once"
+    },
+    {
+      "id": "W-1036/warns-listed",
+      "requirement": "W-1036",
+      "description": "A collection listed in canvasCollections warns as if it were missing.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/canvas-collections.ts",
+          "search": "  if (listed === undefined || listed.includes(collection) || OWN.has(collection)) return false;",
+          "replace": "  if (listed === undefined || OWN.has(collection)) return false;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/resolve.test.ts"],
+      "expect": "\\(fail\\).*canvasCollections warns once"
+    },
+    {
+      "id": "W-1036/plugin-never-sets",
+      "requirement": "W-1036",
+      "description": "The plugin no longer records canvasCollections for the renderer.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/plugin.ts",
+          "search": "  setCanvasCollections(options.canvasCollections);\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/test/server/canvas-collections-option.test.ts"],
+      "expect": "\\(fail\\).*W-1036"
+    },
+    {
+      "id": "W-1038/runtime-never-asked",
+      "requirement": "W-1038",
+      "description": "A Counter that counts up no longer asks for the counter runtime.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/widgets.ts",
+          "search": "  if (node.type === \"counter\" && (node as CounterNode).props.countUp) return \"counter\";\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*asks for the counter runtime"
+    },
+    {
+      "id": "W-1038/no-grouping",
+      "requirement": "W-1038",
+      "description": "A Counter's thousands separator is ignored.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/counter-format.ts",
+          "search": "  const grouped = separator ? whole.replace(/\\B(?=(\\d{3})+(?!\\d))/g, separator) : whole;",
+          "replace": "  const grouped = whole;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*groups thousands"
+    },
+    {
+      "id": "W-1038/longer-than-5s",
+      "requirement": "W-1038",
+      "description": "A count-up may run longer than 5 seconds.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "    duration: z.number().int().min(300).max(5000).optional(),",
+          "replace": "    duration: z.number().int().min(300).max(60000).optional(),"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*longer than 5 seconds"
+    },
+    {
+      "id": "W-1038/reduced-motion-counts",
+      "requirement": "W-1038",
+      "description": "The count-up runs for visitors who prefer reduced motion.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/counter.ts",
+          "search": "  if (reduced || typeof IntersectionObserver === \"undefined\") return;",
+          "replace": "  if (typeof IntersectionObserver === \"undefined\") return;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/counter.test.ts"],
+      "expect": "\\(fail\\).*reduced motion"
+    },
+    {
+      "id": "W-1038/sr-hears-steps",
+      "requirement": "W-1038",
+      "description": "Screen readers hear every step of the count-up instead of the final number.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/counter.ts",
+          "search": "  c.el.setAttribute(\"aria-hidden\", \"true\");\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/counter.test.ts"],
+      "expect": "\\(fail\\).*counts up in view"
+    },
+    {
+      "id": "W-1038/ends-off",
+      "requirement": "W-1038",
+      "description": "The count-up stops one frame short of the rendered number.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/counter.ts",
+          "search": "      finish(c);\n      return;",
+          "replace": "      return;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/counter.test.ts"],
+      "expect": "\\(fail\\).*counts up in view"
+    },
+    {
+      "id": "W-1038/no-title-warning",
+      "requirement": "W-1038",
+      "description": "The accessibility check no longer warns about a Counter without a title.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "    if (node.type === \"counter\" && !spoken(props[\"title\"]) && !node.bind) {",
+          "replace": "    if (node.type === \"counter\" && false) {"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/a11y/widgets.test.ts"],
+      "expect": "\\(fail\\).*number says nothing"
+    },
+    {
+      "id": "W-1038/runtime-not-mounted",
+      "requirement": "W-1038",
+      "description": "EmVBWidgetRuntimes no longer mounts the counter script.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/EmVBWidgetRuntimes.astro",
+          "search": "{names.has(\"counter\") && <EmVBCounterRuntime />}\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "run", "test:astro"],
+      "expect": "FAIL.*W-1038"
+    },
+    {
+      "id": "W-1038/count-up-public",
+      "requirement": "W-1038",
+      "description": "A published Counter never counts up.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/counter.ts",
+          "search": "        run(c);\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "run", "e2e", "e2e/marketing-widgets.e2e.ts", "--project=node"],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1039/no-role",
+      "requirement": "W-1039",
+      "description": "A Progress bar is no longer a meter for screen readers.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "        role: kind ?? \"meter\",\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*named meter"
+    },
+    {
+      "id": "W-1039/past-full",
+      "requirement": "W-1039",
+      "description": "A value above max fills past the end of the bar.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "  return Math.min(100, Math.max(0, (props.value / max) * 100));",
+          "replace": "  return Math.max(0, (props.value / max) * 100);"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*never past full"
+    },
+    {
+      "id": "W-1039/grows-under-reduced-motion",
+      "requirement": "W-1039",
+      "description": "The fill grows in even for visitors who prefer reduced motion.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "@media (prefers-reduced-motion:no-preference){@supports (animation-timeline:view()){.emvb-progress-grow .emvb-progress-fill{transform-box:fill-box;transform-origin:left center;animation:emvb-progress-grow linear both;animation-timeline:view();animation-range:entry 10% cover 40%}}}",
+          "replace": "@supports (animation-timeline:view()){.emvb-progress-grow .emvb-progress-fill{transform-box:fill-box;transform-origin:left center;animation:emvb-progress-grow linear both;animation-timeline:view();animation-range:entry 10% cover 40%}}"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*reduced motion leaves out"
+    },
+    {
+      "id": "W-1039/no-title-warning",
+      "requirement": "W-1039",
+      "description": "The accessibility check no longer warns about a Progress bar without a title.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "    if (node.type === \"progress\" && !spoken(props[\"label\"]) && !node.bind) {",
+          "replace": "    if (node.type === \"progress\" && false) {"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/a11y/widgets.test.ts"],
+      "expect": "\\(fail\\).*can't name it"
+    },
+    {
+      "id": "W-1039/max-zero",
+      "requirement": "W-1039",
+      "description": "A Progress bar accepts a maximum of 0.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "    max: z.number().positive().max(MAX_PROGRESS).optional(),",
+          "replace": "    max: z.number().min(0).max(MAX_PROGRESS).optional(),"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*max of 0"
+    },
+    {
+      "id": "W-1039/value-ignores-max",
+      "requirement": "W-1039",
+      "description": "The Value field no longer reads its highest number from Maximum.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "        maxProp: \"max\",\n        message: \"Enter a number from 0 up to the maximum, such as 75.\",",
+          "replace": "        message: \"Enter a number from 0 up to the maximum, such as 75.\","
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1039"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1040/runtime-never-asked",
+      "requirement": "W-1040",
+      "description": "A ticking Countdown no longer asks for the countdown runtime.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/widgets.ts",
+          "search": "  if (node.type === \"countdown\" && (node as CountdownNode).props.ticking) return \"countdown\";\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*Pause button"
+    },
+    {
+      "id": "W-1040/clock-read-aloud",
+      "requirement": "W-1040",
+      "description": "Screen readers hear the ticking clock.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "          attrs: { class: \"emvb-countdown-units\", \"aria-hidden\": \"true\" },",
+          "replace": "          attrs: { class: \"emvb-countdown-units\" },"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*hidden from screen readers"
+    },
+    {
+      "id": "W-1040/no-offset-needed",
+      "requirement": "W-1040",
+      "description": "A Countdown target without a UTC offset is accepted.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "(?::([0-5]\\d))?(Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$/;",
+          "replace": "(?::([0-5]\\d))?(Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)?$/;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*UTC offset"
+    },
+    {
+      "id": "W-1040/wrong-zone-sign",
+      "requirement": "W-1040",
+      "description": "A negative UTC offset is written as positive.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "    offset = `${zone[0] === \"-\" ? \"\\u2212\" : \"+\"}${hours}${min === \"00\" ? \"\" : `:${min}`}`;",
+          "replace": "    offset = `+${hours}${min === \"00\" ? \"\" : `:${min}`}`;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*no script"
+    },
+    {
+      "id": "W-1040/unsafe-ended-link",
+      "requirement": "W-1040",
+      "description": "The ended link is not sanitised.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "      const href = action === \"link\" && expiredHref ? sanitizeHref(expiredHref) : undefined;",
+          "replace": "      const href = action === \"link\" && expiredHref ? expiredHref : undefined;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*can be a link"
+    },
+    {
+      "id": "W-1040/pause-ignored",
+      "requirement": "W-1040",
+      "description": "Pause doesn't stop the clock.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/countdown.ts",
+          "search": "    else if (timer !== undefined) {\n      clearInterval(timer);\n      timer = undefined;\n    }\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/countdown.test.ts"],
+      "expect": "\\(fail\\).*Pause stops"
+    },
+    {
+      "id": "W-1040/never-ends",
+      "requirement": "W-1040",
+      "description": "A Countdown keeps its clock after time is up.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/countdown.ts",
+          "search": "    if (left.total === 0) end();\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/countdown.test.ts"],
+      "expect": "\\(fail\\).*time is up"
+    },
+    {
+      "id": "W-1040/runtime-not-mounted",
+      "requirement": "W-1040",
+      "description": "EmVBWidgetRuntimes no longer mounts the countdown script.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/EmVBWidgetRuntimes.astro",
+          "search": "{names.has(\"countdown\") && <EmVBCountdownRuntime />}\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "run", "test:astro"],
+      "expect": "FAIL.*W-1040"
+    },
+    {
+      "id": "W-1040/clock-never-shown",
+      "requirement": "W-1040",
+      "description": "A published ticking Countdown keeps its clock hidden.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/countdown.ts",
+          "search": "    el.dataset[\"emvbReady\"] = \"\";\n    start(el, target);",
+          "replace": "    start(el, target);"
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1040"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1041/address-unencoded",
+      "requirement": "W-1041",
+      "description": "A Map's address goes into its link unencoded.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "  const query = encodeURIComponent(address.trim());",
+          "replace": "  const query = address.trim();"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*address and a link"
+    },
+    {
+      "id": "W-1041/osm-embeds-without-coords",
+      "requirement": "W-1041",
+      "description": "An OpenStreetMap Map without coordinates offers an embed that can't work.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "  if (!at) return { link: `https://www.openstreetmap.org/search?query=${query}` };",
+          "replace": "  if (!at) return { link: `https://www.openstreetmap.org/search?query=${query}`, embed: `https://www.openstreetmap.org/export/embed.html?query=${query}` };"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*stays a link"
+    },
+    {
+      "id": "W-1041/button-shown-without-script",
+      "requirement": "W-1041",
+      "description": "The Show the map button shows before its script runs.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": ".emvb-map:not([data-emvb-ready]) .emvb-map-frame{display:none}",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*loads the map on request"
+    },
+    {
+      "id": "W-1041/any-src",
+      "requirement": "W-1041",
+      "description": "The map runtime loads any source it is given.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/map.ts",
+          "search": "  if (!ALLOWED.test(src)) return;\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/map.test.ts"],
+      "expect": "\\(fail\\).*never loaded"
+    },
+    {
+      "id": "W-1041/loads-at-once",
+      "requirement": "W-1041",
+      "description": "The map runtime loads the map without waiting for the button.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/map.ts",
+          "search": "    button.addEventListener(\"click\", () => load(frame));",
+          "replace": "    load(frame);"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/map.test.ts"],
+      "expect": "\\(fail\\).*no iframe until"
+    },
+    {
+      "id": "W-1041/runtime-not-mounted",
+      "requirement": "W-1041",
+      "description": "EmVBWidgetRuntimes no longer mounts the map script.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/EmVBWidgetRuntimes.astro",
+          "search": "{names.has(\"map\") && <EmVBMapRuntime />}\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "run", "test:astro"],
+      "expect": "FAIL.*W-1041"
+    },
+    {
+      "id": "W-1041/no-focus",
+      "requirement": "W-1041",
+      "description": "Loading the map leaves focus on the removed button.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/map.ts",
+          "search": "  iframe.focus();\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1041"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1042/excluded-unannounced",
+      "requirement": "W-1042",
+      "description": "Screen readers aren't told a feature isn't included.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "          srText(\"emvb-price-table-sr\", \"Not included: \"),\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*plan card with its title"
+    },
+    {
+      "id": "W-1042/sale-unannounced",
+      "requirement": "W-1042",
+      "description": "Screen readers aren't told which price is the regular one.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "        children: [srText(\"emvb-price-table-sr\", \"Regular price: \"), `${currency ?? \"\"}${regular}`],",
+          "replace": "        children: [`${currency ?? \"\"}${regular}`],"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*on sale"
+    },
+    {
+      "id": "W-1042/unsafe-button",
+      "requirement": "W-1042",
+      "description": "The button link is not sanitised.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "  const safe = href ? sanitizeHref(href) : undefined;",
+          "replace": "  const safe = href;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*unsafe or missing link"
+    },
+    {
+      "id": "W-1042/blank-without-noopener",
+      "requirement": "W-1042",
+      "description": "A button opening a new tab leaves window.opener to the other site.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "  return newTab ? { href: safe, target: \"_blank\", rel: \"noopener noreferrer\" } : { href: safe };",
+          "replace": "  return newTab ? { href: safe, target: \"_blank\" } : { href: safe };"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*unsafe or missing link"
+    },
+    {
+      "id": "W-1042/no-ribbon",
+      "requirement": "W-1042",
+      "description": "Featured plans lose their ribbon.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "    if (p.featured)\n      children.push({\n        tag: \"p\",",
+          "replace": "    if (false)\n      children.push({\n        tag: \"p\","
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*featured adds the ribbon"
+    },
+    {
+      "id": "W-1042/ribbon-inside",
+      "requirement": "W-1042",
+      "description": "The ribbon sits inside the card instead of on its edge.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": ".emvb-price-table-ribbon{position:absolute;top:0;right:1.5em;transform:translateY(-50%);",
+          "replace": ".emvb-price-table-ribbon{"
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1042"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1043/leader-read-aloud",
+      "requirement": "W-1043",
+      "description": "Screen readers read the dotted leader.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "            attrs: { class: \"emvb-price-list-leader\", \"aria-hidden\": \"true\" },",
+          "replace": "            attrs: { class: \"emvb-price-list-leader\" },"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*dotted leader"
+    },
+    {
+      "id": "W-1043/picture-unnamed-alt",
+      "requirement": "W-1043",
+      "description": "A Price list picture's alt text is dropped.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "          class: \"emvb-price-list-image\",\n          src,\n          alt: p.alt?.trim() ?? \"\",",
+          "replace": "          class: \"emvb-price-list-image\",\n          src,\n          alt: \"\","
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*decorative unless"
+    },
+    {
+      "id": "W-1043/stray-row-allowed",
+      "requirement": "W-1043",
+      "description": "A Price list item may sit outside a Price list.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/arrange.ts",
+          "search": "  if (child.type === \"price-list-item\" && parent.type !== \"price-list\") {\n    return REASONS.itemOutsidePriceList;\n  }\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/arrange-social.test.ts"],
+      "expect": "\\(fail\\).*51st item"
+    },
+    {
+      "id": "W-1043/no-cap",
+      "requirement": "W-1043",
+      "description": "A Price list takes more than 50 items.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/arrange.ts",
+          "search": "      nodeChildren(into.node).length >= MAX_PRICE_ITEMS,",
+          "replace": "      false,"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/arrange-social.test.ts"],
+      "expect": "\\(fail\\).*51st item"
+    },
+    {
+      "id": "W-1043/no-starter-rows",
+      "requirement": "W-1043",
+      "description": "A new Price list starts empty.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/dnd/new-element.ts",
+          "search": "      children: [1, 2, 3].map((n) => newPriceListItem(n, random)),",
+          "replace": "      children: [],"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/admin/editor/panels/settings/item-list.test.tsx"
+      ],
+      "expect": "\\(fail\\).*three rows"
+    },
+    {
+      "id": "W-1043/leader-not-filling",
+      "requirement": "W-1043",
+      "description": "The leader no longer fills the gap between title and price.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": ".emvb-price-list-leader{flex:1;min-width:1em;",
+          "replace": ".emvb-price-list-leader{min-width:1em;"
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1043"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1044/button-announced",
+      "requirement": "W-1044",
+      "description": "Screen readers hear the Call to action's button as well as its link.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "        attrs: { class: \"emvb-cta-button\", \"aria-hidden\": \"true\" },",
+          "replace": "        attrs: { class: \"emvb-cta-button\" },"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*for the eye only"
+    },
+    {
+      "id": "W-1044/unsafe-link",
+      "requirement": "W-1044",
+      "description": "A Call to action's link is not sanitised.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "    const link = linkAttrs(p.href, p.newTab);\n    const children: VNode[] = [];\n    if (p.ribbon?.trim())",
+          "replace": "    const link = p.href ? { href: p.href } : undefined;\n    const children: VNode[] = [];\n    if (p.ribbon?.trim())"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*without a safe link"
+    },
+    {
+      "id": "W-1044/no-overlay",
+      "requirement": "W-1044",
+      "description": "The picture behind the words has no dark overlay.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": ".emvb-cta-behind .emvb-cta-media::after{content:\"\";position:absolute;inset:0;background:rgb(0 0 0 / 0.55)}",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*overlay behind the words"
+    },
+    {
+      "id": "W-1044/box-not-clickable",
+      "requirement": "W-1044",
+      "description": "Only the title, not the whole box, opens the link.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": ".emvb-cta-link::after{content:\"\";position:absolute;inset:0;z-index:1}",
+          "replace": ".emvb-cta-link::after{content:none}"
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1044"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1040/clock-stays-when-ended",
+      "requirement": "W-1040",
+      "description": "An ended Countdown's clock stays on screen.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": ".emvb-countdown[hidden],.emvb-countdown-clock[hidden]{display:none}",
+          "replace": ".emvb-countdown[hidden]{display:none}"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*Pause button"
+    },
+    {
+      "id": "W-1045/hover-everywhere",
+      "requirement": "W-1045",
+      "description": "The Flip box turns on hover even on touch screens, where a tap leaves it turned.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "return `.emvb-flip-${dir} .emvb-flip-back{transform:${turn}}${on}{transform:${turn}}@media (hover:hover){.emvb-flip-${dir}:hover .emvb-flip-inner{transform:${turn}}}`;",
+          "replace": "return `.emvb-flip-${dir} .emvb-flip-back{transform:${turn}}${on}{transform:${turn}}.emvb-flip-${dir}:hover .emvb-flip-inner{transform:${turn}}`;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*where devices hover"
+    },
+    {
+      "id": "W-1045/turns-under-reduced-motion",
+      "requirement": "W-1045",
+      "description": "The Flip box still turns for visitors who prefer reduced motion.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "    \"@media (prefers-reduced-motion:reduce){.emvb-flip-inner{transition:none}}\",",
+          "replace": "    \"\","
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*reduced motion"
+    },
+    {
+      "id": "W-1045/back-hidden-from-sr",
+      "requirement": "W-1045",
+      "description": "The back face is hidden from screen readers.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "        attrs: { class: `emvb-flip-face emvb-flip-${side}` },",
+          "replace": "        attrs: { class: `emvb-flip-face emvb-flip-${side}`, ...(side === \"back\" ? { \"aria-hidden\": \"true\" } : {}) },"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*both faces stay"
+    },
+    {
+      "id": "W-1045/focus-doesnt-turn",
+      "requirement": "W-1045",
+      "description": "Keyboard focus on the back's link doesn't turn the card.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": ",.emvb-flip-${dir}:has(.emvb-flip-back :focus-visible) .emvb-flip-inner`;",
+          "replace": "`;"
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1045"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1045/checkbox-ignored",
+      "requirement": "W-1045",
+      "description": "The Turn over tick box doesn't turn the card.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "const on = `.emvb-flip-${dir}:has(.emvb-flip-check:checked) .emvb-flip-inner,",
+          "replace": "const on = `"
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1045"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1046/never-stops",
+      "requirement": "W-1046",
+      "description": "The headline keeps rotating after its rounds.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/headline.ts",
+          "search": "    if (step >= last) stop();\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/headline.test.ts"],
+      "expect": "\\(fail\\).*stops on the first"
+    },
+    {
+      "id": "W-1046/sr-hears-rotation",
+      "requirement": "W-1046",
+      "description": "Screen readers hear every rotating word.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/headline.ts",
+          "search": "  mark.setAttribute(\"aria-hidden\", \"true\");\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/headline.test.ts"],
+      "expect": "\\(fail\\).*keep the sentence"
+    },
+    {
+      "id": "W-1046/rotates-under-reduced-motion",
+      "requirement": "W-1046",
+      "description": "The headline rotates for visitors who prefer reduced motion.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/headline.ts",
+          "search": "  if (reduced) return;\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/headline.test.ts"],
+      "expect": "\\(fail\\).*reduced motion"
+    },
+    {
+      "id": "W-1046/not-a-heading",
+      "requirement": "W-1046",
+      "description": "The accessibility check doesn't count an Animated headline as a heading.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "    if (node.type === \"heading\" || node.type === \"headline\") {\n      const level = typeof props[\"level\"] === \"number\" ? props[\"level\"] : 2;",
+          "replace": "    if (node.type === \"heading\") {\n      const level = typeof props[\"level\"] === \"number\" ? props[\"level\"] : 2;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/a11y/widgets.test.ts"],
+      "expect": "\\(fail\\).*counts as a heading"
+    },
+    {
+      "id": "W-1046/runtime-not-mounted",
+      "requirement": "W-1046",
+      "description": "EmVBWidgetRuntimes no longer mounts the headline script.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/EmVBWidgetRuntimes.astro",
+          "search": "{names.has(\"headline\") && <EmVBHeadlineRuntime />}\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "run", "test:astro"],
+      "expect": "FAIL.*W-1046"
+    },
+    {
+      "id": "W-1046/pause-missing",
+      "requirement": "W-1046",
+      "description": "The rotating headline has no Pause button.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/headline.ts",
+          "search": "  heading.after(pause);\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1046"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1047/url-unencoded",
+      "requirement": "W-1047",
+      "description": "The page URL goes into share links unencoded.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "  const u = encodeURIComponent(url);",
+          "replace": "  const u = url;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*encoded page URL"
+    },
+    {
+      "id": "W-1047/unnamed-links",
+      "requirement": "W-1047",
+      "description": "Share links have no name for screen readers.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "          \"aria-label\": label?.trim() || shareName(network),\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*named for screen readers"
+    },
+    {
+      "id": "W-1047/example-url-public",
+      "requirement": "W-1047",
+      "description": "A public page without its address shares the editor's example URL.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "      const url = dynamic?.pageUrl ?? (mode === \"editor\" ? \"https://example.com/\" : undefined);",
+          "replace": "      const url = dynamic?.pageUrl ?? \"https://example.com/\";"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*shows no share links"
+    },
+    {
+      "id": "W-1047/share-button-always",
+      "requirement": "W-1047",
+      "description": "The device Share button shows before its script finds a share sheet.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": ".emvb-share-buttons:not([data-emvb-ready]) .emvb-share-native-item{display:none}",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*hidden until the script"
+    },
+    {
+      "id": "W-1047/no-page-url",
+      "requirement": "W-1047",
+      "description": "The host never gives Share buttons the page's address.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/request-data.ts",
+          "search": "    data.pageUrl = `${url.origin}${url.pathname}`;\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/request-data.test.ts"],
+      "expect": "\\(fail\\).*W-1047"
+    },
+    {
+      "id": "W-1047/query-kept",
+      "requirement": "W-1047",
+      "description": "Share links share the page's tracking query too.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/request-data.ts",
+          "search": "    data.pageUrl = `${url.origin}${url.pathname}`;",
+          "replace": "    data.pageUrl = url.href;"
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1047"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1047/sheet-never-opens",
+      "requirement": "W-1047",
+      "description": "The device Share button doesn't open the share sheet.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/widgets/share.ts",
+          "search": "      nav.share({ title: doc.title, url: doc.location.href.split(\"#\")[0] }).catch(() => {});\n",
+          "replace": "      void doc;\n"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/astro/widgets/share.test.ts"],
+      "expect": "\\(fail\\).*opens its sheet"
+    },
+    {
+      "id": "W-1048/marker-unnamed",
+      "requirement": "W-1048",
+      "description": "Hotspot markers have no name for screen readers.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "          \"aria-label\": title,\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*numbered buttons"
+    },
+    {
+      "id": "W-1048/no-popover",
+      "requirement": "W-1048",
+      "description": "A Hotspot's note is no longer a popover.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "attrs: { id: noteId, class: \"emvb-hotspot-note\", popover: \"auto\" },",
+          "replace": "attrs: { id: noteId, class: \"emvb-hotspot-note\" },"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*numbered buttons"
+    },
+    {
+      "id": "W-1048/phone-place-ignored",
+      "requirement": "W-1048",
+      "description": "A Hotspot's phone place is ignored.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/marketing.ts",
+          "search": "      props.xMobile === undefined && props.yMobile === undefined\n        ? []",
+          "replace": "      true\n        ? []"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*tablet and phone places"
+    },
+    {
+      "id": "W-1048/popover-attr-refused",
+      "requirement": "W-1048",
+      "description": "The markup allowlist refuses popovertarget.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/vnode.ts",
+          "search": "|open|popover|popovertarget|popovertargetaction|datetime|",
+          "replace": "|open|popover|datetime|"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/elements/marketing.test.ts"],
+      "expect": "\\(fail\\).*numbered buttons"
+    },
+    {
+      "id": "W-1048/no-alt-check",
+      "requirement": "W-1048",
+      "description": "The accessibility check misses a Hotspots picture without alt text.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "(node.type === \"image-box\" || node.type === \"gallery-image\" || node.type === \"hotspots\")",
+          "replace": "(node.type === \"image-box\" || node.type === \"gallery-image\")"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/a11y/widgets.test.ts"],
+      "expect": "\\(fail\\).*without alt text"
+    },
+    {
+      "id": "W-1048/markers-not-placed",
+      "requirement": "W-1048",
+      "description": "Hotspot markers aren't moved to their places.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "      declarations.push(...placeAt(place.desktop));\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/marketing-widgets.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1048"
+      ],
+      "expect": "✘.*\\[node\\]",
+      "env": {
+        "CI": "1"
+      }
+    },
+    {
+      "id": "W-1049/counter-no-cap",
+      "requirement": "W-1049",
+      "description": "Imported Counters keep Elementor's counting time over 5 seconds.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/import/elementor/widgets.ts",
+          "search": "        duration: Math.min(5000, Math.max(300, Math.round(duration))),",
+          "replace": "        duration: Math.max(300, Math.round(duration)),"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/import/elementor/elementor-marketing.test.ts"
+      ],
+      "expect": "\\(fail\\).*5 s at most"
+    },
+    {
+      "id": "W-1049/countdown-no-zone",
+      "requirement": "W-1049",
+      "description": "An imported Countdown's date gets no time zone.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/import/elementor/widgets.ts",
+          "search": "  return m ? `${m[1]}T${m[2]}:${m[3]}Z` : undefined;",
+          "replace": "  return m ? `${m[1]}T${m[2]}:${m[3]}` : undefined;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/import/elementor/elementor-marketing.test.ts"
+      ],
+      "expect": "\\(fail\\).*due date ticks"
+    },
+    {
+      "id": "W-1049/sale-dropped",
+      "requirement": "W-1049",
+      "description": "An imported Price Table on sale loses its regular price.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/import/elementor/widgets.ts",
+          "search": "  const regular = s[\"sale\"] === \"yes\" ? plain(s[\"original_price\"]).text.slice(0, 20) : \"\";",
+          "replace": "  const regular = \"\";"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/import/elementor/elementor-marketing.test.ts"
+      ],
+      "expect": "\\(fail\\).*on sale"
+    },
+    {
+      "id": "W-1049/hotspot-phone-dropped",
+      "requirement": "W-1049",
+      "description": "Imported Hotspots lose their phone places.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/import/elementor/widgets.ts",
+          "search": "      [\"xMobile\", \"hotspot_offset_x_mobile\"],\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/import/elementor/elementor-marketing.test.ts"
+      ],
+      "expect": "\\(fail\\).*every device"
+    },
+    {
+      "id": "W-1049/slides-stacked",
+      "requirement": "W-1049",
+      "description": "Imported Slides are stacked again instead of a Carousel.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/import/elementor/widgets.ts",
+          "search": "  return carouselFrom(out, 1, s, ctx, el);",
+          "replace": "  return out;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/import/elementor/elementor-marketing.test.ts"
+      ],
+      "expect": "\\(fail\\).*not a stack"
+    },
+    {
+      "id": "W-1049/share-unknown-kept",
+      "requirement": "W-1049",
+      "description": "Imported Share Buttons don't say which services were left out.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/import/elementor/widgets.ts",
+          "search": "  if (networks.some((n) => !n))\n    ctx.note(\"skipped\", el, \"Share buttons for services EmVB has no link for were left out.\");\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/import/elementor/elementor-marketing.test.ts"
+      ],
+      "expect": "\\(fail\\).*say which were left out"
+    },
+    {
+      "id": "W-1049/maps-as-link",
+      "requirement": "W-1049",
+      "description": "Imported Google Maps become a link again.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/import/elementor/widgets.ts",
+          "search": "      provider: \"google\",\n      embed: true,\n",
+          "replace": "      provider: \"google\",\n"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/import/elementor/elementor.test.ts"],
+      "expect": "\\(fail\\).*widget details survive"
+    },
+    {
+      "id": "W-1049/price-list-unmapped",
+      "requirement": "W-1049",
+      "description": "Elementor's Price List is no longer imported.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/import/elementor/widgets.ts",
+          "search": "  \"price-list\": priceList,\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "e2e",
+        "e2e/elementor-import.e2e.ts",
+        "--project=node",
+        "-g",
+        "W-1049"
+      ],
+      "env": {
+        "CI": "1"
+      },
+      "expect": "✘.*\\[node\\]"
     }
   ]
 }

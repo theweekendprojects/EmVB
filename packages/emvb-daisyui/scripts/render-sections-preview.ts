@@ -26,12 +26,7 @@ const parts = SECTION_IDS.map((sectionId) => {
   if (!recipe) throw new Error(`missing recipe ${sectionId}`);
   // A container's children are rendered first and handed to its build, as the editor's renderer does.
   const toVNode = (node: DaisyComponentNode): VNode =>
-    daisyUIProvider.render(
-      node,
-      {},
-      (node.children ?? []).map(toVNode),
-      { mode: "public" },
-    );
+    daisyUIProvider.render(node, {}, (node.children ?? []).map(toVNode), { mode: "public" });
   const body = recipe
     .create(id)
     .map((node) => serialize(toVNode(node) as never))

@@ -12,7 +12,11 @@ The editor canvas is a sandboxed iframe. It cannot see the CSS Astro bundles int
 
 ```css
 @import "tailwindcss";
-@plugin "daisyui" { themes: light --default, dark --prefersdark; }
+@plugin "daisyui" {
+  themes:
+    light --default,
+    dark --prefersdark;
+}
 @source "../../node_modules/@perkyzz/emvb-daisyui/src/**/*.{ts,tsx}";
 @source "../../node_modules/@perkyzz/emvb-daisyui/generated/safelist.css";
 ```
@@ -23,19 +27,19 @@ The editor canvas is a sandboxed iframe. It cannot see the CSS Astro bundles int
 import type { APIRoute } from "astro";
 import css from "../../styles/emvb-daisyui.css?inline";
 export const GET: APIRoute = () =>
-	new Response(css, {
-		headers: { "content-type": "text/css; charset=utf-8", "cache-control": "public, max-age=3600" },
-	});
+  new Response(css, {
+    headers: { "content-type": "text/css; charset=utf-8", "cache-control": "public, max-age=3600" },
+  });
 ```
 
 3. In `astro.config.mjs`:
 
 ```js
 emvb({
-	providers: ["@perkyzz/emvb-daisyui"],
-	adminEntry: "/src/emvb-admin.ts", // imports "@perkyzz/emvb-daisyui", re-exports "@perkyzz/emvb/admin"
-	canvasStyles: ["/styles/emvb-daisyui.css"],
-})
+  providers: ["@perkyzz/emvb-daisyui"],
+  adminEntry: "/src/emvb-admin.ts", // imports "@perkyzz/emvb-daisyui", re-exports "@perkyzz/emvb/admin"
+  canvasStyles: ["/styles/emvb-daisyui.css"],
+});
 ```
 
 Import `../../styles/emvb-daisyui.css` in the public page route (or a component rendered only on EmVB pages) so published pages get the same stylesheet. Verify: open the editor, run `document.querySelector('iframe[title="Page canvas"]').contentDocument.querySelectorAll('link')` in the console, and confirm the CSS URL is listed.
