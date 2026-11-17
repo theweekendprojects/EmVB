@@ -1,0 +1,220 @@
+import { afterEach, describe, expect, test } from "bun:test";
+import { act } from "react";
+import {
+  CONDITIONS_SCHEMA_VERSION,
+  MAX_CONDITION_RULES,
+  validateConditions,
+  type ConditionsDoc,
+} from "../../../core/index.ts";
+import { cleanup, mount } from "../../../../test/dom/mount.ts";
+import { ConditionsEditor } from "./ConditionsEditor.tsx";
+import { pickOption } from "../../../../test/dom/select.ts";
+
+afterEach(cleanup);
+
+// W-091: only the option helpers were tested; the editor's add, change and remove weren't.
+
+const TWO: ConditionsDoc = {
+  schemaVersion: CONDITIONS_SCHEMA_VERSION,
+  rules: [
+    { id: "r1", op: "include", group: "general", name: "entire_site", args: {} },
+    { id: "r2", op: "exclude", group: "singular", name: "front", args: {} },
+  ],
+};
+
+async function editor(conditions: ConditionsDoc | undefined) {
+  const sent: ConditionsDoc[] = [];
+  const host = await mount(
+    <ConditionsEditor conditions={conditions} onChange={(doc) => sent.push(doc)} />,
+  );
+  const rows = () => [...host.querySelectorAll<HTMLElement>(".emvb-condition-row")];
+  const choose = (select: Element | null | undefined, value: string) => pickOption(select, value);
+  const press = async (name: string, within: ParentNode = host) => {
+    const button = [...within.querySelectorAll<HTMLButtonElement>("button")].find(
+      (b) => b.textContent?.trim() === name || b.getAttribute("aria-label") === name,
+    );
+    if (!button) throw new Error(`no ${name}`);
+    await act(async () => button.click());
+  };
+  return { host, sent, rows, choose, press };
+}
+
+describe("display conditions editor (W-091)", () => {
+  test("with no rules it says the part shows nowhere, and Add Include adds an Entire site include", async () => {
+    const view = await editor({ schemaVersion: CONDITIONS_SCHEMA_VERSION, rules: [] });
+    expect(view.host.querySelector('[role="status"]')?.textContent ?? "").toContain(
+      "this part will not appear anywhere",
+    );
+    await view.press("Add include rule");
+    expect(view.sent).toHaveLength(1);
+    const doc = view.sent[0];
+    expect(doc?.schemaVersion).toBe(CONDITIONS_SCHEMA_VERSION);
+    expect(doc?.rules.map(({ op, group, name, args }) => ({ op, group, name, args }))).toEqual([
+      { op: "include", group: "general", name: "entire_site", args: {} },
+    ]);
+    expect(doc?.rules[0]?.id).toMatch(/^r-/);
+  });
+
+  test("a part without conditions starts with the default Entire site include", async () => {
+    const view = await editor(undefined);
+    expect(view.host.querySelector('[role="status"]')).toBeNull();
+    const row = view.rows()[0];
+    expect(view.rows()).toHaveLength(1);
+    expect(row?.querySelector<HTMLElement>(".emvb-condition-op")?.dataset["value"]).toBe("include");
+    expect(row?.querySelector<HTMLElement>(".emvb-condition-where")?.dataset["value"]).toBe(
+      "general:entire_site",
+    );
+  });
+
+  test("Add Exclude appends an exclude after the existing rules", async () => {
+    const view = await editor(TWO);
+    expect(view.host.querySelector('[role="status"]')).toBeNull();
+    await view.press("Add exclude rule");
+    const rules = view.sent[0]?.rules ?? [];
+    expect(rules.map((r) => [r.id.startsWith("r-") ? "new" : r.id, r.op])).toEqual([
+      ["r1", "include"],
+      ["r2", "exclude"],
+      ["new", "exclude"],
+    ]);
+  });
+
+  test("switching a rule to Exclude changes only that rule", async () => {
+    const view = await editor(TWO);
+    await view.choose(view.rows()[0]?.querySelector(".emvb-condition-op"), "exclude");
+    expect(view.sent).toEqual([
+      {
+        schemaVersion: CONDITIONS_SCHEMA_VERSION,
+        rules: [{ ...TWO.rules[0], op: "exclude" }, TWO.rules[1]],
+      } as ConditionsDoc,
+    ]);
+  });
+
+  test("choosing where a rule applies keeps its op and id, and changes only that rule", async () => {
+    const view = await editor(TWO);
+    await view.choose(
+      view.rows()[1]?.querySelector(".emvb-condition-where"),
+      "archive:taxonomy:tag",
+    );
+    expect(view.sent).toEqual([
+      {
+        schemaVersion: CONDITIONS_SCHEMA_VERSION,
+        rules: [
+          TWO.rules[0],
+          {
+            id: "r2",
+            op: "exclude",
+            group: "archive",
+            name: "taxonomy",
+            args: { taxonomy: "tag" },
+          },
+        ],
+      } as ConditionsDoc,
+    ]);
+  });
+
+  test("Remove condition removes only its own row", async () => {
+    const view = await editor(TWO);
+    const second = view.rows()[1];
+    if (!second) throw new Error("no second row");
+    await view.press("Remove condition", second);
+    expect(view.sent).toEqual([
+      { schemaVersion: CONDITIONS_SCHEMA_VERSION, rules: [TWO.rules[0]] } as ConditionsDoc,
+    ]);
+  });
+});
+
+describe("the condition limit (W-092)", () => {
+  const rules = (count: number): ConditionsDoc => ({
+    schemaVersion: CONDITIONS_SCHEMA_VERSION,
+    rules: Array.from({ length: count }, (_, i) => ({
+      id: `r${i}`,
+      op: "include" as const,
+      group: "general" as const,
+      name: "entire_site",
+      args: {},
+    })),
+  });
+  const addButtons = (host: HTMLElement) =>
+    [...host.querySelectorAll<HTMLButtonElement>("button")].filter((b) =>
+      (b.getAttribute("aria-label") ?? "").startsWith("Add "),
+    );
+
+  test("at 20 rules both Add buttons are disabled, say why, and add nothing", async () => {
+    const view = await editor(rules(MAX_CONDITION_RULES));
+    // The Kumo tooltip (`title`) only mounts on hover; the helper line says why at all times.
+    expect(addButtons(view.host).map((b) => [b.getAttribute("aria-label"), b.disabled])).toEqual([
+      ["Add include rule", true],
+      ["Add exclude rule", true],
+    ]);
+    expect(view.host.querySelector("[data-emvb-conditions-full]")?.textContent).toBe(
+      "20 conditions is the most one part can have. Remove one to add another.",
+    );
+    await act(async () => {
+      for (const button of addButtons(view.host)) button.click();
+    });
+    expect(view.sent).toEqual([]);
+  });
+
+  test("at 19 rules the 20th can still be added, and the result is a valid document", async () => {
+    const view = await editor(rules(MAX_CONDITION_RULES - 1));
+    expect(addButtons(view.host).map((b) => b.disabled)).toEqual([false, false]);
+    expect(view.host.querySelector("[data-emvb-conditions-full]") === null).toBe(true);
+    await view.press("Add exclude rule");
+    expect(view.sent.map((doc) => doc.rules.length)).toEqual([MAX_CONDITION_RULES]);
+    expect(validateConditions(view.sent[0]).ok).toBe(true);
+  });
+});
+
+describe("rules the menu can't build show as themselves (W-694)", () => {
+  const doc = (rule: Record<string, unknown>): ConditionsDoc =>
+    ({
+      schemaVersion: CONDITIONS_SCHEMA_VERSION,
+      rules: [{ id: "r1", op: "include", args: {}, ...rule }],
+    }) as ConditionsDoc;
+  const shown = async (rule: Record<string, unknown>) => {
+    const sent: ConditionsDoc[] = [];
+    const host = await mount(
+      <ConditionsEditor conditions={doc(rule)} onChange={(d) => sent.push(d)} />,
+    );
+    const select = host.querySelector('.emvb-condition-where [role="combobox"]');
+    return { text: select?.textContent, sent };
+  };
+
+  test("the Archive part's default reads All archives, not Entire site", async () => {
+    expect((await shown({ group: "archive", name: "all" })).text).toBe("All archives");
+  });
+
+  test("one tag, one entry and another collection keep their own label", async () => {
+    expect(
+      (await shown({ group: "archive", name: "taxonomy", args: { taxonomy: "tag", slug: "news" } }))
+        .text,
+    ).toBe("Tag: news");
+    expect(
+      (
+        await shown({
+          group: "singular",
+          name: "entry",
+          args: { collection: "posts", id: "01ABC" },
+        })
+      ).text,
+    ).toBe("One entry in Posts");
+    expect(
+      (await shown({ group: "singular", name: "collection", args: { collection: "docs" } })).text,
+    ).toBe("docs (all)");
+  });
+
+  test("a plain rule still shows its option", async () => {
+    expect(
+      (await shown({ group: "archive", name: "taxonomy", args: { taxonomy: "tag" } })).text,
+    ).toBe("All tags");
+  });
+});
+
+test("UX-051: the add buttons read Include and Exclude, and are named as adding a rule", async () => {
+  const view = await editor(undefined);
+  const adds = [...view.host.querySelectorAll<HTMLButtonElement>(".emvb-condition-actions button")];
+  expect(adds.map((b) => `${b.textContent?.trim()} = ${b.getAttribute("aria-label")}`)).toEqual([
+    "Include = Add include rule",
+    "Exclude = Add exclude rule",
+  ]);
+});

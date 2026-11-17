@@ -1,0 +1,558 @@
+import { Input } from "@cloudflare/kumo";
+import {
+  CaretDownIcon,
+  CaretRightIcon,
+  CopySimpleIcon,
+  PaletteIcon,
+  PencilSimpleLineIcon,
+  RulerIcon,
+  TextAaIcon,
+  TextTIcon,
+  TrashIcon,
+  type Icon,
+} from "@phosphor-icons/react";
+import * as React from "react";
+import {
+  cleanClassName,
+  duplicateVariable,
+  variableListFull,
+  findVariableUsages,
+  findVariableUsagesInDesign,
+  renameVariable,
+  variableNameTaken,
+  variableNameTakenMessage,
+  type DesignSystem,
+  type Layout,
+  type VariableKind,
+} from "../../../core/index.ts";
+import { FIELD } from "../../ui.ts";
+import { useEditedNoun } from "../edited-noun.ts";
+import { InlineError } from "./inline-error.tsx";
+import {
+  CreateRow,
+  matches,
+  RenameInput,
+  RowMenu,
+  SectionHead,
+  SiteSearch,
+  uniqueId,
+} from "./site-list.tsx";
+import {
+  isLengthKind,
+  lengthPx,
+  parseValue,
+  pickerHex,
+  withPreviousAlpha,
+  valueText,
+  type Length,
+} from "./variable-values.ts";
+import { isCancelEscape, isCommitEnter } from "../ime.ts";
+
+const VAR_TOKEN: Record<VariableKind, (id: string) => string> = {
+  color: (id) => `--emvb-c-${id}`,
+  font: (id) => `--emvb-f-${id}`,
+  fontSize: (id) => `--emvb-fs-${id}`,
+  spacing: (id) => `--emvb-s-${id}`,
+};
+
+const LIST_KEY = {
+  color: "colors",
+  font: "fonts",
+  fontSize: "fontSizes",
+  spacing: "spacings",
+} as const satisfies Record<VariableKind, keyof DesignSystem["variables"]>;
+
+const NEW_VALUE: Record<VariableKind, string> = {
+  color: "#0055ff",
+  font: "Noto Sans, sans-serif",
+  fontSize: "16",
+  spacing: "16",
+};
+
+const EMPTY: Record<VariableKind, { icon: Icon; text: string }> = {
+  color: { icon: PaletteIcon, text: "No colors yet. Add one to reuse it in any color field." },
+  font: { icon: TextTIcon, text: "No fonts yet. Add a font stack to reuse it." },
+  fontSize: { icon: TextAaIcon, text: "No font sizes yet. Add one to build a type scale." },
+  spacing: { icon: RulerIcon, text: "No spacing yet. Add one to keep gaps consistent." },
+};
+
+/** Previews never grow the row: type samples stop at 24 px, spacing bars at 64 px. */
+const MAX_TYPE_PREVIEW = 24;
+const MAX_BAR = 64;
+
+type Item = { id: string; name: string; value: string | Length };
+
+/** The kind's visual sample in the row: a swatch, "Ag" in the font, "Aa" at the size. */
+function Preview({ kind, value }: { kind: VariableKind; value: string | Length }) {
+  if (kind === "color" && typeof value === "string") {
+    return (
+      <span
+        className="emvb-site-preview emvb-site-preview-color"
+        style={{ background: value }}
+        aria-hidden="true"
+        data-emvb-var-swatch=""
+      />
+    );
+  }
+  if (kind === "font" && typeof value === "string") {
+    return (
+      <span
+        className="emvb-site-preview"
+        style={{ fontFamily: value }}
+        aria-hidden="true"
+        data-emvb-var-preview=""
+      >
+        Ag
+      </span>
+    );
+  }
+  if (kind === "fontSize" && typeof value === "object") {
+    const size = Math.min(lengthPx(value), MAX_TYPE_PREVIEW);
+    return (
+      <span
+        className="emvb-site-preview"
+        style={{ fontSize: `${size}px` }}
+        aria-hidden="true"
+        data-emvb-var-preview=""
+      >
+        Aa
+      </span>
+    );
+  }
+  return (
+    <span className="emvb-site-preview emvb-site-preview-icon" aria-hidden="true">
+      <RulerIcon size={14} />
+    </span>
+  );
+}
+
+/** The value field under an open row. Enter or blur saves a valid change once; Escape reverts. */
+function ValueEditor({
+  kind,
+  item,
+  token,
+  onCommit,
+}: {
+  kind: VariableKind;
+  item: Item;
+  token: string;
+  onCommit: (value: string | Length) => void;
+}) {
+  const current = valueText(item.value);
+  const [text, setText] = React.useState(current);
+  const [error, setError] = React.useState<string | null>(null);
+  const committed = React.useRef(current);
+  const picker = React.useRef<HTMLInputElement | null>(null);
+
+  const commit = (raw: string) => {
+    const trimmed = raw.trim();
+    if (trimmed === committed.current) {
+      setError(null);
+      return;
+    }
+    const parsed = parseValue(kind, trimmed);
+    if (!parsed.ok) {
+      setError(parsed.error);
+      return;
+    }
+    setError(null);
+    committed.current = trimmed;
+    onCommit(parsed.value);
+  };
+
+  // The picker saves on its native change event (the dialog closed), not on every drag step.
+  React.useEffect(() => {
+    const el = picker.current;
+    if (!el) return;
+    const onChange = () => {
+      const picked = withPreviousAlpha(el.value, committed.current);
+      setText(picked);
+      commit(picked);
+    };
+    el.addEventListener("change", onChange);
+    return () => el.removeEventListener("change", onChange);
+  });
+
+  return (
+    <div className="emvb-site-item-body" data-emvb-var-value="">
+      <div className="emvb-site-value-row">
+        {kind === "color" && (
+          <input
+            ref={picker}
+            type="color"
+            className="emvb-site-picker"
+            aria-label={`Pick ${item.name}`}
+            value={pickerHex(error ? current : text)}
+            onChange={(event) => setText(withPreviousAlpha(event.target.value, committed.current))}
+          />
+        )}
+        <Input
+          aria-label={`Value of ${item.name}`}
+          className={`${FIELD} emvb-site-value-input`}
+          value={text}
+          aria-invalid={error ? true : undefined}
+          onChange={(event) => {
+            setText(event.target.value);
+            if (error) setError(null);
+          }}
+          onBlur={(event) => commit(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (isCommitEnter(event)) commit(event.currentTarget.value);
+            else if (isCancelEscape(event)) {
+              event.stopPropagation();
+              setText(committed.current);
+              setError(null);
+            }
+          }}
+        />
+      </div>
+      {error && <InlineError>{error}</InlineError>}
+      {kind === "font" && typeof item.value === "string" && (
+        <p className="emvb-site-font-sample" style={{ fontFamily: item.value }}>
+          The quick brown fox jumps · 0123
+        </p>
+      )}
+      <p className="emvb-mono emvb-site-token">var({token})</p>
+    </div>
+  );
+}
+
+/** "2 on page", and the classes that use it too: "2 on page · 1 class" (W-150). */
+const usageText = (onPage: number, inClasses: number) =>
+  inClasses
+    ? `${onPage} on page · ${inClasses} ${inClasses === 1 ? "class" : "classes"}`
+    : `${onPage} on page`;
+
+export function VariableSection({
+  title,
+  kind,
+  design,
+  layout,
+  onSave,
+  onAskDelete,
+}: {
+  title: string;
+  kind: VariableKind;
+  design: DesignSystem;
+  layout: Layout | null;
+  onSave: (design: DesignSystem) => Promise<boolean | void>;
+  onAskDelete: (id: string, name: string) => void;
+}) {
+  const noun = useEditedNoun();
+  const listKey = LIST_KEY[kind];
+  const items: readonly Item[] = design.variables[listKey] ?? [];
+  const [creating, setCreating] = React.useState(false);
+  const [filter, setFilter] = React.useState("");
+  const [name, setName] = React.useState("");
+  const [value, setValue] = React.useState(NEW_VALUE[kind]);
+  // W-281: a name clash and a bad value are told apart, so only the field at fault is invalid.
+  const [createError, setCreateError] = React.useState<{
+    field: "name" | "value";
+    message: string;
+  } | null>(null);
+  const [nameError, setNameError] = React.useState<string | null>(null);
+  const [open, setOpen] = React.useState<string | null>(null);
+  const [renaming, setRenaming] = React.useState<string | null>(null);
+  // W-616: what was typed in a rename whose save failed, so the reopened field keeps it.
+  const [renameDraft, setRenameDraft] = React.useState<string | null>(null);
+  // W-778: a failed copy says so in the row too; it used to do nothing at all.
+  const [copied, setCopied] = React.useState<{ id: string; ok: boolean } | null>(null);
+  const rows = React.useRef(new Map<string, HTMLButtonElement>());
+  // W-840: the create row goes away on Create or Cancel; focus lands on the new row or on New.
+  const section = React.useRef<HTMLElement | null>(null);
+  const focusNew = () =>
+    requestAnimationFrame(() =>
+      section.current?.querySelector<HTMLButtonElement>(".emvb-site-section-head button")?.focus(),
+    );
+
+  const saveValue = (id: string, next: string | Length) =>
+    void onSave({
+      ...design,
+      variables: {
+        ...design.variables,
+        [listKey]: items.map((entry) => {
+          if (entry.id !== id) return entry;
+          // W-316: typing a fixed size ends a token's fluid sizing.
+          const { fluid: _fluid, ...fixed } = entry as typeof entry & { fluid?: unknown };
+          return Object.assign({}, fixed, { value: next });
+        }),
+      },
+    });
+
+  const q = filter.trim().toLowerCase();
+  const visible = q
+    ? items.filter((item) => matches(q, item.name, item.id, VAR_TOKEN[kind](item.id)))
+    : items;
+
+  const create = async () => {
+    const trimmed = cleanClassName(name);
+    if (!trimmed || variableListFull(design, kind)) return;
+    if (variableNameTaken(design, kind, trimmed)) {
+      setCreateError({ field: "name", message: variableNameTakenMessage(trimmed) });
+      return;
+    }
+    const parsed = parseValue(kind, value);
+    if (!parsed.ok) {
+      setCreateError({ field: "value", message: parsed.error });
+      return;
+    }
+    const id = uniqueId(
+      trimmed,
+      kind,
+      items.map((item) => item.id),
+    );
+    const entry = { id, name: trimmed, value: parsed.value };
+    const next = { ...design, variables: { ...design.variables, [listKey]: [...items, entry] } };
+    // W-610: a failed save keeps the row and what was typed, so it can be retried.
+    if ((await onSave(next)) === false) return;
+    setCreating(false);
+    setName("");
+    setValue(NEW_VALUE[kind]);
+    requestAnimationFrame(() => rows.current.get(id)?.focus());
+  };
+
+  const rename = async (id: string, next: string | null) => {
+    setRenaming(null);
+    setRenameDraft(null);
+    requestAnimationFrame(() => rows.current.get(id)?.focus());
+    if (next && variableNameTaken(design, kind, next, id)) {
+      setNameError(variableNameTakenMessage(next));
+      return;
+    }
+    setNameError(null);
+    if (!next) return;
+    const renamed = renameVariable(design, id, kind, next);
+    if (renamed !== design && (await onSave(renamed)) === false) {
+      setRenameDraft(next);
+      setRenaming(id);
+    }
+  };
+
+  const copy = (id: string, token: string) => {
+    const show = (ok: boolean) => {
+      const mark = { id, ok };
+      setCopied(mark);
+      setTimeout(() => setCopied((now) => (now === mark ? null : now)), ok ? 1500 : 4000);
+    };
+    if (!navigator.clipboard?.writeText) return show(false);
+    void navigator.clipboard.writeText(`var(${token})`).then(
+      () => show(true),
+      () => show(false),
+    );
+  };
+
+  const EmptyIcon = EMPTY[kind].icon;
+  return (
+    <section ref={section} className="emvb-site-section" data-emvb-var-kind={kind}>
+      <SectionHead
+        title={title}
+        count={items.length}
+        countProps={{ "data-emvb-var-count": "" }}
+        onNew={() => setCreating(true)}
+        newDisabled={variableListFull(design, kind)}
+      />
+      {(items.length > 3 || filter.length > 0) && (
+        <SiteSearch
+          label={`Search ${title.toLowerCase()}`}
+          value={filter}
+          onChange={setFilter}
+          data-emvb-var-filter={kind}
+        />
+      )}
+      {items.length === 0 && !creating && (
+        <p className="emvb-site-empty" data-emvb-var-empty={kind}>
+          <EmptyIcon size={16} aria-hidden="true" />
+          {EMPTY[kind].text}
+        </p>
+      )}
+      {items.length > 0 && visible.length === 0 && (
+        <p className="emvb-helper" data-emvb-var-nomatch="">
+          No {title.toLowerCase()} match "{filter.trim()}".
+        </p>
+      )}
+      <ul className="emvb-site-items">
+        {visible.map((item) => {
+          const token = VAR_TOKEN[kind](item.id);
+          const isOpen = open === item.id;
+          const toggle = () => setOpen(isOpen ? null : item.id);
+          const onPage = layout ? findVariableUsages(layout, item.id, kind).length : 0;
+          const inClasses = new Set(
+            findVariableUsagesInDesign(design, item.id, kind).map((u) => u.classId),
+          ).size;
+          // W-316: a fluid token reads "14 → 18 px".
+          const fluid = (item as { fluid?: { min: number; max: number } }).fluid;
+          const text = fluid ? `${fluid.min} → ${fluid.max} px fluid` : valueText(item.value);
+          return (
+            <li
+              key={item.id}
+              className="emvb-site-item"
+              data-emvb-var-id={item.id}
+              data-open={isOpen || undefined}
+            >
+              <div className="emvb-site-item-row">
+                {renaming === item.id ? (
+                  <span className="emvb-site-item-main" data-renaming="">
+                    <Preview kind={kind} value={item.value} />
+                    <RenameInput
+                      name={item.name}
+                      initial={renameDraft ?? undefined}
+                      label={`Rename ${item.name}`}
+                      onDone={(next) => void rename(item.id, next)}
+                    />
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    ref={(el) => {
+                      if (el) rows.current.set(item.id, el);
+                      else rows.current.delete(item.id);
+                    }}
+                    className="emvb-site-item-main"
+                    aria-expanded={isOpen}
+                    title={`${item.name} · var(${token})`}
+                    onClick={toggle}
+                    onDoubleClick={() => setRenaming(item.id)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "F2") return;
+                      event.preventDefault();
+                      setRenaming(item.id);
+                    }}
+                  >
+                    {isOpen ? (
+                      <CaretDownIcon
+                        size={12}
+                        aria-hidden="true"
+                        className="emvb-site-item-caret"
+                      />
+                    ) : (
+                      <CaretRightIcon
+                        size={12}
+                        aria-hidden="true"
+                        className="emvb-site-item-caret"
+                      />
+                    )}
+                    <Preview kind={kind} value={item.value} />
+                    <span className="emvb-site-item-text">
+                      <span className="emvb-site-item-name">{item.name}</span>
+                      <span className="emvb-mono emvb-site-token" data-emvb-var-text="">
+                        {kind === "spacing" && typeof item.value === "object" && (
+                          <span
+                            className="emvb-site-bar"
+                            style={{
+                              width: `${Math.max(2, Math.min(lengthPx(item.value), MAX_BAR))}px`,
+                            }}
+                            aria-hidden="true"
+                            data-emvb-var-bar=""
+                          />
+                        )}
+                        {text}
+                      </span>
+                    </span>
+                  </button>
+                )}
+                <span
+                  className="emvb-site-usage"
+                  title={`Used ${onPage} ${onPage === 1 ? "time" : "times"} on this ${noun}${
+                    inClasses ? ` and in ${inClasses} ${inClasses === 1 ? "class" : "classes"}` : ""
+                  }`}
+                  data-emvb-usage=""
+                  aria-live="polite"
+                >
+                  {copied?.id === item.id
+                    ? copied.ok
+                      ? "Copied"
+                      : "Couldn't copy"
+                    : usageText(onPage, inClasses)}
+                </span>
+                <RowMenu
+                  label={`Actions for ${item.name}`}
+                  actions={[
+                    {
+                      label: isOpen ? "Hide value" : "Edit value",
+                      icon: PencilSimpleLineIcon,
+                      onSelect: toggle,
+                    },
+                    {
+                      label: "Rename",
+                      icon: TextTIcon,
+                      afterClose: true,
+                      onSelect: () => setRenaming(item.id),
+                    },
+                    {
+                      label: "Duplicate",
+                      icon: CopySimpleIcon,
+                      onSelect: () => {
+                        const next = duplicateVariable(design, item.id, kind);
+                        if (next !== design) void onSave(next);
+                      },
+                    },
+                    {
+                      label: "Copy CSS variable",
+                      icon: CopySimpleIcon,
+                      onSelect: () => copy(item.id, token),
+                    },
+                    {
+                      label: "Delete",
+                      icon: TrashIcon,
+                      danger: true,
+                      onSelect: () => onAskDelete(item.id, item.name),
+                    },
+                  ]}
+                />
+              </div>
+              {isOpen && (
+                <ValueEditor
+                  key={text}
+                  kind={kind}
+                  item={item}
+                  token={token}
+                  onCommit={(next) => saveValue(item.id, next)}
+                />
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {nameError && (
+        <div data-emvb-var-name-error="">
+          <InlineError>{nameError}</InlineError>
+        </div>
+      )}
+      {creating && (
+        <CreateRow
+          rowProps={{ "data-emvb-var-create": kind }}
+          submitLabel="Create"
+          onCancel={() => {
+            setCreating(false);
+            setCreateError(null);
+            focusNew();
+          }}
+          onCreate={() => void create()}
+        >
+          <Input
+            label="Name"
+            className={FIELD}
+            value={name}
+            aria-invalid={createError?.field === "name" ? true : undefined}
+            onChange={(e) => {
+              setName(e.target.value);
+              setCreateError(null);
+            }}
+          />
+          {createError?.field === "name" && <InlineError>{createError.message}</InlineError>}
+          <Input
+            label={isLengthKind(kind) ? "Value (px, rem, em or %)" : "Value"}
+            className={FIELD}
+            value={value}
+            aria-invalid={createError?.field === "value" ? true : undefined}
+            onChange={(e) => {
+              setValue(e.target.value);
+              setCreateError(null);
+            }}
+          />
+          {createError?.field === "value" && <InlineError>{createError.message}</InlineError>}
+        </CreateRow>
+      )}
+    </section>
+  );
+}

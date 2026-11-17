@@ -1,0 +1,429 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`PageList renders rows 1`] = `
+"div.emvb-list-header
+  h1.emvb-page-title
+    "Pages VisualBuilder"
+  div.emvb-list-actions
+    button.emvb-btn data-emvb-export-pages="" type="button"
+      svg aria-hidden="true"
+        path
+      "Export pages"
+    button.emvb-btn data-emvb-import-elementor="" type="button"
+      svg aria-hidden="true"
+        path
+      "Import from Elementor"
+    button.emvb-btn type="button"
+      span aria-hidden="true"
+      svg aria-hidden="true"
+        path
+      "New page"
+div.emvb-list-search
+  input aria-label="Search pages" id="emvb-list-search" placeholder="Search pages" type="search" value=""
+div.emvb-surface-card data-emvb-list="pages"
+  table data-emvb-list="pages"
+    thead
+      tr
+        th.emvb-row-select
+          span aria-checked="false" aria-label="Select all pages shown" data-emvb-select-all="" data-unchecked="" role="checkbox" tabindex="0"
+            span data-unchecked=""
+              svg
+                path
+        th
+          "Title"
+        th
+          "Status"
+        th
+          "Last edited"
+    tbody
+      tr data-emvb-row="01A"
+        td.emvb-row-select
+          span aria-checked="false" aria-label="Select About" data-emvb-select-row="01A" data-unchecked="" role="checkbox" tabindex="0"
+            span data-unchecked=""
+              svg
+                path
+        td
+          a.emvb-row-title href="/_emdash/admin/plugins/emvb/editor?entry=01A"
+            "About"
+          div.emvb-row-slug
+            "/"
+            "about"
+        td
+          span.emvb-status data-status="published"
+            span.emvb-status-dot aria-hidden="true"
+            "Published"
+        td
+          time.emvb-tabular datetime="2026-09-01T10:00:00.000Z"
+            "…"
+      tr data-emvb-row="01B"
+        td.emvb-row-select
+          span aria-checked="false" aria-label="Select Untitled page" data-emvb-select-row="01B" data-unchecked="" role="checkbox" tabindex="0"
+            span data-unchecked=""
+              svg
+                path
+        td
+          a.emvb-row-title href="/_emdash/admin/plugins/emvb/editor?entry=01B"
+            "Untitled page"
+          div.emvb-row-slug
+            "/"
+            "draft-one"
+        td
+          span.emvb-status data-status="draft"
+            span.emvb-status-dot aria-hidden="true"
+            "Draft"
+        td
+          time.emvb-tabular datetime=""
+            "…""
+`;
+
+exports[`PageList renders empty 1`] = `
+"div.emvb-list-header
+  h1.emvb-page-title
+    "Pages VisualBuilder"
+div.emvb-surface-card.emvb-empty-shell
+  svg aria-hidden="true"
+    path
+  h2
+    "No visual pages yet"
+  p
+    "Create a page to start building."
+  div.emvb-list-actions
+    button.emvb-btn data-emvb-import-elementor="" type="button"
+      svg aria-hidden="true"
+        path
+      "Import from Elementor"
+    button.emvb-btn type="button"
+      span aria-hidden="true"
+      svg aria-hidden="true"
+        path
+      "New page""
+`;
+
+exports[`PageList renders error 1`] = `
+"div.emvb-list-header
+  h1.emvb-page-title
+    "Pages VisualBuilder"
+div role="alert"
+  svg aria-hidden="true"
+    path
+  p
+    "Couldn't load your pages"
+  p
+    "Database offline"
+  button.emvb-btn type="button"
+    "Retry""
+`;
+
+exports[`ThemePartList renders rows 1`] = `
+"div.emvb-list-header
+  h1.emvb-page-title
+    "Theme Builder"
+  div.emvb-list-actions
+    button.emvb-btn data-emvb-import-elementor="" type="button"
+      svg aria-hidden="true"
+        path
+      "Import from Elementor"
+    button.emvb-btn type="button"
+      span aria-hidden="true"
+      svg aria-hidden="true"
+        path
+      "New theme part"
+div.emvb-theme-filters aria-label="Filter by type" role="tablist"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="true" data-active="true" id="emvb-theme-filter-all" role="tab" tabindex="0" type="button"
+    "All"
+    span.emvb-theme-filter-count.emvb-tabular
+      "2"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-header" role="tab" tabindex="-1" type="button"
+    "Headers"
+    span.emvb-theme-filter-count.emvb-tabular
+      "1"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-footer" role="tab" tabindex="-1" type="button"
+    "Footers"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-error_404" role="tab" tabindex="-1" type="button"
+    "Error 404"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-search_results" role="tab" tabindex="-1" type="button"
+    "Search results"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-single_page" role="tab" tabindex="-1" type="button"
+    "Single page"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-single_post" role="tab" tabindex="-1" type="button"
+    "Single post"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-archive" role="tab" tabindex="-1" type="button"
+    "Archive"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-loop_item" role="tab" tabindex="-1" type="button"
+    "Loop item"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-section" role="tab" tabindex="-1" type="button"
+    "Sections"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-page_template" role="tab" tabindex="-1" type="button"
+    "Page templates"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-popup" role="tab" tabindex="-1" type="button"
+    "Popups"
+    span.emvb-theme-filter-count.emvb-tabular
+      "1"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-float" role="tab" tabindex="-1" type="button"
+    "Floats"
+div.emvb-list-search
+  input aria-label="Search theme parts" id="emvb-list-search" placeholder="Search theme parts" type="search" value=""
+div aria-labelledby="emvb-theme-filter-all" id="emvb-theme-parts-panel" role="tabpanel"
+  div.emvb-surface-card data-emvb-list="theme-parts"
+    table data-emvb-list="theme-parts"
+      thead
+        tr
+          th.emvb-row-select
+            span aria-checked="false" aria-label="Select all theme parts shown" data-emvb-select-all="" data-unchecked="" role="checkbox" tabindex="0"
+              span data-unchecked=""
+                svg
+                  path
+          th
+            "Title"
+          th
+            "Type"
+          th
+            "Conditions"
+          th
+            "Status"
+          th
+            "Last edited"
+      tbody
+        tr data-emvb-row="01H"
+          td.emvb-row-select
+            span aria-checked="false" aria-label="Select Main header" data-emvb-select-row="01H" data-unchecked="" role="checkbox" tabindex="0"
+              span data-unchecked=""
+                svg
+                  path
+          td
+            a.emvb-row-title href="/_emdash/admin/plugins/emvb/editor?entry=01H&collection=emvb_theme_parts"
+              "Main header"
+          td
+            "Header"
+          td
+            span.emvb-tabular
+              "Entire site"
+          td
+            span.emvb-status data-status="published"
+              span.emvb-status-dot aria-hidden="true"
+              "Published"
+          td
+            time.emvb-tabular datetime="2026-09-02T08:30:00.000Z"
+              "…"
+        tr data-emvb-row="01P"
+          td.emvb-row-select
+            span aria-checked="false" aria-label="Select Promo" data-emvb-select-row="01P" data-unchecked="" role="checkbox" tabindex="0"
+              span data-unchecked=""
+                svg
+                  path
+          td
+            a.emvb-row-title href="/_emdash/admin/plugins/emvb/editor?entry=01P&collection=emvb_theme_parts"
+              "Promo"
+          td
+            "Popup"
+          td
+            span.emvb-tabular
+              "No conditions"
+          td
+            span.emvb-status data-status="draft"
+              span.emvb-status-dot aria-hidden="true"
+              "Draft"
+          td
+            time.emvb-tabular datetime=""
+              "…""
+`;
+
+exports[`ThemePartList renders empty 1`] = `
+"div.emvb-list-header
+  h1.emvb-page-title
+    "Theme Builder"
+div.emvb-surface-card.emvb-empty-shell
+  svg aria-hidden="true"
+    path
+  h2
+    "No site parts yet"
+  p
+    "Create a Header, Footer, content template, Popup, or Float."
+  div.emvb-list-actions
+    button.emvb-btn data-emvb-import-elementor="" type="button"
+      svg aria-hidden="true"
+        path
+      "Import from Elementor"
+    button.emvb-btn type="button"
+      span aria-hidden="true"
+      svg aria-hidden="true"
+        path
+      "New theme part""
+`;
+
+exports[`ThemePartList renders error 1`] = `
+"div.emvb-list-header
+  h1.emvb-page-title
+    "Theme Builder"
+div role="alert"
+  svg aria-hidden="true"
+    path
+  p
+    "Couldn't load theme parts"
+  p
+    "Database offline"
+  button.emvb-btn type="button"
+    "Retry""
+`;
+
+exports[`ThemePartList filters by type and shows the filter's empty state 1`] = `
+"div.emvb-list-header
+  h1.emvb-page-title
+    "Theme Builder"
+  div.emvb-list-actions
+    button.emvb-btn data-emvb-import-elementor="" type="button"
+      svg aria-hidden="true"
+        path
+      "Import from Elementor"
+    button.emvb-btn type="button"
+      span aria-hidden="true"
+      svg aria-hidden="true"
+        path
+      "New theme part"
+div.emvb-theme-filters aria-label="Filter by type" role="tablist"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-all" role="tab" tabindex="-1" type="button"
+    "All"
+    span.emvb-theme-filter-count.emvb-tabular
+      "2"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-header" role="tab" tabindex="-1" type="button"
+    "Headers"
+    span.emvb-theme-filter-count.emvb-tabular
+      "1"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-footer" role="tab" tabindex="-1" type="button"
+    "Footers"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-error_404" role="tab" tabindex="-1" type="button"
+    "Error 404"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-search_results" role="tab" tabindex="-1" type="button"
+    "Search results"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-single_page" role="tab" tabindex="-1" type="button"
+    "Single page"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-single_post" role="tab" tabindex="-1" type="button"
+    "Single post"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-archive" role="tab" tabindex="-1" type="button"
+    "Archive"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-loop_item" role="tab" tabindex="-1" type="button"
+    "Loop item"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-section" role="tab" tabindex="-1" type="button"
+    "Sections"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-page_template" role="tab" tabindex="-1" type="button"
+    "Page templates"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="true" data-active="true" id="emvb-theme-filter-popup" role="tab" tabindex="0" type="button"
+    "Popups"
+    span.emvb-theme-filter-count.emvb-tabular
+      "1"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-float" role="tab" tabindex="-1" type="button"
+    "Floats"
+div.emvb-list-search
+  input aria-label="Search theme parts" id="emvb-list-search" placeholder="Search theme parts" type="search" value=""
+div aria-labelledby="emvb-theme-filter-popup" id="emvb-theme-parts-panel" role="tabpanel"
+  div.emvb-surface-card data-emvb-list="theme-parts"
+    table data-emvb-list="theme-parts"
+      thead
+        tr
+          th.emvb-row-select
+            span aria-checked="false" aria-label="Select all theme parts shown" data-emvb-select-all="" data-unchecked="" role="checkbox" tabindex="0"
+              span data-unchecked=""
+                svg
+                  path
+          th
+            "Title"
+          th
+            "Type"
+          th
+            "Conditions"
+          th
+            "Status"
+          th
+            "Last edited"
+      tbody
+        tr data-emvb-row="01P"
+          td.emvb-row-select
+            span aria-checked="false" aria-label="Select Promo" data-emvb-select-row="01P" data-unchecked="" role="checkbox" tabindex="0"
+              span data-unchecked=""
+                svg
+                  path
+          td
+            a.emvb-row-title href="/_emdash/admin/plugins/emvb/editor?entry=01P&collection=emvb_theme_parts"
+              "Promo"
+          td
+            "Popup"
+          td
+            span.emvb-tabular
+              "No conditions"
+          td
+            span.emvb-status data-status="draft"
+              span.emvb-status-dot aria-hidden="true"
+              "Draft"
+          td
+            time.emvb-tabular datetime=""
+              "…""
+`;
+
+exports[`ThemePartList filters by type and shows the filter's empty state 2`] = `
+"div.emvb-list-header
+  h1.emvb-page-title
+    "Theme Builder"
+  div.emvb-list-actions
+    button.emvb-btn data-emvb-import-elementor="" type="button"
+      svg aria-hidden="true"
+        path
+      "Import from Elementor"
+    button.emvb-btn type="button"
+      span aria-hidden="true"
+      svg aria-hidden="true"
+        path
+      "New theme part"
+div.emvb-theme-filters aria-label="Filter by type" role="tablist"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-all" role="tab" tabindex="-1" type="button"
+    "All"
+    span.emvb-theme-filter-count.emvb-tabular
+      "2"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-header" role="tab" tabindex="-1" type="button"
+    "Headers"
+    span.emvb-theme-filter-count.emvb-tabular
+      "1"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="true" data-active="true" id="emvb-theme-filter-footer" role="tab" tabindex="0" type="button"
+    "Footers"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-error_404" role="tab" tabindex="-1" type="button"
+    "Error 404"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-search_results" role="tab" tabindex="-1" type="button"
+    "Search results"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-single_page" role="tab" tabindex="-1" type="button"
+    "Single page"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-single_post" role="tab" tabindex="-1" type="button"
+    "Single post"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-archive" role="tab" tabindex="-1" type="button"
+    "Archive"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-loop_item" role="tab" tabindex="-1" type="button"
+    "Loop item"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-section" role="tab" tabindex="-1" type="button"
+    "Sections"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-page_template" role="tab" tabindex="-1" type="button"
+    "Page templates"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-popup" role="tab" tabindex="-1" type="button"
+    "Popups"
+    span.emvb-theme-filter-count.emvb-tabular
+      "1"
+  button.emvb-theme-filter aria-controls="emvb-theme-parts-panel" aria-selected="false" id="emvb-theme-filter-float" role="tab" tabindex="-1" type="button"
+    "Floats"
+div.emvb-list-search
+  input aria-label="Search theme parts" id="emvb-list-search" placeholder="Search theme parts" type="search" value=""
+div aria-labelledby="emvb-theme-filter-footer" id="emvb-theme-parts-panel" role="tabpanel"
+  div.emvb-surface-card.emvb-empty-shell
+    svg aria-hidden="true"
+      path
+    h2
+      "No footers yet"
+    p
+      "Create one or choose a different filter."
+    div.emvb-list-actions
+      button.emvb-btn data-emvb-import-elementor="" type="button"
+        svg aria-hidden="true"
+          path
+        "Import from Elementor"
+      button.emvb-btn type="button"
+        span aria-hidden="true"
+        svg aria-hidden="true"
+          path
+        "New theme part""
+`;

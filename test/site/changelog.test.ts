@@ -1,0 +1,77 @@
+import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { releaseLabel, releasesWithEntries } from "../../site/src/data/changelog";
+import { nav } from "../../site/src/data/nav";
+
+// emvb.dev/changelog/ renders the repository's CHANGELOG.md at build time, so it can't drift.
+const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+
+describe("emvb.dev changelog page (W-322)", () => {
+  test("the page renders CHANGELOG.md itself, inside the site's header and footer", () => {
+    const page = read("site/src/pages/changelog.astro");
+    expect(page).toContain('from "../../../CHANGELOG.md"');
+    expect(page).toContain("<Content />");
+    expect(page).toContain("<SiteHeader />");
+    expect(page).toContain("<SiteFooter />");
+    expect(page).toContain("<h1>Changelog</h1>");
+  });
+
+  test("the header and footer link to it, and their section links work from any page", () => {
+    expect(nav.some((item) => item.href === "/changelog/" && item.label === "Changelog")).toBe(
+      true,
+    );
+    for (const item of nav) expect(item.href.startsWith("/")).toBe(true);
+    const header = read("site/src/components/SiteHeader.astro");
+    expect(header).not.toMatch(/href="#/);
+  });
+
+  test("the sitemap lists it", () => {
+    expect(read("site/src/pages/sitemap.xml.ts")).toContain('"/changelog/"');
+  });
+
+  test("release headings split into a version and a date", () => {
+    expect(releaseLabel("[0.2.1] - 2026-10-08")).toEqual({ version: "0.2.1", date: "2026-10-08" });
+    expect(releaseLabel("0.1.0 - 2026-10-04")).toEqual({ version: "0.1.0", date: "2026-10-04" });
+    expect(releaseLabel("[Unreleased]")).toEqual({ version: "Unreleased" });
+    expect(releaseLabel("Unreleased")).toEqual({ version: "Unreleased" });
+  });
+
+  test("every release in CHANGELOG.md has a version and a date", () => {
+    const releases = read("CHANGELOG.md")
+      .split("\n")
+      .filter((line) => line.startsWith("## "))
+      .map((line) => releaseLabel(line.slice(3)));
+    expect(releases[0]).toEqual({ version: "Unreleased" });
+    for (const release of releases.slice(1)) expect(release.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe("the home page leads to the changelog (W-323)", () => {
+  test("the hero's version label and a See what's new link go to /changelog/", () => {
+    const hero = read("site/src/components/Hero.astro");
+    expect(hero).toMatch(/<a class="release" href="\/changelog\/"/);
+    expect(hero).toContain('<a class="whats-new" href="/changelog/">See what\'s new');
+  });
+});
+
+describe("releases with no entries stay off the changelog page (W-324)", () => {
+  test("an empty Unreleased is left out of the version list", () => {
+    const h = (depth: number, text: string) => ({ depth, text });
+    const list = releasesWithEntries([
+      h(1, "Changelog"),
+      h(2, "[Unreleased]"),
+      h(2, "[0.3.0] - 2026-10-09"),
+      h(3, "Added"),
+      h(2, "[0.2.1] - 2026-10-08"),
+      h(3, "Fixed"),
+      h(2, "[0.0.1] - 2026-01-01"),
+    ]);
+    expect(list.map((x) => x.text)).toEqual(["[0.3.0] - 2026-10-09", "[0.2.1] - 2026-10-08"]);
+  });
+
+  test("the page uses it and hides an empty release heading in the rendered file", () => {
+    const page = read("site/src/pages/changelog.astro");
+    expect(page).toContain("releasesWithEntries(getHeadings())");
+    expect(page).toMatch(/:global\(h2:has\(\+ h2\)\) \{\s*display: none;/);
+  });
+});

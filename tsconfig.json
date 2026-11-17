@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["bun"]
+  },
+  "include": [
+    "scripts",
+    "test",
+    "e2e",
+    "playwright.config.ts",
+    "playwright.prod.config.ts",
+    "playwright.shared.ts",
+    "packages/emvb/src/**/*.test.ts",
+    "packages/emvb/src/**/*.test.tsx",
+    "packages/emvb/test/dom",
+    "packages/emvb/test/fixtures",
+    "packages/emvb/test/server",
+    "site/src/playground",
+    "site/src/data",
+    "site/src/scripts"
+  ]
+}

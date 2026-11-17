@@ -1,0 +1,236 @@
+import { experimental_AstroContainer as AstroContainer } from "astro/container";
+import { expect, test } from "vitest";
+import EmVBPage from "../../src/astro/EmVBPage.astro";
+import { renderPage, type DesignSystem } from "../../src/core/index.ts";
+import { XSS_CORPUS } from "../fixtures/xss.ts";
+import { heading, s1Page } from "../fixtures/layouts.ts";
+
+const DESIGN: DesignSystem = {
+  schemaVersion: 1,
+  variables: { colors: [{ id: "brand", name: "Brand", value: "#123456" }] },
+};
+
+const pageOf = (layout: ReturnType<typeof s1Page>) => {
+  const { html, css, needsFormsRuntime, needsTabsRuntime } = renderPage(layout, DESIGN);
+  return { html, css, needsFormsRuntime, needsTabsRuntime };
+};
+
+test("EmVBPage emits exactly the core CSS and HTML (A-08, R-031)", async () => {
+  const container = await AstroContainer.create();
+  const page = pageOf(s1Page());
+  const output = await container.renderToString(EmVBPage, { props: { page } });
+  expect(output).toBe(`<style>${page.css}</style>${page.html}`);
+  expect(output).not.toContain("<script");
+});
+
+test("hostile text reaches the page escaped once, exactly as the core wrote it", async () => {
+  const container = await AstroContainer.create();
+  const pages = XSS_CORPUS.map((text) => {
+    const layout = s1Page();
+    layout.root.children = [heading("head0001", text, 2)];
+    return pageOf(layout);
+  });
+  const outputs = await Promise.all(
+    pages.map((page) => container.renderToString(EmVBPage, { props: { page } })),
+  );
+  expect(outputs).toEqual(pages.map((page) => `<style>${page.css}</style>${page.html}`));
+});
+
+test("blank canvas mode renders a whole document with the page's title and no scripts", async () => {
+  const container = await AstroContainer.create();
+  const page = pageOf(s1Page());
+  const output = await container.renderToString(EmVBPage, {
+    props: { page, standalone: true, title: "Pricing & plans", description: "Our plans" },
+  });
+  expect(output.startsWith('<html lang="en">')).toBe(true);
+  expect(output).toContain("<title>Pricing &amp; plans</title>");
+  expect(output).toContain('<meta name="description" content="Our plans">');
+  expect(output).toContain(`<style>${page.css}</style>`);
+  expect(output).toContain(`<body>${page.html}</body>`);
+  expect(output).not.toContain("<script");
+});
+
+test("blank canvas mode prints the page's SEO tags: canonical, robots and Open Graph (W-274)", async () => {
+  const container = await AstroContainer.create();
+  const page = pageOf(s1Page());
+  const output = await container.renderToString(EmVBPage, {
+    props: {
+      page,
+      standalone: true,
+      title: "Launch | My Site",
+      description: 'Big "news"',
+      seo: {
+        ogTitle: "Launch",
+        ogDescription: 'Big "news"',
+        ogImage: "https://example.com/og.png",
+        canonical: "https://example.com/launch",
+        robots: "noindex, nofollow",
+      },
+    },
+  });
+  expect(output).toContain('<meta name="robots" content="noindex, nofollow">');
+  expect(output).toContain('<link rel="canonical" href="https://example.com/launch">');
+  expect(output).toContain('<meta property="og:title" content="Launch">');
+  expect(output).toContain('<meta property="og:description" content="Big &quot;news&quot;">');
+  expect(output).toContain('<meta property="og:image" content="https://example.com/og.png">');
+  expect(output).toContain('<meta property="og:url" content="https://example.com/launch">');
+  expect(output).toContain('<meta name="twitter:card" content="summary_large_image">');
+  expect(output).not.toContain("<script");
+});
+
+test("without robots or an image, blank mode prints neither (W-274)", async () => {
+  const container = await AstroContainer.create();
+  const page = pageOf(s1Page());
+  const output = await container.renderToString(EmVBPage, {
+    props: {
+      page,
+      standalone: true,
+      title: "Open",
+      seo: { canonical: "https://example.com/open" },
+    },
+  });
+  expect(output).not.toContain('name="robots"');
+  expect(output).not.toContain("og:image");
+  expect(output).toContain('<meta property="og:title" content="Open">');
+  expect(output).toContain('<meta name="twitter:card" content="summary">');
+});
+
+test("blank canvas mode uses the page's language, and ignores one that isn't a language tag (W-528)", async () => {
+  const container = await AstroContainer.create();
+  const page = pageOf(s1Page());
+  const french = await container.renderToString(EmVBPage, {
+    props: { page, standalone: true, title: "Tarifs", lang: "fr-CA" },
+  });
+  expect(french.startsWith('<html lang="fr-CA">')).toBe(true);
+  const odd = await container.renderToString(EmVBPage, {
+    props: { page, standalone: true, title: "x", lang: 'en" onload="x' },
+  });
+  expect(odd.startsWith('<html lang="en">')).toBe(true);
+});
+
+test("W-1025: a page with a dismissible Alert loads the alerts script; others load none", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "alrt0001",
+      type: "alert",
+      props: { variant: "info", text: "Saved.", dismissible: true },
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN);
+  expect(runtimes).toEqual(["alerts"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBAlertsRuntime");
+  const standalone = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes }, standalone: true, title: "T" },
+  });
+  expect(standalone.match(/<script/g)).toHaveLength(1);
+  const plain = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes: [] } },
+  });
+  expect(plain).not.toContain("<script");
+});
+
+test("W-1038: a page with a counting Counter loads the counter script only", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "cntr0001",
+      type: "counter",
+      props: { value: 1200, title: "Clients", countUp: true },
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN);
+  expect(runtimes).toEqual(["counter"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBCounterRuntime");
+  expect(output).not.toContain("EmVBAlertsRuntime");
+});
+
+test("W-1040: a page with a ticking Countdown loads the countdown script only", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "cdwn0001",
+      type: "countdown",
+      props: { target: "2027-01-01T00:00Z", ticking: true },
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN);
+  expect(runtimes).toEqual(["countdown"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBCountdownRuntime");
+});
+
+test("W-1041: a page with a Map that loads on request gets the map script only", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "mapp0001",
+      type: "map",
+      props: { address: "Main St", lat: 45.5, lng: -73.56, embed: true },
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN);
+  expect(runtimes).toEqual(["map"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBMapRuntime");
+  expect(output.includes("<iframe")).toBe(false);
+});
+
+test("W-1046: a page with rotating headline words loads the headline script only", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "hdln0001",
+      type: "headline",
+      props: { highlight: "fast", rotate: ["safe"], rotating: true },
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN);
+  expect(runtimes).toEqual(["headline"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBHeadlineRuntime");
+});
+
+test("W-1047: Share buttons with the device's Share button load the share script only", async () => {
+  const container = await AstroContainer.create();
+  const layout = s1Page();
+  layout.root.children = [
+    {
+      id: "shar0001",
+      type: "share-buttons",
+      props: { nativeShare: true },
+      children: [{ id: "shl00001", type: "share-link", props: { network: "x" } }],
+    } as never,
+  ];
+  const { html, css, runtimes } = renderPage(layout, DESIGN, {
+    dynamic: { pageUrl: "https://example.com/" },
+  });
+  expect(runtimes).toEqual(["share"]);
+  const output = await container.renderToString(EmVBPage, {
+    props: { page: { html, css, runtimes } },
+  });
+  expect(output.match(/<script/g)).toHaveLength(1);
+  expect(output).toContain("EmVBShareRuntime");
+});

@@ -1,0 +1,1357 @@
+import { describe, expect, test } from "bun:test";
+import containerPage from "../../../../test/fixtures/elementor/container-page.json";
+import headerTemplate from "../../../../test/fixtures/elementor/header-template.json";
+import proWidgets from "../../../../test/fixtures/elementor/pro-widgets.json";
+import sectionPage from "../../../../test/fixtures/elementor/section-page.json";
+import siteKit from "../../../../test/fixtures/elementor/site-kit.json";
+import { XSS_CORPUS } from "../../../../test/fixtures/xss.ts";
+import { renderPage } from "../../render/index.ts";
+import { emptyDesign } from "../../schema/design.ts";
+import type { Layout, LayoutNode } from "../../schema/layout.ts";
+import { validateLayout } from "../../validate.ts";
+import { htmlToBlocks } from "./html.ts";
+import {
+  type ElementorImport,
+  importElementor,
+  MAX_IMPORT_CHARS,
+  MAX_IMPORT_ELEMENTS,
+} from "./index.ts";
+
+const FIXTURES: Record<string, unknown> = {
+  "container-page": containerPage,
+  "section-page": sectionPage,
+  "header-template": headerTemplate,
+  "pro-widgets": proWidgets,
+  "site-kit": siteKit,
+};
+/** A fixture as the text a person pastes or uploads. */
+const fixture = (name: string) => JSON.stringify(FIXTURES[name]);
+
+const SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" fill="currentColor"><path d="M0 0h10v10z"/></svg>';
+const KNOWN_ICONS = new Set([
+  "fa-solid:arrow-right",
+  "fa-solid:bolt",
+  "fa-solid:universal-access",
+  "fa-regular:star",
+  "fa-solid:phone",
+  "fa-solid:envelope",
+  "fa-brands:facebook",
+  "fa-brands:instagram",
+]);
+const icon = (id: string) => (KNOWN_ICONS.has(id) ? SVG : undefined);
+
+type Node = LayoutNode & {
+  children?: Node[];
+  style?: Record<string, unknown>;
+  devices?: Record<string, Record<string, unknown>>;
+};
+
+function ok(result: ElementorImport) {
+  if (!result.ok) throw new Error(result.error);
+  return result;
+}
+
+const all = (node: Node): Node[] => [node, ...(node.children ?? []).flatMap(all)];
+const nodes = (layout: Layout) => all(layout.root as Node);
+const ofType = (layout: Layout, type: string) => nodes(layout).filter((n) => n.type === type);
+const props = (n: Node | undefined) => (n?.props ?? {}) as Record<string, unknown>;
+const notes = (result: { notes: { message: string }[] }) =>
+  result.notes.map((n) => n.message).join("\n");
+
+/** Element types in document order, for a compact shape check. */
+const types = (layout: Layout) => nodes(layout).map((n) => n.type);
+
+describe("Elementor import: containers (W-945)", () => {
+  const result = ok(importElementor(fixture("container-page"), { icon }));
+
+  test("the result is a valid EmVB page with the template's title", () => {
+    expect(validateLayout(result.layout).ok).toBe(true);
+    expect(result.title).toBe("Container landing");
+    expect(result.partType).toBeUndefined();
+    expect(result.elements).toBe(24);
+    expect(result.mapped).toBe(24);
+  });
+
+  test("a boxed container is a full-width box around a centred inner box", () => {
+    const hero = result.layout.root.children?.[0] as Node;
+    expect(hero.style).toMatchObject({
+      minHeight: { value: 80, unit: "vh" },
+      backgroundImage: "https://old.example/wp-content/uploads/2025/03/hero.jpg",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      overlay: { color: "#000000", opacity: 0.5 },
+      paddingTop: { value: 80, unit: "px" },
+      justifyContent: "center",
+    });
+    expect(hero.devices?.["mobile"]).toEqual({ minHeight: { value: 60, unit: "vh" } });
+    expect(hero.htmlId).toBe("top");
+    const inner = hero.children?.[0];
+    expect(inner?.style).toMatchObject({
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      maxWidth: { value: 1140, unit: "px" },
+      marginLeft: "auto",
+      marginRight: "auto",
+    });
+  });
+
+  test("a heading keeps its level, typography and per-device overrides", () => {
+    const heading = ofType(result.layout, "heading")[0];
+    expect(props(heading)).toEqual({ text: "Build pages visually", level: 1 });
+    expect(heading?.style).toMatchObject({
+      color: "#ffffff",
+      fontFamily: '"Poppins", sans-serif',
+      fontSize: { value: 56, unit: "px" },
+      fontWeight: 700,
+      lineHeight: 1.1,
+      letterSpacing: { value: -1, unit: "px" },
+      textAlign: "center",
+    });
+    expect(heading?.devices).toEqual({
+      tablet: { fontSize: { value: 44, unit: "px" } },
+      mobile: { fontSize: { value: 34, unit: "px" }, textAlign: "left" },
+    });
+    expect(result.fonts).toContain("Poppins");
+  });
+
+  test("a button keeps its link, icon, colours, hover and entrance", () => {
+    const button = ofType(result.layout, "button")[0];
+    expect(props(button)).toMatchObject({
+      text: "Get started",
+      href: "https://example.com/start",
+      iconId: "fa-solid:arrow-right",
+      iconSvg: SVG,
+      iconPosition: "after",
+    });
+    expect(button?.style).toMatchObject({
+      color: "#111111",
+      backgroundColor: "#ffcc00",
+      borderRadius: { value: 30, unit: "px" },
+      paddingTop: { value: 15, unit: "px" },
+      marginLeft: "auto",
+      marginRight: "auto",
+      motion: { entrance: { type: "fade-up", duration: 750, trigger: "view" } },
+    });
+    expect(button?.states).toEqual({ hover: { color: "#ffffff", backgroundColor: "#222222" } });
+  });
+
+  test("text editor line breaks stay line breaks", () => {
+    expect(ofType(result.layout, "text").map((n) => props(n)["text"])).toContain(
+      "Fast, accessible pages.\nNo code needed.",
+    );
+  });
+
+  test("child containers in a row share the row; a set width wins; phones stack", () => {
+    const band = result.layout.root.children?.[1] as Node | undefined;
+    const row = band?.children?.[0];
+    expect(row?.style).toMatchObject({
+      flexDirection: "row",
+      gap: { value: 30, unit: "px" },
+      maxWidth: { value: 1200, unit: "px" },
+    });
+    expect(row?.devices).toEqual({ mobile: { flexDirection: "column" } });
+    expect(row?.children?.map((c) => c.style?.["width"])).toEqual([
+      { value: 100, unit: "%" },
+      { value: 100, unit: "%" },
+      { value: 40, unit: "%" },
+    ]);
+  });
+
+  test("icon and image boxes keep media, title and description", () => {
+    // W-1020: Icon Boxes are Icon boxes, with their icon, title, text and position.
+    const [top, left] = ofType(result.layout, "icon-box").map((n) => props(n));
+    expect(top).toMatchObject({ iconId: "fa-solid:bolt", title: "Fast" });
+    expect(top).not.toHaveProperty("position");
+    expect(left).toMatchObject({
+      iconId: "fa-solid:universal-access",
+      title: "Accessible",
+      position: "left",
+    });
+    expect(typeof left?.["iconSvg"]).toBe("string");
+    // W-1021: the Image Box is an Image box with its picture, alt text and title.
+    const [people] = ofType(result.layout, "image-box").map((n) => props(n));
+    expect(people).toMatchObject({ alt: "Our team", title: "People", imageSize: "small" });
+    expect(typeof people?.["src"]).toBe("string");
+  });
+
+  test("a grid container keeps its columns per device", () => {
+    expect(props(ofType(result.layout, "grid")[0])).toEqual({
+      columns: 4,
+      columnsTablet: 2,
+      columnsMobile: 1,
+    });
+  });
+
+  test("nested tabs and accordions keep their titles and contents", () => {
+    expect(ofType(result.layout, "tab-panel").map((n) => props(n)["label"])).toEqual([
+      "Design",
+      "Publish",
+    ]);
+    expect(ofType(result.layout, "accordion-item").map((n) => props(n)["summary"])).toEqual([
+      "Is it free?",
+    ]);
+    expect(ofType(result.layout, "text").map((n) => props(n)["text"])).toEqual(
+      expect.arrayContaining(["Design tab body", "Publish tab body", "Yes."]),
+    );
+  });
+
+  test("the report says images still load from the old site and global colours are defaults", () => {
+    const text = notes(result);
+    expect(text).toContain("Images still load from their original address");
+    expect(text).toContain("Global colours use Elementor's default kit");
+  });
+});
+
+describe("Elementor import: legacy sections and core widgets (W-945)", () => {
+  const result = ok(importElementor(fixture("section-page"), { icon }));
+
+  test("a section is a band with a row of percentage columns that stack on phones", () => {
+    const section = result.layout.root.children?.[0] as Node;
+    expect(props(section)).toEqual({ tag: "header" });
+    expect(section.style).toMatchObject({
+      minHeight: { value: 400, unit: "px" },
+      justifyContent: "center",
+      gradient: {
+        type: "linear",
+        angle: 90,
+        stops: [
+          { color: "#ff0000", at: 0 },
+          { color: "#0000ff", at: 100 },
+        ],
+      },
+    });
+    const row = section.children?.[0];
+    expect(row?.style).toMatchObject({
+      flexDirection: "row",
+      maxWidth: { value: 1000, unit: "px" },
+    });
+    expect(row?.devices).toEqual({ mobile: { flexDirection: "column" } });
+    const [first, second] = row?.children ?? [];
+    expect(first?.style).toMatchObject({
+      width: { value: 33.333, unit: "%" },
+      paddingTop: { value: 20, unit: "px" },
+    });
+    expect(first?.devices).toEqual({ mobile: { width: { value: 100, unit: "%" } } });
+    // The column's own padding replaces the section gap, as in Elementor.
+    expect(second?.style).toMatchObject({
+      paddingTop: { value: 5, unit: "px" },
+      backgroundColor: "#00000080",
+    });
+  });
+
+  test("every core widget becomes its EmVB element", () => {
+    expect(types(result.layout)).toEqual([
+      "container",
+      "container",
+      "container",
+      "container",
+      "heading",
+      "container",
+      "heading",
+      "text",
+      "list",
+      "divider",
+      "image",
+      "video",
+      "image",
+      "container",
+      "spacer",
+      "divider",
+      "icon",
+      "container",
+      "container",
+      "icon",
+      "link",
+      "container",
+      "icon",
+      "link",
+      "video",
+      "counter",
+      "progress",
+      "testimonial",
+      "container",
+      "text",
+      "rating",
+      "alert",
+      "tabs",
+      "tab-panel",
+      "text",
+      "tab-panel",
+      "text",
+      "accordion",
+      "accordion-item",
+      "text",
+      "accordion-item",
+      "text",
+      "accordion",
+      "accordion-item",
+      "text",
+      "social-icons",
+      "social-link",
+      "social-link",
+      "gallery",
+      "gallery-image",
+      "gallery-image",
+      "map",
+      "container",
+      "text",
+    ]);
+  });
+
+  test("widget details survive: links, captions, sizes, anchors and phone links", () => {
+    const heading = ofType(result.layout, "heading")[0];
+    expect(props(heading)).toEqual({ text: "Legacy section", level: 2, href: "/about" });
+    expect(heading?.style?.["fontSize"]).toEqual({ value: 29, unit: "px" });
+    const photo = ofType(result.layout, "image").find((n) => props(n)["caption"]);
+    expect(props(photo)).toMatchObject({
+      alt: "Photo",
+      caption: "A photo",
+      href: "https://example.com/photo",
+      newTab: true,
+    });
+    expect(photo?.style).toMatchObject({ width: { value: 80, unit: "%" }, marginRight: "auto" });
+    expect(props(ofType(result.layout, "spacer")[0])).toEqual({
+      height: { value: 30, unit: "px" },
+    });
+    expect(ofType(result.layout, "spacer")[0]?.devices).toEqual({
+      mobile: { height: { value: 10, unit: "px" } },
+    });
+    expect(ofType(result.layout, "link").map((n) => props(n)["href"])).toEqual(
+      expect.arrayContaining(["tel:+15550100199", "mailto:hi@example.com"]),
+    );
+    expect(nodes(result.layout).some((n) => n.htmlId === "contact")).toBe(true);
+    expect(ofType(result.layout, "text").map((n) => props(n)["text"])).toEqual(
+      expect.arrayContaining(["Rated", "From HTML"]),
+    );
+    // W-1049: the Counter, Progress Bar and Google Maps become EmVB's own.
+    expect(props(ofType(result.layout, "counter")[0])).toEqual({
+      value: 12500,
+      suffix: "+",
+      title: "Pages built",
+      countUp: true,
+      duration: 2000,
+    });
+    expect(props(ofType(result.layout, "progress")[0])).toMatchObject({
+      value: 70,
+      label: "Done",
+      showValue: true,
+      grow: true,
+    });
+    expect(props(ofType(result.layout, "map")[0])).toEqual({
+      address: "London Eye, London",
+      provider: "google",
+      embed: true,
+    });
+    // W-1022: the Testimonial is one, with its quote, photo, name and job.
+    expect(props(ofType(result.layout, "testimonial")[0])).toMatchObject({
+      quote: "It just works.",
+      name: "Ada",
+      role: "Engineer",
+      alt: "Ada",
+    });
+    // W-1025: an Alert is an Alert of the same kind, without the icon Elementor doesn't show.
+    expect(props(ofType(result.layout, "alert")[0])).toEqual({
+      variant: "warning",
+      title: "Heads up",
+      text: "Backups run nightly.",
+      hideIcon: true,
+    });
+    // W-1023: a Star Rating is a Rating, its title beside it.
+    expect(props(ofType(result.layout, "rating")[0])).toEqual({ value: 4, max: 5 });
+    expect(props(ofType(result.layout, "accordion-item")[0])).toMatchObject({ open: true });
+    expect(props(ofType(result.layout, "accordion-item")[2])).not.toHaveProperty("open");
+  });
+
+  test("the report names what was approximated or left out", () => {
+    const text = notes(result);
+    for (const expected of [
+      "Text inside progress bars was left out",
+      "Google Maps load when a visitor presses Show the map",
+      'The shortcode [contact-form-7 id="5"] needs WordPress',
+      "WordPress widgets weren't imported",
+      "Left out: script",
+      "Images without alt text got one from their file name",
+    ]) {
+      expect(text).toContain(expected);
+    }
+    expect(text).not.toContain("iframe");
+    expect(result.notes.find((n) => n.message.includes("Custom HTML"))?.element).toBe("HTML");
+  });
+});
+
+describe("Elementor import: theme builder, Pro widgets and kits (W-945)", () => {
+  test("a header template maps to a header theme part", () => {
+    const result = ok(importElementor(fixture("header-template"), { icon }));
+    expect(result.partType).toBe("header");
+    expect(result.title).toBe("Main header");
+    expect(types(result.layout)).toEqual(["container", "container", "container", "menu", "button"]);
+    expect(result.layout.root.style).toMatchObject({ backgroundColor: "#fafafa" });
+    expect(notes(result)).toContain('The WordPress menu "main-menu" isn\'t on this site');
+    expect(notes(result)).toContain("The site logo comes from WordPress settings");
+    expect(result.menus).toEqual(["main-menu"]);
+  });
+
+  test("W-1026: the Nav Menu is filled with the site menu's links, three levels deep", () => {
+    const asked: string[] = [];
+    const result = ok(
+      importElementor(fixture("header-template"), {
+        icon,
+        menu: (name) => {
+          asked.push(name);
+          return [
+            { text: "Home", href: "/" },
+            {
+              text: "Work",
+              href: "/work",
+              children: [
+                {
+                  text: "Projects",
+                  href: "/work/projects",
+                  children: [
+                    {
+                      text: "2026",
+                      href: "/work/2026",
+                      children: [{ text: "Too deep", href: "/x" }],
+                    },
+                  ],
+                },
+              ],
+            },
+            { text: "Shop", href: "https://shop.example.com", newTab: true },
+          ];
+        },
+      }),
+    );
+    expect(asked).toEqual(["main-menu"]);
+    const menu = ofType(result.layout, "menu")[0];
+    const item = (n: Node | undefined) => props(n);
+    expect(menu?.children?.map(item)).toEqual([
+      { text: "Home", href: "/" },
+      { text: "Work", href: "/work" },
+      { text: "Shop", href: "https://shop.example.com", newTab: true },
+    ]);
+    const projects = menu?.children?.[1]?.children?.[0];
+    expect(item(projects)).toEqual({ text: "Projects", href: "/work/projects" });
+    expect(projects?.children?.map(item)).toEqual([{ text: "2026", href: "/work/2026" }]);
+    expect(projects?.children?.[0]?.children).toEqual([]);
+    expect(notes(result)).not.toContain("isn't on this site");
+  });
+
+  test("Pro widgets are rebuilt as well as EmVB can, and say so", () => {
+    const result = ok(importElementor(fixture("pro-widgets"), { icon }));
+    expect(result.partType).toBe("single_post");
+    expect(props(ofType(result.layout, "post-title")[0])).toEqual({ level: 1 });
+    expect(ofType(result.layout, "post-content")).toHaveLength(1);
+    const form = ofType(result.layout, "form")[0];
+    expect(props(form)).toEqual({ formId: "" });
+    expect(form?.children?.map((c) => [c.type, props(c)["field"] ?? props(c)["label"]])).toEqual([
+      ["text-input", "name"],
+      ["text-input", "email"],
+      ["textarea", "msg"],
+      ["checkbox", "terms"],
+      ["text-input", "field_6"],
+      ["submit", "Send it"],
+    ]);
+    // W-1049: Price Table, Call to Action, Flip Box and Animated Headline become EmVB's own.
+    expect(props(ofType(result.layout, "price-table")[0])).toMatchObject({
+      title: "Pro",
+      price: "29",
+      currency: "€",
+      period: "month",
+      features: ["Unlimited pages", "Support"],
+      buttonText: "Buy",
+    });
+    expect(props(ofType(result.layout, "cta")[0])).toMatchObject({
+      title: "Ready?",
+      text: "Start today.",
+      buttonText: "Go",
+      href: "https://example.com/go",
+    });
+    expect(props(ofType(result.layout, "flip-box")[0])).toMatchObject({
+      frontTitle: "Front",
+      backTitle: "Back",
+      buttonText: "Learn more",
+    });
+    expect(props(ofType(result.layout, "headline")[0])).toMatchObject({
+      before: "We build",
+      highlight: "pages",
+      after: "fast",
+      rotate: ["sites", "shops"],
+      rotating: true,
+    });
+    expect(ofType(result.layout, "heading").map((n) => props(n)["text"])).toContain(
+      "Styled by CSS",
+    );
+    const styled = ofType(result.layout, "heading").find(
+      (n) => props(n)["text"] === "Styled by CSS",
+    );
+    expect(styled?.style).toMatchObject({ color: "#123456", fontSize: { value: 30, unit: "px" } });
+    const text = notes(result);
+    expect(text).toContain('Dynamic tag "site-title" kept its fixed fallback value.');
+    expect(text).toContain('Form field type "upload" was left out.');
+    expect(text).toContain("Post lists and loops weren't imported");
+    expect(text).toContain("Custom CSS properties left out: transform.");
+  });
+
+  test("a site kit gives exact global colours and fonts", () => {
+    const kit = JSON.parse(fixture("site-kit")) as unknown;
+    const result = ok(importElementor(fixture("header-template"), { icon, kit }));
+    const button = ofType(result.layout, "button")[0];
+    expect(button?.style).toMatchObject({
+      backgroundColor: "#0000aa",
+      fontFamily: '"Inter", sans-serif',
+      fontWeight: 600,
+    });
+    expect(notes(result)).not.toContain("default kit");
+  });
+
+  test("with defaults off, unstyled widgets keep EmVB's own look", () => {
+    const result = ok(importElementor(fixture("container-page"), { icon, defaults: false }));
+    const grid = ofType(result.layout, "grid")[0];
+    expect(grid?.children?.[0]?.style).toBeUndefined();
+    expect(notes(result)).not.toContain("default kit");
+  });
+});
+
+describe("Elementor import: what people paste (W-945)", () => {
+  const heading = { id: "h", elType: "widget", widgetType: "heading", settings: { title: "Hi" } };
+
+  test.each([
+    ["_elementor_data array", JSON.stringify([heading])],
+    ["one copied element", JSON.stringify(heading)],
+    [
+      "_elementor_data as a JSON string",
+      JSON.stringify({ _elementor_data: JSON.stringify([heading]) }),
+    ],
+    [
+      "template export",
+      JSON.stringify({ version: "0.4", title: "T", type: "page", content: [heading] }),
+    ],
+  ])("accepts %s", (_name, input) => {
+    expect(
+      ofType(ok(importElementor(input)).layout, "heading").map((n) => props(n)["text"]),
+    ).toEqual(["Hi"]);
+  });
+
+  test.each([
+    ["not JSON", "{oops", "isn't valid JSON"],
+    ["a WordPress XML export", '<?xml version="1.0"?><rss/>', "WordPress XML export"],
+    ["a site kit", fixture("site-kit"), "This is a site kit"],
+    ["something else", JSON.stringify({ hello: "world" }), "No Elementor content was found"],
+    ["an empty export", JSON.stringify([]), "no elements"],
+    [
+      "only things EmVB can't import",
+      JSON.stringify([{ elType: "widget", widgetType: "sidebar", settings: {} }]),
+      "Nothing in this export could be imported",
+    ],
+  ])("refuses %s with a clear message", (_name, input, message) => {
+    const result = importElementor(input);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toContain(message);
+  });
+
+  test("an unknown third-party widget keeps its text, image and button", () => {
+    const result = ok(
+      importElementor([
+        {
+          id: "x",
+          elType: "widget",
+          widgetType: "ekit-fancy-box",
+          settings: {
+            title: "Fancy",
+            description: "<p>Addon text</p>",
+            image: { url: "https://cdn.example/x.png", alt: "X" },
+            btn_text: "More",
+            btn_link: "https://example.com/more",
+            title_color: "#ff0000",
+          },
+        },
+        { id: "y", elType: "widget", widgetType: "jet-blank", settings: { show_arrows: "yes" } },
+      ]),
+    );
+    expect(types(result.layout)).toEqual([
+      "container",
+      "container",
+      "heading",
+      "text",
+      "image",
+      "button",
+    ]);
+    expect(props(ofType(result.layout, "button")[0])).toMatchObject({
+      text: "More",
+      href: "https://example.com/more",
+    });
+    const text = notes(result);
+    expect(text).toContain('Widget "ekit-fancy-box" isn\'t known to EmVB');
+    expect(text).toContain('Widget "jet-blank" has no EmVB match');
+  });
+
+  test("Elementor 4 atomic elements keep their content", () => {
+    const result = ok(
+      importElementor([
+        {
+          id: "f",
+          elType: "e-flexbox",
+          settings: {},
+          elements: [
+            {
+              id: "h",
+              elType: "widget",
+              widgetType: "e-heading",
+              settings: {
+                title: { $$type: "string", value: "Atomic" },
+                tag: { $$type: "string", value: "h3" },
+              },
+            },
+            {
+              id: "p",
+              elType: "widget",
+              widgetType: "e-paragraph",
+              settings: { paragraph: { $$type: "string", value: "Body" } },
+            },
+          ],
+        },
+      ]),
+    );
+    expect(ofType(result.layout, "heading").map((n) => props(n))).toEqual([
+      { text: "Atomic", level: 3 },
+    ]);
+    expect(ofType(result.layout, "text").map((n) => props(n)["text"])).toEqual(["Body"]);
+  });
+});
+
+describe("Elementor import: hostile and oversized input (W-945)", () => {
+  /** Every place a person's text or URL lands. */
+  const hostile = (payload: string) => [
+    {
+      id: "c",
+      elType: "container",
+      settings: {
+        _element_id: payload,
+        custom_css: `selector { color: ${payload}; }`,
+        background_background: "classic",
+        background_image: { url: payload },
+      },
+      elements: [
+        {
+          id: "h",
+          elType: "widget",
+          widgetType: "heading",
+          settings: { title: payload, link: { url: payload } },
+        },
+        { id: "t", elType: "widget", widgetType: "text-editor", settings: { editor: payload } },
+        { id: "x", elType: "widget", widgetType: "html", settings: { html: payload } },
+        {
+          id: "b",
+          elType: "widget",
+          widgetType: "button",
+          settings: { text: payload, link: { url: "javascript:alert(1)" } },
+        },
+        {
+          id: "i",
+          elType: "widget",
+          widgetType: "image",
+          settings: { image: { url: payload, alt: payload } },
+        },
+        {
+          id: "l",
+          elType: "widget",
+          widgetType: "icon-list",
+          settings: { icon_list: [{ text: payload, link: { url: payload } }] },
+        },
+        {
+          id: "a",
+          elType: "widget",
+          widgetType: "accordion",
+          settings: { tabs: [{ tab_title: payload, tab_content: payload }] },
+        },
+        {
+          id: "u",
+          elType: "widget",
+          widgetType: "unknown-addon",
+          settings: { title: payload, description: payload },
+        },
+      ],
+    },
+  ];
+
+  test.each(XSS_CORPUS)("%p renders as inert text wherever it lands", (payload) => {
+    const result = ok(importElementor(hostile(payload)));
+    expect(validateLayout(result.layout).ok).toBe(true);
+    const { html, css } = renderPage(result.layout, emptyDesign()) as {
+      html: string;
+      css?: string;
+    };
+    expect(html).not.toMatch(/<script|<iframe|<svg|<img[^>]*onerror|\son[a-z]+=|javascript:/i);
+    if (css) expect(css).not.toMatch(/<\/style|javascript:|expression\(/i);
+    expect(JSON.stringify(result.layout)).not.toMatch(/javascript:/i);
+  });
+
+  test("a file over 8 MB is refused before parsing", () => {
+    const result = importElementor(" ".repeat(MAX_IMPORT_CHARS + 1));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toContain("larger than 8 MB");
+  });
+
+  test("a page with too many elements keeps the first ones and says so", () => {
+    const many = Array.from({ length: MAX_IMPORT_ELEMENTS + 50 }, (_, i) => ({
+      id: `s${i}`,
+      elType: "widget",
+      widgetType: "spacer",
+      settings: {},
+    }));
+    const result = ok(importElementor(many));
+    expect(validateLayout(result.layout).ok).toBe(true);
+    expect(ofType(result.layout, "spacer").length).toBeLessThan(MAX_IMPORT_ELEMENTS);
+    expect(notes(result)).toContain("the rest was left out");
+  });
+
+  test("very deep nesting is cut, not crashed on", () => {
+    let element: Record<string, unknown> = {
+      id: "leaf",
+      elType: "widget",
+      widgetType: "heading",
+      settings: { title: "Deep" },
+    };
+    for (let i = 0; i < 200; i++)
+      element = {
+        id: `c${i}`,
+        elType: "container",
+        settings: { content_width: "full" },
+        elements: [element],
+      };
+    const result = ok(importElementor([element]));
+    expect(validateLayout(result.layout).ok).toBe(true);
+    expect(notes(result)).toContain("nested deeper than EmVB allows");
+  });
+
+  test("W-949: an Elementor 3 gradient overlay becomes a gradient overlay", () => {
+    const result = ok(
+      importElementor([
+        {
+          id: "c",
+          elType: "container",
+          settings: {
+            content_width: "full",
+            background_background: "classic",
+            background_image: { url: "https://cdn.example/hero.jpg" },
+            background_overlay_background: "gradient",
+            background_overlay_color: "#000000",
+            background_overlay_color_b: "rgba(0,0,0,0)",
+            background_overlay_gradient_angle: { unit: "deg", size: 90 },
+            background_overlay_opacity: { size: 0.8 },
+          },
+          elements: [],
+        },
+      ]),
+    );
+    const [box] = (result.layout.root.children ?? []) as Node[];
+    expect(box?.style?.["overlay"]).toEqual({
+      gradient: {
+        type: "linear",
+        angle: 90,
+        stops: [
+          { color: "#000000", at: 0 },
+          { color: "#00000000", at: 100 },
+        ],
+      },
+      opacity: 0.8,
+    });
+  });
+
+  test("W-953: Elementor 3 transforms and hover transforms carry over", () => {
+    const result = ok(
+      importElementor([
+        {
+          id: "w",
+          elType: "widget",
+          widgetType: "heading",
+          settings: {
+            title: "Lift me",
+            _transform_rotateZ_effect: { unit: "px", size: 5 },
+            _transform_translateY_effect_hover: { unit: "px", size: -6 },
+            _transform_scale_effect_hover: { size: 1.05 },
+          },
+        },
+      ]),
+    );
+    const heading = ofType(result.layout, "heading")[0];
+    expect(heading?.style?.["transform"]).toEqual({ rotate: 5 });
+    expect(heading?.states).toEqual({ hover: { transform: { y: -6, scale: 105 } } });
+  });
+
+  test("W-954: Elementor 3 flex child settings carry over", () => {
+    const result = ok(
+      importElementor([
+        {
+          id: "w",
+          elType: "widget",
+          widgetType: "heading",
+          settings: {
+            title: "Grow",
+            _flex_size: "custom",
+            _flex_grow: "2",
+            _flex_shrink: "0",
+            _flex_align_self: "center",
+            _flex_order: "end",
+          },
+        },
+      ]),
+    );
+    expect(ofType(result.layout, "heading")[0]?.style).toMatchObject({
+      flexGrow: 2,
+      flexShrink: 0,
+      alignSelf: "center",
+      order: 99,
+    });
+  });
+
+  test("long text is split, never cut", () => {
+    const long = `${"word ".repeat(1000)}end`;
+    const result = ok(
+      importElementor([
+        {
+          id: "t",
+          elType: "widget",
+          widgetType: "text-editor",
+          settings: { editor: `<p>${long}</p>` },
+        },
+      ]),
+    );
+    const texts = ofType(result.layout, "text").map((n) => String(props(n)["text"]));
+    expect(texts.length).toBeGreaterThan(1);
+    expect(texts.join(" ")).toBe(long);
+  });
+
+  test("bad values in settings are dropped, not passed on", () => {
+    const result = ok(
+      importElementor([
+        {
+          id: "c",
+          elType: "container",
+          settings: {
+            content_width: "full",
+            background_background: "classic",
+            background_color: "red;}body{background:red",
+            padding: { unit: "px", top: "-5", right: "1e9", bottom: "abc", left: "12" },
+            min_height: { unit: "furlong", size: 3 },
+            _element_id: "has space",
+            typography_font_family: "x;}",
+          },
+          elements: [
+            {
+              id: "h",
+              elType: "widget",
+              widgetType: "heading",
+              settings: {
+                title: "Ok",
+                typography_typography: "custom",
+                typography_font_family: 'Evil"; } body { x',
+                title_color: "expression(alert(1))",
+              },
+            },
+          ],
+        },
+      ]),
+    );
+    const [box] = result.layout.root.children ?? [];
+    expect((box as Node).style).toEqual({
+      flexDirection: "column",
+      gap: { value: 20, unit: "px" },
+      paddingLeft: { value: 12, unit: "px" },
+    });
+    expect((box as Node).htmlId).toBeUndefined();
+    const heading = ofType(result.layout, "heading")[0];
+    // Custom typography with an unusable family sets no font; a bad colour sets no colour.
+    expect(heading?.style ?? {}).not.toHaveProperty("fontFamily");
+    expect(heading?.style ?? {}).not.toHaveProperty("color");
+  });
+});
+
+describe("Elementor 3 uploaded SVG icons (W-951)", () => {
+  const page = JSON.stringify({
+    content: [
+      {
+        id: "i1",
+        elType: "widget",
+        widgetType: "icon",
+        settings: {
+          selected_icon: {
+            library: "svg",
+            value: { id: 12, url: "https://old.example/uploads/truck-logo.svg" },
+          },
+        },
+      },
+      { id: "h1", elType: "widget", widgetType: "heading", settings: { title: "Fleet" } },
+    ],
+  });
+
+  test("with the file's markup the icon keeps its own SVG, recolourable", () => {
+    const result = ok(importElementor(page, { icon, svg: () => SVG }));
+    const [found] = ofType(result.layout, "icon");
+    expect(props(found)).toMatchObject({ iconId: "file:truck-logo", iconSvg: SVG });
+    expect(result.svgFiles).toEqual([]);
+  });
+
+  test("without it the icon is left out, the file listed and the report says how to add it", () => {
+    const result = ok(importElementor(page, { icon }));
+    expect(ofType(result.layout, "icon")).toEqual([]);
+    expect(result.svgFiles).toEqual(["https://old.example/uploads/truck-logo.svg"]);
+    expect(result.notes.map((n) => n.message).join("\n")).toContain(
+      "add the .svg files in the import dialog",
+    );
+  });
+});
+
+describe("images copied to the media library (W-958)", () => {
+  const OLD = "https://old.example/wp-content/uploads/";
+  const page = JSON.stringify({
+    content: [
+      {
+        id: "c1",
+        elType: "container",
+        settings: { background_background: "classic", background_image: { url: `${OLD}bg.jpg` } },
+        elements: [
+          {
+            id: "i1",
+            elType: "widget",
+            widgetType: "image",
+            settings: { image: { url: `${OLD}photo.jpg` }, link_to: "file" },
+          },
+        ],
+      },
+    ],
+  });
+
+  test("the export's old-site images are listed for copying", () => {
+    const result = ok(importElementor(page, { icon }));
+    expect(result.images.toSorted()).toEqual([`${OLD}bg.jpg`, `${OLD}photo.jpg`]);
+    expect(result.notes.map((n) => n.message).join("\n")).toContain(
+      "Copy them to the media library",
+    );
+  });
+
+  test("copies replace every use: image source with its media id, file link and background", () => {
+    const media = (url: string) =>
+      url.startsWith(OLD)
+        ? {
+            url: `/_emdash/api/media/file/${url.slice(OLD.length)}`,
+            id: `m-${url.slice(OLD.length)}`,
+          }
+        : undefined;
+    const result = ok(importElementor(page, { icon, media }));
+    const json = JSON.stringify(result.layout);
+    expect(json).not.toContain(OLD);
+    const [image] = ofType(result.layout, "image");
+    expect(props(image)).toMatchObject({
+      src: "/_emdash/api/media/file/photo.jpg",
+      mediaId: "m-photo.jpg",
+      href: "/_emdash/api/media/file/photo.jpg",
+    });
+    expect(json).toContain("/_emdash/api/media/file/bg.jpg");
+    expect(result.notes.map((n) => n.message).join("\n")).not.toContain("original address");
+  });
+
+  test("a copy at an unsafe address is not used", () => {
+    const result = ok(
+      importElementor(page, { icon, media: () => ({ url: "javascript:alert(1)" }) }),
+    );
+    expect(JSON.stringify(result.layout)).not.toContain("javascript");
+    expect(JSON.stringify(result.layout)).toContain(`${OLD}photo.jpg`);
+  });
+});
+
+describe("inline formatting from Elementor (W-950)", () => {
+  test("bold, italic, coloured and linked words in a heading stay formatted", () => {
+    const result = ok(
+      importElementor(
+        JSON.stringify({
+          content: [
+            {
+              id: "h1",
+              elType: "widget",
+              widgetType: "heading",
+              settings: {
+                title:
+                  'Trucks <strong>insured</strong>, <span style="color: rgb(212, 160, 23)">fast</span> &amp; <a href="/quote">online</a>',
+                header_size: "h1",
+              },
+            },
+          ],
+        }),
+        { icon },
+      ),
+    );
+    const [heading] = ofType(result.layout, "heading");
+    expect(props(heading)).toEqual({
+      text: "Trucks insured, fast & online",
+      level: 1,
+      marks: [
+        { start: 7, end: 14, bold: true },
+        { start: 16, end: 20, color: "#d4a017" },
+        { start: 23, end: 29, href: "/quote" },
+      ],
+    });
+    expect(result.notes.map((n) => n.message).join("\n")).not.toContain("became plain text");
+  });
+
+  test("a Text Editor paragraph keeps its formatting; other formatting is still flattened", () => {
+    const { blocks, flattened } = htmlToBlocks(
+      "<p>Call <b><i>now</i></b> or <u>later</u></p>",
+      (u) => u,
+      (u) => u,
+    );
+    expect(blocks).toEqual([
+      {
+        kind: "text",
+        text: "Call now or later",
+        marks: [{ start: 5, end: 8, bold: true, italic: true }],
+      },
+    ]);
+    expect(flattened).toBe(true);
+  });
+
+  test("unsafe links and colours never become marks", () => {
+    const { blocks } = htmlToBlocks(
+      '<p><a href="javascript:alert(1)">bad</a> <span style="color:expression(alert(1))">x</span> <font color="#00ff00">ok</font></p>',
+      (u) => (u.startsWith("javascript") ? undefined : u),
+      (u) => u,
+    );
+    expect(blocks).toEqual([
+      { kind: "text", text: "bad x ok", marks: [{ start: 6, end: 8, color: "#00ff00" }] },
+    ]);
+  });
+});
+
+describe("Elementor laptop values (W-956)", () => {
+  const heading = (settings: Record<string, unknown>) =>
+    ok(
+      importElementor(
+        JSON.stringify({
+          content: [
+            {
+              id: "h1",
+              elType: "widget",
+              widgetType: "heading",
+              settings: { title: "Hello", ...settings },
+            },
+          ],
+        }),
+        { icon },
+      ),
+    );
+
+  test("a laptop value stays on Laptop, and tablets inherit it", () => {
+    const result = heading({
+      align: "left",
+      align_laptop: "center",
+      typography_typography: "custom",
+      typography_font_size: { unit: "px", size: 40 },
+      typography_font_size_laptop: { unit: "px", size: 32 },
+    });
+    const [found] = ofType(result.layout, "heading");
+    expect(found?.devices?.["laptop"]).toMatchObject({ fontSize: { value: 32, unit: "px" } });
+    expect(found?.devices?.["tablet"]?.["fontSize"]).toBeUndefined();
+  });
+
+  test("hide on desktop covers laptops unless the site has the laptop breakpoint", () => {
+    const [plain] = ofType(heading({ hide_desktop: "hidden-desktop" }).layout, "heading");
+    expect(plain?.hiddenOn).toEqual(["desktop", "laptop"]);
+    const [split] = ofType(
+      heading({ hide_desktop: "hidden-desktop", hide_laptop: "" }).layout,
+      "heading",
+    );
+    expect(split?.hiddenOn).toEqual(["desktop"]);
+    const [laptopOnly] = ofType(heading({ hide_laptop: "hidden-laptop" }).layout, "heading");
+    expect(laptopOnly?.hiddenOn).toEqual(["laptop"]);
+  });
+});
+
+describe("Elementor widescreen values (W-959)", () => {
+  const imported = (settings: Record<string, unknown>, extra: Record<string, unknown>[] = []) =>
+    ok(
+      importElementor(
+        JSON.stringify({
+          content: [
+            {
+              id: "h1",
+              elType: "widget",
+              widgetType: "heading",
+              settings: { title: "Hello", ...settings },
+            },
+            ...extra,
+          ],
+        }),
+        { icon },
+      ),
+    );
+
+  test("a widescreen value goes to Wide screen (style.wide), not Desktop", () => {
+    const [found] = ofType(
+      imported({
+        typography_typography: "custom",
+        typography_font_size: { unit: "px", size: 40 },
+        typography_font_size_widescreen: { unit: "px", size: 72 },
+      }).layout,
+      "heading",
+    );
+    expect(found?.style?.["fontSize"]).toEqual({ value: 40, unit: "px" });
+    expect(found?.style?.["wide"]).toEqual({ fontSize: { value: 72, unit: "px" } });
+  });
+
+  test("hide on widescreen, apart from Desktop, only when the site has that breakpoint", () => {
+    const wide = (settings: Record<string, unknown>) =>
+      (
+        ofType(imported(settings).layout, "heading")[0]?.style?.["wide"] as
+          | { hidden?: boolean }
+          | undefined
+      )?.hidden;
+    expect(wide({ hide_desktop: "hidden-desktop" })).toBeUndefined();
+    expect(wide({ hide_desktop: "hidden-desktop", hide_widescreen: "" })).toBe(false);
+    expect(wide({ hide_widescreen: "hidden-widescreen" })).toBe(true);
+    expect(wide({ hide_desktop: "hidden-desktop", hide_widescreen: "hidden-widescreen" })).toBe(
+      undefined,
+    );
+  });
+
+  test("a boxed container keeps its Laptop and Wide screen layout values (W-956 fix)", () => {
+    const result = ok(
+      importElementor(
+        JSON.stringify({
+          content: [
+            {
+              id: "c1",
+              elType: "container",
+              settings: {
+                content_width: "boxed",
+                flex_direction: "row",
+                flex_direction_laptop: "column",
+                flex_direction_widescreen: "row-reverse",
+              },
+              elements: [
+                {
+                  id: "h1",
+                  elType: "widget",
+                  widgetType: "heading",
+                  settings: { title: "Hi" },
+                },
+              ],
+            },
+          ],
+        }),
+        { icon },
+      ),
+    );
+    const containers = ofType(result.layout, "container").filter(
+      (c) => c.style?.["flexDirection"] !== undefined || c.devices?.["laptop"] !== undefined,
+    );
+    const inner = containers.find((c) => c.style?.["maxWidth"] !== undefined);
+    expect(inner?.devices?.["laptop"]).toMatchObject({ flexDirection: "column" });
+    expect(inner?.style?.["wide"]).toMatchObject({ flexDirection: "row-reverse" });
+  });
+});
+
+describe("Elementor HTML to blocks (W-945)", () => {
+  const keep = (url: string) => (/^https?:\/\//.test(url) ? url : undefined);
+
+  test("blocks, lists, rules, images and video embeds in order", () => {
+    const { blocks, flattened, dropped } = htmlToBlocks(
+      '<h2>Title</h2><p>One <b>bold</b><br/>two</p><ul><li>A</li><li>B<ul><li>B1</li></ul></li></ul><hr><img src="https://x.test/a.png" alt="A"><iframe src="https://player.vimeo.com/video/123"></iframe><p><a href="https://x.test">Only a link</a></p><table><tr><td>c1</td><td>c2</td></tr></table>',
+      keep,
+      keep,
+    );
+    expect(blocks).toEqual([
+      { kind: "heading", level: 2, text: "Title" },
+      { kind: "text", text: "One bold\ntwo", marks: [{ start: 4, end: 8, bold: true }] },
+      { kind: "list", ordered: false, items: ["A", "B", "B1"] },
+      { kind: "divider" },
+      { kind: "image", src: "https://x.test/a.png", alt: "A" },
+      { kind: "video", url: "https://vimeo.com/123" },
+      { kind: "link", text: "Only a link", href: "https://x.test" },
+      { kind: "text", text: "c1 c2" },
+    ]);
+    expect(flattened).toBe(true);
+    expect(dropped).toEqual(["table (its cells are kept as paragraphs)"]);
+  });
+
+  test("a numbered list keeps where it starts counting (W-952)", () => {
+    const { blocks } = htmlToBlocks(
+      '<ol start="4"><li>Four</li></ol><ol start="0"><li>Zero</li></ol><ol start="x"><li>X</li></ol>',
+      keep,
+      keep,
+    );
+    expect(blocks).toEqual([
+      { kind: "list", ordered: true, start: 4, items: ["Four"] },
+      { kind: "list", ordered: true, items: ["Zero"] },
+      { kind: "list", ordered: true, items: ["X"] },
+    ]);
+  });
+
+  test("entities decode once and source line breaks are spaces", () => {
+    const { blocks } = htmlToBlocks(
+      "<p>a&amp;b &lt;tag&gt; &#169; &#x1F600;\n next &bogus;</p>",
+      keep,
+      keep,
+    );
+    expect(blocks).toEqual([{ kind: "text", text: "a&b <tag> © 😀 next &bogus;" }]);
+  });
+});
+
+describe("Elementor import: the 1.2 widgets", () => {
+  const one = (widgetType: string, settings: Record<string, unknown>) =>
+    ok(
+      importElementor(JSON.stringify([{ id: "w", elType: "widget", widgetType, settings }]), {
+        icon,
+      }),
+    );
+
+  test("W-1025: a dismissible Alert stays dismissible, with its own colours", () => {
+    const result = one("alert", {
+      alert_type: "danger",
+      alert_description: "Payment failed.",
+      show_dismiss: "show",
+      background: "#ffeeee",
+      border_color: "#cc0000",
+    });
+    const [alert] = ofType(result.layout, "alert");
+    expect(props(alert)).toEqual({
+      variant: "danger",
+      text: "Payment failed.",
+      hideIcon: true,
+      dismissible: true,
+    });
+    expect(alert?.style).toEqual({ backgroundColor: "#ffeeee", borderColor: "#cc0000" });
+    expect(notes(result)).not.toContain("dismissed");
+  });
+
+  test("W-1024: Social Icons become Social icons with one link per profile, in brand colours", () => {
+    const fa = (value: string, url: string) => ({
+      social_icon: { value, library: "fa-brands" },
+      link: { url, is_external: "on" },
+    });
+    const result = one("social-icons", {
+      shape: "circle",
+      social_icon_list: [
+        fa("fab fa-x-twitter", "https://x.com/emvb"),
+        fa("fab fa-linkedin-in", "https://linkedin.com/company/emvb"),
+      ],
+    });
+    const [icons] = ofType(result.layout, "social-icons");
+    expect(props(icons)).toEqual({ shape: "circle", brandColors: true });
+    expect(ofType(result.layout, "social-link").map((n) => props(n))).toEqual([
+      { network: "x", href: "https://x.com/emvb", newTab: true },
+      { network: "linkedin", href: "https://linkedin.com/company/emvb", newTab: true },
+    ]);
+  });
+
+  test("W-1026: Elementor's Sticky becomes CSS sticky with its edge, offset and devices", () => {
+    const box = (settings: Record<string, unknown>) =>
+      importElementor(
+        JSON.stringify([
+          {
+            id: "c",
+            elType: "container",
+            settings,
+            elements: [
+              { id: "h", elType: "widget", widgetType: "heading", settings: { title: "Hi" } },
+            ],
+          },
+        ]),
+        { icon },
+      );
+    const top = ok(box({ sticky: "top", sticky_offset: 12 })).layout.root.children?.[0] as Node;
+    expect(top.style).toMatchObject({
+      position: "sticky",
+      top: { value: 12, unit: "px" },
+      zIndex: 99,
+    });
+    expect(top.devices).toBeUndefined();
+    const desktopOnly = ok(box({ sticky: "bottom", sticky_on: ["desktop"] })).layout.root
+      .children?.[0] as Node;
+    expect(desktopOnly.style).toMatchObject({
+      position: "sticky",
+      bottom: { value: 0, unit: "px" },
+    });
+    expect(desktopOnly.devices).toMatchObject({ tablet: { position: "static" } });
+    expect(notes(ok(box({ sticky: "top" })))).not.toContain("Sticky positioning wasn't imported");
+  });
+
+  test("W-1018: an Image Carousel is a Carousel with a slide per picture and its navigation", () => {
+    const pics = [
+      { id: 1, url: "https://old.example/a.jpg", alt: "A" },
+      { id: 2, url: "https://old.example/b.jpg", alt: "B" },
+    ];
+    const plain = one("image-carousel", { carousel: pics, slides_to_show: 6 });
+    expect(props(ofType(plain.layout, "carousel")[0])).toEqual({
+      perView: 4,
+      arrows: true,
+      dots: true,
+      loop: true,
+    });
+    expect(ofType(plain.layout, "carousel-slide")).toHaveLength(2);
+    expect(ofType(plain.layout, "image").map((n) => props(n)["alt"])).toEqual(["A", "B"]);
+    expect(notes(plain)).toContain("don't play by themselves");
+    const playing = one("image-carousel", {
+      carousel: pics,
+      navigation: "dots",
+      autoplay: "yes",
+      autoplay_speed: 4000,
+      infinite: "no",
+    });
+    expect(props(ofType(playing.layout, "carousel")[0])).toEqual({
+      perView: 3,
+      dots: true,
+      autoplay: true,
+      interval: 4,
+    });
+  });
+
+  test("W-1019: an Image Gallery is a Gallery with its pictures and Elementor's lightbox", () => {
+    const pics = [
+      { id: 1, url: "https://old.example/a.jpg", alt: "A" },
+      { id: 2, url: "https://old.example/b.jpg", alt: "B" },
+    ];
+    const on = one("image-gallery", { wp_gallery: pics, gallery_columns: 2 });
+    expect(props(ofType(on.layout, "gallery")[0])).toEqual({ columns: 2, lightbox: true });
+    expect(ofType(on.layout, "gallery-image").map((n) => props(n)["alt"])).toEqual(["A", "B"]);
+    const off = one("image-gallery", { wp_gallery: pics, gallery_columns: 9, open_lightbox: "no" });
+    expect(props(ofType(off.layout, "gallery")[0])).toEqual({ columns: 6 });
+  });
+
+  test("W-1024: a network without a preset keeps the widget as icons, nothing lost", () => {
+    const settings = {
+      social_icon_list: [
+        {
+          social_icon: { value: "fab fa-facebook", library: "fa-brands" },
+          link: { url: "https://facebook.com/x" },
+        },
+        {
+          social_icon: { value: "fab fa-vimeo-v", library: "fa-brands" },
+          link: { url: "https://vimeo.com/x" },
+        },
+      ],
+    };
+    // Every icon resolves here, so the fallback's two Icons are both kept.
+    const result = ok(
+      importElementor(
+        JSON.stringify([{ id: "w", elType: "widget", widgetType: "social-icons", settings }]),
+        { icon: () => SVG },
+      ),
+    );
+    expect(ofType(result.layout, "social-icons")).toEqual([]);
+    expect(ofType(result.layout, "icon")).toHaveLength(2);
+  });
+
+  test("W-1025: an unknown kind is an info Alert; an empty one is left out", () => {
+    expect(
+      props(ofType(one("alert", { alert_type: "odd", alert_title: "T" }).layout, "alert")[0]),
+    ).toMatchObject({ variant: "info", title: "T", text: "" });
+    const empty = importElementor(
+      JSON.stringify([{ id: "w", elType: "widget", widgetType: "alert", settings: {} }]),
+      { icon },
+    );
+    expect(empty.ok).toBe(false);
+  });
+});

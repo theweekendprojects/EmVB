@@ -1,0 +1,20 @@
+---
+/** The EmVB icon: "Em" over "VB" in a rounded square (W-966). Source: docs/brand/icon-small-dark.svg. */
+import inner from "../brand/icon-inner.svg.txt?raw";
+
+interface Props {
+  size?: number;
+}
+
+const { size = 28 } = Astro.props;
+---
+
+<svg
+  class="logo"
+  width={size}
+  height={size}
+  viewBox="0 0 512 512"
+  aria-hidden="true"
+  focusable="false"
+  set:html={inner}
+/>

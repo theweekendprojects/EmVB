@@ -1,0 +1,2020 @@
+import { boundedArray } from "../bounded-array.ts";
+import { z } from "zod";
+import { LIST_MARKERS } from "../css-keywords.ts";
+import { MAX_TEXT_LENGTH } from "../limits.ts";
+import { ImageEdit } from "../image-edit/schema.ts";
+import {
+  ColorValue,
+  DeviceStyles,
+  HiddenOn,
+  Length,
+  OwnStyle,
+  StyleProps,
+  StyleStates,
+} from "./style.ts";
+
+/**
+ * 16 since W-481 (D-061): an optional editor-only `edit` record on images (image editor).
+ * Every other value is unchanged.
+ * 15 since W-341: optional per-element `dir`, image link/caption/focal point/sources, button icons,
+ * a table-of-contents element, and container queries. Every other value is unchanged.
+ * 14 since W-329: optional visitor `segments` in an element's audience (the host names them);
+ * W-330 Loop permalink, image, excerpt and filter options; W-331 `ch` lengths and negative
+ * margins. Every other value is unchanged.
+ * 13 since W-307: optional `bind` on a node (live data bindings); W-308 collection Loops and the
+ * Loop's Empty state element. Every other value is unchanged.
+ * 12 since W-160: gradient type, stop locations, and up to 10 stops. v11 gradients
+ * (`{ angle, from, to }`) become a linear gradient on read.
+ * 18 since W-925 (D-065, contract 1.0): the Section reference node is `part-ref`, a node's
+ * editor name is `editorLabel`, a Loop's template part is `partId`, and the four motion style
+ * keys sit under one `motion` record. Older documents are rewritten on read.
+ * 11 since W-156 and W-157 (D-045): the layout Section element and an editor-only node label.
+ */
+export const LAYOUT_SCHEMA_VERSION = 18;
+
+/**
+ * The frozen document contract (W-925, D-065). Within 1.x a new optional key may appear
+ * without a schemaVersion bump, and readers keep keys they do not know; a rename or a removal
+ * needs 2.0. `schemaVersion` stays a plain number for the migration chain.
+ */
+export const CONTRACT_VERSION = "1.0";
+
+export const NodeId = z
+  .string()
+  .regex(/^[A-Za-z0-9_-]{4,24}$/, "Ids are 4-24 letters, digits, _ or -");
+const ClassIds = boundedArray(z.string().regex(/^[a-z0-9-]{1,40}$/), 20);
+/** CSS id attribute (Advanced). Letters first; unique on the page (checked in validateLayout). */
+const HtmlId = z
+  .string()
+  .regex(
+    /^[A-Za-z][A-Za-z0-9_-]{0,63}$/,
+    "CSS ids start with a letter and are at most 64 characters",
+  );
+
+export const CONTAINER_TAGS = [
+  "div",
+  "section",
+  "header",
+  "footer",
+  "main",
+  "article",
+  "aside",
+  "nav",
+] as const;
+export const TEXT_TAGS = ["p", "div"] as const;
+
+/** The editor-only name of a node in Layers (W-157, D-045). Never rendered on the page. */
+const NodeLabel = z.string().trim().min(1).max(80);
+
+/** `data-*` and `aria-*` only. Names stay unique on the element (W-105 / R-032). */
+const HtmlAttribute = z.strictObject({
+  name: z
+    .string()
+    .regex(
+      /^(?:data|aria)-[a-z][a-z0-9-]{0,40}$/,
+      "Use a data-* or aria-* name, starting with a letter",
+    ),
+  value: z.string().max(200),
+});
+
+const HtmlAttributes = boundedArray(HtmlAttribute, 20);
+
+/** Where a bound field reads its live value (W-307). */
+export const BIND_SOURCES = ["post", "site", "param"] as const;
+export type BindSource = (typeof BIND_SOURCES)[number];
+
+/**
+ * A field bound to live data (W-307): a post field, a site setting or a URL parameter. The
+ * field's own value stays as the fallback when the source has nothing to show.
+ */
+export const Binding = z.strictObject({
+  source: z.enum(BIND_SOURCES),
+  key: z
+    .string()
+    .regex(
+      /^[A-Za-z][A-Za-z0-9_.-]{0,63}$/,
+      "Keys start with a letter: letters, digits, _, . or -, up to 64",
+    ),
+  /**
+   * A link or image bound to a URL parameter takes only same-site URLs (relative, or this site's
+   * origin) unless this is set (W-307). Anyone can craft such a link, so outside sites are opt-in.
+   */
+  outside: z.boolean().optional(),
+});
+export type Binding = z.infer<typeof Binding>;
+
+/** Prop name → binding. Which props may be bound is checked against BINDABLE_FIELDS on render. */
+const Bindings = z
+  .record(z.string().regex(/^[a-zA-Z]{1,32}$/), Binding)
+  .refine((value) => Object.keys(value).length <= 8, "At most 8 bound fields per element");
+
+/** A/B test names (W-312): lowercase letters, digits and dashes, up to 32. */
+export const AB_TEST_NAME = /^[a-z0-9][a-z0-9-]{0,31}$/;
+
+/**
+ * One arm of an edge A/B test (W-312). Elements sharing a `test` are the variants; the host picks
+ * one arm per visitor on the server (a cookie keeps it), so there is no flicker and no script.
+ */
+export const Variant = z.strictObject({
+  test: z.string().regex(AB_TEST_NAME, "Lowercase letters, digits and -, up to 32"),
+  arm: z.enum(["a", "b"]),
+  /** Share of visitors who see B, 1–99 %. Read from the test's B element. Unset = 50. */
+  split: z.number().int().min(1).max(99).optional(),
+});
+export type Variant = z.infer<typeof Variant>;
+
+export const AUDIENCE_DEVICES = ["mobile", "tablet", "desktop"] as const;
+/** A visitor segment name the host passes and a Visitors rule matches (W-329). */
+/** A host segment name: letters, digits, and `:` `_` `-`, up to 64 characters (`plan:pro`). */
+export const AUDIENCE_SEGMENT = /^[a-z0-9][a-z0-9:_-]{0,63}$/;
+const SEGMENT_HINT = "Segments are lowercase letters, digits, :, - or _, such as plan:pro";
+
+/**
+ * Who sees an element (W-313): visitors from these countries, on these devices, new or
+ * returning, at these hours and days. Every rule set must match; `hide` flips it to "everyone
+ * except". Hosts evaluate it on the server; a rule the host can't read (no country header) does
+ * not match.
+ */
+export const Audience = z.strictObject({
+  countries: z
+    .array(z.string().regex(/^[A-Z]{2}$/, "Two-letter country codes, such as CA"))
+    .min(1)
+    .max(50)
+    .optional(),
+  devices: boundedArray(z.enum(AUDIENCE_DEVICES), 3, 1).optional(),
+  visitor: z.enum(["new", "returning"]).optional(),
+  /** From hour `from` up to (not including) hour `to`, 0–24; wraps past midnight when to < from. */
+  hours: z
+    .strictObject({ from: z.number().int().min(0).max(23), to: z.number().int().min(0).max(24) })
+    .optional(),
+  /** Days of the week, 0 = Sunday. */
+  days: boundedArray(z.number().int().min(0).max(6), 7, 1).optional(),
+  /** IANA time zone for hours and days, e.g. America/Toronto. Unset = UTC. */
+  timeZone: z
+    .string()
+    .regex(/^[A-Za-z][A-Za-z0-9_+-]*(\/[A-Za-z0-9_+-]+){0,2}$/)
+    .max(64)
+    .optional(),
+  /**
+   * Visitor segments the host passes (W-329), e.g. `member`, `plan:pro`: the rule matches a
+   * visitor in any of them. A letter or digit, then letters, digits, `:`, `_` or `-`, up to 64.
+   */
+  segments: boundedArray(z.string().regex(AUDIENCE_SEGMENT, SEGMENT_HINT), 20, 1).optional(),
+  hide: z.boolean().optional(),
+});
+export type Audience = z.infer<typeof Audience>;
+
+/** A box may be the link. A link inside a link is dropped at render time (W-111). */
+const BoxLink = {
+  href: z.string().max(2000).optional(),
+  newTab: z.boolean().optional(),
+};
+
+/**
+ * Fields every element carries, known or unknown (W-352). One object so a new field cannot
+ * land on known nodes and be stripped from unknown ones, which is what happened to
+ * `dir`, `container` and `query` before this.
+ */
+const sharedNodeFields = {
+  style: OwnStyle.optional(),
+  states: StyleStates.optional(),
+  devices: DeviceStyles.optional(),
+  hiddenOn: HiddenOn.optional(),
+  classes: ClassIds.optional(),
+  htmlId: HtmlId.optional(),
+  attributes: HtmlAttributes.optional(),
+  /** The name shown in the editor's Navigator (was `label` before schema 18). Never rendered. */
+  editorLabel: NodeLabel.optional(),
+  bind: Bindings.optional(),
+  variant: Variant.optional(),
+  audience: Audience.optional(),
+  /** Text direction for this element only (W-341). Unset follows the site direction. */
+  dir: z.enum(["ltr", "rtl", "auto"]).optional(),
+  /** This box is a container-query container (`container-type: inline-size`) (W-346). */
+  container: z.literal(true).optional(),
+  /**
+   * Style overrides when the nearest query container is at least `min` px wide (W-346).
+   * Emitted as `@container (min-width: Npx)`, not a viewport media query.
+   */
+  query: z
+    .strictObject({
+      min: z.number().int().min(1).max(3840),
+      style: StyleProps,
+    })
+    .optional(),
+};
+
+/** The fields every element has; `props` is the element's own strict props schema. */
+const nodeFields = <T extends string, P extends z.ZodType>(type: T, props: P) => ({
+  id: NodeId,
+  type: z.literal(type),
+  props,
+  ...sharedNodeFields,
+});
+
+const leafNode = <T extends string, P extends z.ZodType>(type: T, props: P) =>
+  z.strictObject(nodeFields(type, props));
+
+const parentNode = <T extends string, P extends z.ZodType>(type: T, props: P) =>
+  z.strictObject({
+    ...nodeFields(type, props),
+    get children(): z.ZodType<LayoutNode[]> {
+      return ChildList;
+    },
+  });
+
+/** W-950: at most this many formatted ranges in one Heading or Text. */
+export const MAX_TEXT_MARKS = 100;
+
+/**
+ * W-950: formatting on part of a Heading's or Text's words: characters `start` to `end` (end not
+ * included) are bold, italic, in a colour and/or a link. The text stays plain; ranges past its
+ * end are clipped when the page is drawn, so changing the text never makes a page invalid.
+ */
+export const TextMark = z.strictObject({
+  start: z.number().int().min(0).max(MAX_TEXT_LENGTH),
+  end: z.number().int().min(1).max(MAX_TEXT_LENGTH),
+  bold: z.literal(true).optional(),
+  italic: z.literal(true).optional(),
+  color: ColorValue.optional(),
+  href: z.string().min(1).max(2000).optional(),
+  newTab: z.literal(true).optional(),
+});
+export type TextMark = z.infer<typeof TextMark>;
+const TextMarks = boundedArray(TextMark, MAX_TEXT_MARKS);
+
+export const HeadingNode = leafNode(
+  "heading",
+  z.strictObject({
+    text: z.string().max(MAX_TEXT_LENGTH),
+    level: z.number().int().min(1).max(6),
+    /** Optional link around the text (W-141), like Elementor's Heading link. */
+    href: z.string().max(2000).optional(),
+    newTab: z.boolean().optional(),
+    /** W-950: bold, italic, colour and links on part of the text (links only when unlinked). */
+    marks: TextMarks.optional(),
+  }),
+);
+
+export const SpacerNode = leafNode(
+  "spacer",
+  z.strictObject({
+    height: Length,
+  }),
+);
+
+export const DividerNode = leafNode("divider", z.strictObject({}));
+
+export const TextNode = leafNode(
+  "text",
+  z.strictObject({
+    text: z.string().max(MAX_TEXT_LENGTH),
+    tag: z.enum(TEXT_TAGS).optional(),
+    /** W-950: bold, italic, colour and links on part of the text. */
+    marks: TextMarks.optional(),
+  }),
+);
+
+export const LabelNode = leafNode(
+  "label",
+  z.strictObject({
+    text: z.string().max(MAX_TEXT_LENGTH),
+  }),
+);
+
+export const LinkNode = leafNode(
+  "link",
+  z.strictObject({
+    text: z.string().max(MAX_TEXT_LENGTH),
+    href: z.string().max(2000),
+    newTab: z.boolean().optional(),
+  }),
+);
+
+export const ButtonNode = leafNode(
+  "button",
+  z.strictObject({
+    text: z.string().max(MAX_TEXT_LENGTH),
+    href: z.string().max(2000).optional(),
+    newTab: z.boolean().optional(),
+    /** Icon shown with the label (W-343). The SVG is stored on the button, like an Icon element. */
+    iconId: z.string().max(64).optional(),
+    iconSvg: z.string().max(32_768).optional(),
+    iconPosition: z.enum(["before", "after"]).optional(),
+    iconGap: z.number().int().min(0).max(64).optional(),
+    iconSize: z.enum(["sm", "md", "lg"]).optional(),
+  }),
+);
+
+export const ListNode = leafNode(
+  "list",
+  z.strictObject({
+    ordered: z.boolean().optional(),
+    /** W-952: the marker style; a number style or `steps` makes the list numbered. */
+    marker: z.enum(LIST_MARKERS).optional(),
+    /** W-952: the first number of a numbered list. */
+    start: z.number().int().min(1).max(9999).optional(),
+    items: boundedArray(z.string().max(MAX_TEXT_LENGTH), 200),
+  }),
+);
+
+/** YouTube/Vimeo privacy embed or media-library video (W-026 / R-013). */
+export const VideoNode = leafNode(
+  "video",
+  z.strictObject({
+    url: z.string().max(2000),
+    title: z.string().min(1).max(200),
+    mediaId: z.string().min(1).max(128).optional(),
+  }),
+);
+
+/**
+ * An icon (W-025 / A-04). `iconId` names it: a bundled Lucide id ("star") or, from the Icon library
+ * (W-234), `<set prefix>:<name>` ("fa-solid:rocket"), so the picker can reopen on it. `iconSvg` is
+ * that icon's SVG, stored with the page so public pages load no icon library; it's sanitized on
+ * every render. Unknown ids without SVG stay on save; the renderer shows a placeholder.
+ * W-239: an uploaded SVG is `upload:<id>` (EmVB's icon uploads); the cap rose from 16 KB to
+ * 32 KB for uploaded logos and illustrations: the SVG sanitizer's own limit (and the SVG
+ * element's), so a stored icon always renders.
+ */
+export const ICON_SVG_MAX = 32_768;
+export const IconNode = leafNode(
+  "icon",
+  z.strictObject({
+    iconId: z.string().min(1).max(64),
+    iconSvg: z.string().max(ICON_SVG_MAX).optional(),
+    /** W-238: paint a multi-colour SVG in the icon's colour (fills and strokes → currentColor). */
+    singleColor: z.boolean().optional(),
+    size: z.number().int().positive().max(512).optional(),
+    decorative: z.boolean().optional(),
+    title: z.string().max(200).optional(),
+    /** Optional link around the icon (W-141); the title names the link. */
+    href: z.string().max(2000).optional(),
+    newTab: z.boolean().optional(),
+  }),
+)
+  .refine((node) => node.props.decorative === true || (node.props.title?.length ?? 0) > 0, {
+    message: "Title is required unless the icon is marked decorative.",
+    path: ["props", "title"],
+  })
+  .refine((node) => !node.props.href?.trim() || (node.props.title?.trim().length ?? 0) > 0, {
+    message: "A linked icon needs a title: it names the link.",
+    path: ["props", "title"],
+  });
+
+/** Image from the media library or a URL (W-024 / R-007). Alt required unless decorative. */
+export const ImageNode = leafNode(
+  "image",
+  z.strictObject({
+    src: z.string().max(2000),
+    alt: z.string().max(500),
+    decorative: z.boolean().optional(),
+    width: z.number().int().positive().max(10000).optional(),
+    height: z.number().int().positive().max(10000).optional(),
+    mediaId: z.string().min(1).max(128).optional(),
+    /** Load right away (eager, high fetch priority) for the hero/LCP image (W-226). */
+    priority: z.boolean().optional(),
+    /** Link around the image. Size styles stay on the img (W-342). */
+    href: z.string().max(2000).optional(),
+    newTab: z.boolean().optional(),
+    caption: z.string().max(500).optional(),
+    /** Focal point as object-position percentages (W-344). */
+    focalX: z.number().int().min(0).max(100).optional(),
+    focalY: z.number().int().min(0).max(100).optional(),
+    /** Extra widths for srcset. Omitted when there is no distinct URL (W-344). */
+    sources: z
+      .array(
+        z.strictObject({
+          src: z.string().max(2000),
+          width: z.number().int().min(1).max(8000),
+        }),
+      )
+      .max(6)
+      .optional(),
+    /** Editor-only record of an image-editor edit; never rendered (W-481). */
+    edit: ImageEdit.optional(),
+  }),
+).refine((node) => node.props.decorative === true || node.props.alt.length > 0, {
+  message: "Alt text is required unless the image is marked decorative.",
+  path: ["props", "alt"],
+});
+
+export const ContainerNode = parentNode(
+  "container",
+  z.strictObject({
+    tag: z.enum(CONTAINER_TAGS).optional(),
+    ...BoxLink,
+  }),
+);
+
+/** Field name on a forms-plugin form (D-015). */
+/** Form field names (W-202 checks them as you type with the same rule). */
+export const FIELD_NAME_PATTERN = /^[a-zA-Z][a-zA-Z0-9_-]*$/;
+export const MAX_FIELD_NAME = 80;
+const FieldName = z
+  .string()
+  .min(1)
+  .max(MAX_FIELD_NAME)
+  .regex(FIELD_NAME_PATTERN, "Field names start with a letter");
+
+export const DivBlockNode = parentNode("div-block", z.strictObject({ ...BoxLink }));
+
+/**
+ * A layout Section (W-156, D-045): a full-width band whose contents sit in a centred inner box,
+ * `contentWidth` wide at most (1140 px when unset), or the full width with `fullWidth`.
+ */
+export const LayoutSectionNode = parentNode(
+  "layout-section",
+  z.strictObject({
+    tag: z.enum(CONTAINER_TAGS).optional(),
+    contentWidth: Length.optional(),
+    fullWidth: z.boolean().optional(),
+  }),
+);
+
+export const FlexboxNode = parentNode("flexbox", z.strictObject({ ...BoxLink }));
+
+/**
+ * Equal columns, or custom tracks when `columnTracks` is set for that device. Children span
+ * with `gridColumnSpan` and `gridRowSpan`, and can start on a line with `gridColumnStart` and
+ * `gridRowStart`. Tablet and mobile may have their own count (W-139); unset follows the next
+ * wider device.
+ */
+/**
+ * One grid track: `1fr`/`2fr`/`3fr`, `auto`, `min-content`, `max-content`, or a length
+ * in the same units as other lengths (`200px`, `20%`, `1.5rem`).
+ */
+const GRID_TRACK =
+  /^(?:1fr|2fr|3fr|auto|min-content|max-content|0|(?:\d+(?:\.\d+)?)(?:px|rem|em|%|vw|vh|ch))$/;
+const GridTracks = boundedArray(z.string().regex(GRID_TRACK), 12, 1);
+
+export const GridNode = parentNode(
+  "grid",
+  z.strictObject({
+    columns: z.number().int().min(1).max(12),
+    columnsTablet: z.number().int().min(1).max(12).optional(),
+    columnsMobile: z.number().int().min(1).max(12).optional(),
+    /** Replaces equal `columns` on that device when set. */
+    columnTracks: GridTracks.optional(),
+    columnTracksTablet: GridTracks.optional(),
+    columnTracksMobile: GridTracks.optional(),
+    ...BoxLink,
+  }),
+);
+
+/** Several disclosures. Items are `<details>`, so the public page needs no script (W-106). */
+export const AccordionNode = parentNode("accordion", z.strictObject({}));
+
+export const AccordionItemNode = parentNode(
+  "accordion-item",
+  z.strictObject({
+    summary: z.string().min(1).max(200),
+    open: z.boolean().optional(),
+  }),
+);
+
+/** A row or column of menu items. Dropdowns and wide panels are the items' children (W-162). */
+export const MenuNode = parentNode(
+  "menu",
+  z.strictObject({
+    direction: z.enum(["row", "column"]),
+    /** Names the navigation landmark. Omitted uses "Menu". */
+    label: z.string().max(80).optional(),
+  }),
+);
+
+/** A link, and, when it has children, the dropdown or wide panel under it. */
+export const MenuItemNode = parentNode(
+  "menu-item",
+  z.strictObject({
+    text: z.string().min(1).max(MAX_TEXT_LENGTH),
+    href: z.string().max(2000).optional(),
+    newTab: z.boolean().optional(),
+    /** The panel stretches across the menu instead of sitting under the item. */
+    wide: z.boolean().optional(),
+  }),
+);
+
+export const SvgNode = leafNode(
+  "svg",
+  z.strictObject({
+    /** Sanitized SVG markup (allowlisted tags/attrs only). */
+    markup: z.string().max(32768),
+    title: z.string().max(MAX_TEXT_LENGTH).optional(),
+    decorative: z.boolean().optional(),
+    size: z.number().int().positive().max(2048).optional(),
+  }),
+);
+
+export const TabPanelNode = parentNode(
+  "tab-panel",
+  z.strictObject({
+    label: z.string().min(1).max(MAX_TEXT_LENGTH),
+  }),
+);
+
+const TabsNodeSchema = parentNode("tabs", z.strictObject({}));
+
+export const FORM_FIELD_TYPES = [
+  "text-input",
+  "textarea",
+  "select",
+  "checkbox",
+  "radio",
+  "submit",
+] as const;
+
+export const FormNode = parentNode(
+  "form",
+  z.strictObject({
+    /** Empty until the editor binds a forms-plugin form (W-036). */
+    formId: z.string().max(64),
+  }),
+);
+
+const InputFieldProps = z.strictObject({
+  field: FieldName,
+  label: z.string().max(200).optional(),
+  placeholder: z.string().max(200).optional(),
+});
+
+export const TextInputNode = leafNode("text-input", InputFieldProps);
+
+export const TextareaNode = leafNode("textarea", InputFieldProps);
+
+export const SelectNode = leafNode("select", InputFieldProps);
+
+export const CheckboxNode = leafNode(
+  "checkbox",
+  z.strictObject({
+    field: FieldName,
+    label: z.string().max(200).optional(),
+  }),
+);
+
+export const RadioNode = leafNode("radio", InputFieldProps);
+
+export const SubmitNode = leafNode(
+  "submit",
+  z.strictObject({
+    label: z.string().min(1).max(80).optional(),
+  }),
+);
+
+/** Dynamic post title from ThemeDynamicData (S7d). */
+export const PostTitleNode = leafNode(
+  "post-title",
+  z.strictObject({
+    level: z.number().int().min(1).max(6).optional(),
+  }),
+);
+
+/** Dynamic post excerpt (escaped text). `maxWords` cuts it to that many words, with "…" (W-177). */
+export const PostExcerptNode = leafNode(
+  "post-excerpt",
+  z.strictObject({ maxWords: z.number().int().positive().max(10_000).optional() }),
+);
+
+/** Dynamic post body from Portable Text / string (sanitized via VNode serialize). */
+export const PostContentNode = leafNode("post-content", z.strictObject({}));
+
+/** Dynamic featured image when a URL is available. */
+export const PostImageNode = leafNode(
+  "post-image",
+  z.strictObject({
+    decorative: z.boolean().optional(),
+  }),
+);
+
+/** How a Post Date reads (W-177). Unset is `medium`. `numeric` is YYYY-MM-DD. */
+export const POST_DATE_FORMATS = ["medium", "short", "long", "full", "numeric"] as const;
+
+/** Published date from the post, shown as a `<time>` element (W-108). */
+export const PostDateNode = leafNode(
+  "post-date",
+  z.strictObject({ format: z.enum(POST_DATE_FORMATS).optional() }),
+);
+
+/** Author name from the post (W-108). */
+export const PostAuthorNode = leafNode("post-author", z.strictObject({}));
+
+/** Permalink link; empty text uses the post title. */
+export const PostLinkNode = leafNode(
+  "post-link",
+  z.strictObject({
+    text: z.string().max(MAX_TEXT_LENGTH).optional(),
+    newTab: z.boolean().optional(),
+  }),
+);
+
+/**
+ * Repeats its item template for each post in ThemeDynamicData.posts.
+ * When `partId` is set, the host supplies that Loop Item layout in loopTemplates;
+ * otherwise children are the inline item template.
+ */
+/** How a Loop lays out its items (W-308): one design, shown as a list, a grid or cards. */
+export const LOOP_DISPLAYS = ["list", "grid", "cards"] as const;
+/** A collection field's slug, e.g. `photo` (W-330). */
+const FIELD_SLUG = /^[a-z][a-z0-9_]{0,63}$/;
+const FIELD_SLUG_HINT = "Use the field's slug, such as photo";
+/** A site path with `{slug}` or `{id}`, and no other placeholders (W-330). */
+export const LOOP_PERMALINK =
+  /^(?=.*\{(?:slug|id)\})\/(?!\/)(?:[A-Za-z0-9._~/-]|\{slug\}|\{id\})*$/;
+/**
+ * `field=value` pairs separated by `;` (W-330). Values have no `;`, `=` or angle brackets.
+ * W-391: a value starts and ends with a non-space, so the spaces around it can only be matched
+ * one way; the earlier pattern let both sides take them and a 265-character filter took ~50 s.
+ */
+export const LOOP_FILTER =
+  /^\s*[a-z][a-z0-9_]{0,63}\s*=\s*[^;=<>\s](?:[^;=<>]{0,98}[^;=<>\s])?(?:\s*;\s*[a-z][a-z0-9_]{0,63}\s*=\s*[^;=<>\s](?:[^;=<>]{0,98}[^;=<>\s])?)*\s*;?\s*$/;
+/** Which entries a collection Loop shows first (W-308). */
+export const LOOP_ORDERS = ["newest", "oldest", "title"] as const;
+
+export const LoopNode = parentNode(
+  "loop",
+  z.strictObject({
+    partId: z.string().max(128).optional(),
+    /** Posts per archive page, 1–50 (W-221). Unset = 20. */
+    perPage: z.number().int().min(1).max(50).optional(),
+    /**
+     * A collection to list on any page (W-308), e.g. `team`. Unset lists the archive's posts on
+     * an Archive part, as before.
+     */
+    collection: z
+      .string()
+      .regex(/^[a-z][a-z0-9_]{0,63}$/, "Use the collection's slug, such as team")
+      .optional(),
+    /** How many entries a collection Loop shows, 1–50. Unset = 6. */
+    limit: z.number().int().min(1).max(50).optional(),
+    order: z.enum(LOOP_ORDERS).optional(),
+    display: z.enum(LOOP_DISPLAYS).optional(),
+    /** Columns for grid and cards, 1–6 (one column on phones). Unset = 3. */
+    columns: z.number().int().min(1).max(6).optional(),
+    /**
+     * Where each entry links (W-330), e.g. `/team/{slug}`; `{slug}` and `{id}` are filled in.
+     * Unset = `/<collection>/{slug}`.
+     */
+    permalink: z
+      .string()
+      .max(200)
+      .regex(LOOP_PERMALINK, "A site path with {slug} or {id}, such as /team/{slug}")
+      .optional(),
+    /** The entry field holding the image Post Image shows (W-330). Unset = featured_image. */
+    imageField: z.string().regex(FIELD_SLUG, FIELD_SLUG_HINT).optional(),
+    /** The entry field Post Excerpt shows (W-330). Unset = excerpt. */
+    excerptField: z.string().regex(FIELD_SLUG, FIELD_SLUG_HINT).optional(),
+    /**
+     * Only entries where `field=value` (W-330), pairs separated by `;`, at most 5. A taxonomy name
+     * filters by term; the same field twice matches either value.
+     */
+    filter: z
+      .string()
+      .max(300)
+      .regex(LOOP_FILTER, "Use field=value pairs separated by ;")
+      .optional(),
+  }),
+);
+
+/**
+ * What a Loop shows when it has no entries (W-308). Only inside a Loop; its children are designed
+ * like any box, and it is left out of the item template.
+ */
+export const LoopEmptyNode = parentNode("loop-empty", z.strictObject({}));
+
+/**
+ * Previous / page numbers / Next links for an archive (W-222). Renders only on an archive with
+ * more than one page; the host supplies `ThemeDynamicData.pagination`.
+ */
+export const PaginationNode = leafNode(
+  "pagination",
+  z.strictObject({
+    prevText: z.string().max(40).optional(),
+    nextText: z.string().max(40).optional(),
+    /** Show "Page N of M" beside the links (W-309). */
+    showCount: z.boolean().optional(),
+    /** The count's text; `{page}` and `{total}` are filled in. Unset = "Page {page} of {total}". */
+    countText: z.string().max(60).optional(),
+    /** W-916: a link to the last page, shown when the host knows the total. */
+    showLast: z.boolean().optional(),
+    lastText: z.string().max(40).optional(),
+    /** The Last link's name when its text is only an arrow. Unset = "Last page". */
+    lastLabel: z.string().max(60).optional(),
+    /**
+     * The page title of archive page 2 onward (W-529); `{title}` and `{page}` are filled in.
+     * Unset = "{title} – page {page}". Hosts read it with `archivePageTitle`.
+     */
+    titleText: z.string().max(60).optional(),
+    archiveTitle: z.string().max(60).optional(),
+    /** W-689: screen reader names in the site's language. Unset = "Pagination". */
+    navLabel: z.string().max(60).optional(),
+    /** Each number's name; `{page}` is filled in. Unset = "Page {page}". */
+    pageLabel: z.string().max(60).optional(),
+    /** Previous / Next names when their text is only an arrow. Unset = "Previous page" / "Next page". */
+    prevLabel: z.string().max(60).optional(),
+    nextLabel: z.string().max(60).optional(),
+  }),
+);
+
+/**
+ * A reusable block. When `partId` is set, the host supplies that Section theme part in
+ * `sectionTemplates` and the part's children render in place of `children`.
+ */
+export const SectionNode = parentNode(
+  "part-ref",
+  z.strictObject({
+    partId: z.string().max(128).optional(),
+  }),
+);
+
+/** Known element type strings (everything else is an UnknownNode). */
+export const KNOWN_ELEMENT_TYPES = [
+  "container",
+  "heading",
+  "spacer",
+  "divider",
+  "text",
+  "label",
+  "link",
+  "button",
+  "list",
+  "image",
+  "icon",
+  "video",
+  "form",
+  "text-input",
+  "textarea",
+  "select",
+  "checkbox",
+  "radio",
+  "submit",
+  "post-title",
+  "post-excerpt",
+  "post-content",
+  "post-image",
+  "post-link",
+  "post-date",
+  "post-author",
+  "loop",
+  "loop-empty",
+  "pagination",
+  "part-ref",
+  "div-block",
+  "flexbox",
+  "grid",
+  "svg",
+  "tabs",
+  "tab-panel",
+  "accordion",
+  "accordion-item",
+  "menu",
+  "menu-item",
+  "layout-section",
+  "toc",
+  "language-switcher",
+  "rating",
+  "alert",
+  "icon-box",
+  "image-box",
+  "testimonial",
+  "social-icons",
+  "social-link",
+  "gallery",
+  "gallery-image",
+  "carousel",
+  "carousel-slide",
+  "counter",
+  "progress",
+  "countdown",
+  "map",
+  "price-table",
+  "price-list",
+  "price-list-item",
+  "cta",
+  "flip-box",
+  "headline",
+  "share-buttons",
+  "share-link",
+  "hotspots",
+  "hotspot",
+] as const;
+
+/** Headings on this page, as a list of links. No script (W-345). */
+export const TocNode = leafNode(
+  "toc",
+  z.strictObject({
+    title: z.string().max(80).optional(),
+  }),
+);
+
+/**
+ * W-937: links to this page in its other published languages (EmDash translations), each with
+ * hreflang. `label` names the navigation for screen readers. The host fills the links.
+ */
+export const LanguageSwitcherNode = leafNode(
+  "language-switcher",
+  z.strictObject({
+    label: z.string().max(80).optional(),
+  }),
+);
+
+/** W-1023: most stars a Rating shows. */
+export const MAX_RATING = 10;
+
+/**
+ * W-1023: a star rating, `value` out of `max` (5 when unset), in steps as fine as a tenth. Screen
+ * readers hear `label` with {value} and {max} filled in; unset it says "Rated 4.5 out of 5".
+ * A value above `max` shows as `max`, so lowering the number of stars never makes a page invalid.
+ */
+export const RatingNode = leafNode(
+  "rating",
+  z.strictObject({
+    value: z.number().min(0).max(MAX_RATING),
+    max: z.number().int().min(1).max(MAX_RATING).optional(),
+    label: z.string().max(120).optional(),
+    /** Each star's width and height in px. Unset = 20. */
+    size: z.number().int().min(8).max(128).optional(),
+  }),
+);
+
+/** W-1025: the kinds of Alert, each with its own colours and icon. */
+export const ALERT_VARIANTS = ["info", "success", "warning", "danger"] as const;
+
+/**
+ * W-1025: a notice: an optional title and text in the variant's colours, with its icon unless
+ * `hideIcon`. `dismissible` adds a close button that the opt-in alerts runtime shows and wires;
+ * without that script the notice simply stays.
+ */
+export const AlertNode = leafNode(
+  "alert",
+  z.strictObject({
+    variant: z.enum(ALERT_VARIANTS),
+    title: z.string().max(200).optional(),
+    text: z.string().max(MAX_TEXT_LENGTH),
+    hideIcon: z.boolean().optional(),
+    dismissible: z.boolean().optional(),
+    /** The close button's name for screen readers. Unset = "Dismiss". */
+    dismissLabel: z.string().max(80).optional(),
+  }),
+);
+
+/** W-1038: the thousands separators a Counter can use. */
+export const COUNTER_SEPARATORS = [",", ".", " ", "'"] as const;
+
+/** W-1038: the largest number a Counter shows, either way (beyond it, rounding shows). */
+export const MAX_COUNTER = 1e12;
+
+/**
+ * W-1038: a number to show off, such as "1,200+ clients": `value` with optional `prefix`,
+ * `suffix` and `title`, as text. `countUp` asks for the opt-in counter runtime, which counts from
+ * `start` (unset 0) to `value` over `duration` ms when the number scrolls into view; under
+ * reduced motion, and without the script, the final number shows at once.
+ */
+export const CounterNode = leafNode(
+  "counter",
+  z.strictObject({
+    value: z.number().min(-MAX_COUNTER).max(MAX_COUNTER),
+    start: z.number().min(-MAX_COUNTER).max(MAX_COUNTER).optional(),
+    /** Digits after the decimal point. Unset = 0. */
+    decimals: z.number().int().min(0).max(3).optional(),
+    /** Thousands separator. Unset = none. */
+    separator: z.enum(COUNTER_SEPARATORS).optional(),
+    prefix: z.string().max(20).optional(),
+    suffix: z.string().max(20).optional(),
+    title: z.string().max(200).optional(),
+    countUp: z.boolean().optional(),
+    /** How long the count-up takes, in ms; at most 5 s, so it never needs a pause (WCAG 2.2.2). Unset = 2000. */
+    duration: z.number().int().min(300).max(5000).optional(),
+  }),
+);
+
+/** W-1039: what a Progress bar means: a measurement (a skill level) or how far a task has got. */
+export const PROGRESS_KINDS = ["meter", "progressbar"] as const;
+
+/** W-1039: the largest `max` a Progress bar takes. */
+export const MAX_PROGRESS = 1e6;
+
+/**
+ * W-1039: a labelled bar filled to `value` out of `max` (unset 100). Screen readers get it as a
+ * meter or a progress bar (`kind`, unset meter) with the value as text. `grow` lets the fill grow
+ * in as it scrolls into view, with CSS only and not under reduced motion. A value above `max`
+ * shows as full, so lowering `max` never makes a page invalid.
+ */
+export const ProgressNode = leafNode(
+  "progress",
+  z.strictObject({
+    value: z.number().min(0).max(MAX_PROGRESS),
+    max: z.number().positive().max(MAX_PROGRESS).optional(),
+    label: z.string().max(120).optional(),
+    showValue: z.boolean().optional(),
+    kind: z.enum(PROGRESS_KINDS).optional(),
+    /** The bar's height in px. Unset = 8. */
+    thickness: z.number().int().min(2).max(48).optional(),
+    grow: z.boolean().optional(),
+  }),
+);
+
+/** W-1040: a date and time with its UTC offset, such as 2026-12-01T09:00-05:00 or …T14:00Z. */
+export const COUNTDOWN_TARGET =
+  /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?(Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
+
+/** W-1040: what a ticking Countdown does when its time is up. */
+export const COUNTDOWN_EXPIRED = ["text", "hide", "link"] as const;
+
+/**
+ * W-1040: a deadline. Without script it is a sentence with the target as `<time>` ("Ends 1 Dec
+ * 2026, 09:00 UTC−5"). `ticking` asks for the opt-in countdown runtime: days, hours, minutes and
+ * seconds that screen readers skip (the sentence stays for them), a Pause button, and at the end
+ * `expired`: show `expiredText`, hide the Countdown, or show `expiredText` as a link to
+ * `expiredHref`.
+ */
+export const CountdownNode = leafNode(
+  "countdown",
+  z.strictObject({
+    target: z
+      .string()
+      .regex(COUNTDOWN_TARGET, "Use a date, time and UTC offset such as 2026-12-01T09:00-05:00")
+      .refine((value) => !Number.isNaN(Date.parse(value)), "This date doesn't exist"),
+    title: z.string().max(200).optional(),
+    /** The words before the date. Unset = "Ends". */
+    label: z.string().max(40).optional(),
+    ticking: z.boolean().optional(),
+    hideSeconds: z.boolean().optional(),
+    expired: z.enum(COUNTDOWN_EXPIRED).optional(),
+    /** Unset = "This offer has ended." */
+    expiredText: z.string().max(200).optional(),
+    expiredHref: z.string().max(2000).optional(),
+  }),
+);
+
+/** W-1041: the map services a Map links to and embeds. */
+export const MAP_PROVIDERS = ["osm", "google"] as const;
+
+/**
+ * W-1041: a place. Without script it is the address and a link to it on OpenStreetMap or Google
+ * Maps (`provider`, unset osm), at `lat`/`lng` when set. `embed` asks for the opt-in map runtime:
+ * a "Show the map" button that loads the map in an iframe only when pressed, so the page makes
+ * no request to the map service until the visitor asks. OpenStreetMap embeds need `lat`/`lng`.
+ */
+export const MapNode = leafNode(
+  "map",
+  z.strictObject({
+    address: z.string().min(1).max(300),
+    provider: z.enum(MAP_PROVIDERS).optional(),
+    lat: z.number().min(-90).max(90).optional(),
+    lng: z.number().min(-180).max(180).optional(),
+    /** Unset = 15. */
+    zoom: z.number().int().min(1).max(19).optional(),
+    /** The link's words. Unset = "Open in OpenStreetMap" or "Open in Google Maps". */
+    linkText: z.string().max(80).optional(),
+    embed: z.boolean().optional(),
+    /** The embedded map's height in px. Unset = 360. */
+    height: z.number().int().min(150).max(800).optional(),
+  }),
+);
+
+/**
+ * W-1042: a plan card: title, price (with `currency` and `period`; `regularPrice` shows struck
+ * through before it as on sale), what is in the plan (`features`) and what isn't (`excluded`),
+ * a button link, and an optional ribbon when `featured`. No script.
+ */
+export const PriceTableNode = leafNode(
+  "price-table",
+  z.strictObject({
+    title: z.string().max(120),
+    /** The title's heading level. Unset = 3. */
+    titleLevel: z.number().int().min(2).max(6).optional(),
+    description: z.string().max(500).optional(),
+    price: z.string().max(20),
+    currency: z.string().max(5).optional(),
+    period: z.string().max(40).optional(),
+    regularPrice: z.string().max(20).optional(),
+    features: boundedArray(z.string().max(200), 30).optional(),
+    excluded: boundedArray(z.string().max(200), 30).optional(),
+    buttonText: z.string().max(80).optional(),
+    buttonHref: z.string().max(2000).optional(),
+    newTab: z.boolean().optional(),
+    featured: z.boolean().optional(),
+    /** The ribbon's words when `featured`. Unset = "Featured". */
+    ribbon: z.string().max(30).optional(),
+  }),
+);
+
+/** W-1020: where a media box puts its icon or image: above, or before or after the words. */
+export const MEDIA_BOX_POSITIONS = ["top", "left", "right"] as const;
+
+/** W-1020 / W-1021: what an icon box and an image box share: title, text, link, layout. */
+const MediaBoxText = {
+  title: z.string().max(200),
+  /** The title's heading level. Unset = 3. */
+  titleLevel: z.number().int().min(2).max(6).optional(),
+  text: z.string().max(MAX_TEXT_LENGTH),
+  position: z.enum(MEDIA_BOX_POSITIONS).optional(),
+  /** Optional link: the title is the link, and the whole box is clickable. */
+  href: z.string().max(2000).optional(),
+  newTab: z.boolean().optional(),
+};
+
+/**
+ * W-1020: an icon above (or beside) a title and text, like Elementor's Icon Box. The icon is
+ * decorative: the title says what the box is. `iconId` and `iconSvg` work as on an Icon.
+ */
+export const IconBoxNode = leafNode(
+  "icon-box",
+  z.strictObject({
+    iconId: z.string().min(1).max(64),
+    iconSvg: z.string().max(ICON_SVG_MAX).optional(),
+    /** The icon's width and height in px. Unset = 48. */
+    iconSize: z.number().int().min(8).max(512).optional(),
+    ...MediaBoxText,
+  }),
+);
+
+/** W-1021: how much of the box's width an image box's picture takes when beside the words. */
+export const IMAGE_BOX_SIZES = ["small", "medium", "large", "full"] as const;
+
+/** A picture picked from the media library: its id, intrinsic size and focal point (as Image). */
+const PICKED_MEDIA = {
+  mediaId: z.string().min(1).max(128).optional(),
+  width: z.number().int().positive().max(10000).optional(),
+  height: z.number().int().positive().max(10000).optional(),
+  focalX: z.number().int().min(0).max(100).optional(),
+  focalY: z.number().int().min(0).max(100).optional(),
+};
+
+/**
+ * W-1021: a picture above (or beside) a title and text, like Elementor's Image Box. The picture
+ * keys are an Image's, so the media library fills them the same way; alt text is required unless
+ * the picture is decorative.
+ */
+export const ImageBoxNode = leafNode(
+  "image-box",
+  z.strictObject({
+    src: z.string().max(2000),
+    alt: z.string().max(500),
+    decorative: z.boolean().optional(),
+    ...PICKED_MEDIA,
+    /** Beside the words: small 25 %, medium 40 %, large 60 % of the box. Unset = medium. */
+    imageSize: z.enum(IMAGE_BOX_SIZES).optional(),
+    ...MediaBoxText,
+  }),
+).refine((node) => node.props.decorative === true || node.props.alt.length > 0, {
+  message: "Alt text is required unless the image is marked decorative.",
+  path: ["props", "alt"],
+});
+
+/**
+ * W-1022: a quote in a figure: the words as a blockquote, then who said them (name and role) with
+ * an optional photo, and an optional star rating read as "Rated 5 out of 5". The photo is shown
+ * beside the name, so it is decorative; its keys are an Image's so the media library fills them.
+ */
+export const TestimonialNode = leafNode(
+  "testimonial",
+  z.strictObject({
+    quote: z.string().max(MAX_TEXT_LENGTH),
+    name: z.string().max(200),
+    role: z.string().max(200).optional(),
+    src: z.string().max(2000).optional(),
+    /** Written by the media library; never rendered (the photo is beside the name). */
+    alt: z.string().max(500).optional(),
+    ...PICKED_MEDIA,
+    /** Stars out of `ratingMax` (unset 5); no stars when unset. */
+    rating: z.number().min(0).max(MAX_RATING).optional(),
+    ratingMax: z.number().int().min(1).max(MAX_RATING).optional(),
+  }),
+);
+
+/** W-1024: the Social icons presets (Font Awesome Free brand icons, plus email, RSS, website). */
+export const SOCIAL_NETWORKS = [
+  "facebook",
+  "instagram",
+  "x",
+  "linkedin",
+  "youtube",
+  "tiktok",
+  "bluesky",
+  "mastodon",
+  "threads",
+  "github",
+  "pinterest",
+  "whatsapp",
+  "discord",
+  "twitch",
+  "reddit",
+  "dribbble",
+  "behance",
+  "telegram",
+  "spotify",
+  "email",
+  "rss",
+  "website",
+] as const;
+/** W-1024: how each icon is drawn: on its own, or in a circle, rounded or square badge. */
+export const SOCIAL_SHAPES = ["plain", "circle", "rounded", "square"] as const;
+
+/**
+ * W-1024: a list of links to the site's social profiles, each a brand icon named for screen
+ * readers ("Instagram"). Holds Social links only. `label` names the list (unset "Social media");
+ * `brandColors` paints each icon in its network's colour; icons follow the font size.
+ */
+export const SocialIconsNodeSchema = parentNode(
+  "social-icons",
+  z.strictObject({
+    label: z.string().max(80).optional(),
+    shape: z.enum(SOCIAL_SHAPES).optional(),
+    brandColors: z.boolean().optional(),
+  }),
+);
+
+/** W-1024: one profile link in Social icons. `label` replaces the network's name. */
+export const SocialLinkNode = leafNode(
+  "social-link",
+  z.strictObject({
+    network: z.enum(SOCIAL_NETWORKS),
+    href: z.string().max(2000),
+    label: z.string().max(80).optional(),
+    newTab: z.boolean().optional(),
+  }),
+);
+
+/** W-1019: a Gallery's layout: equal squares in a grid, or each picture its own height. */
+export const GALLERY_LAYOUTS = ["grid", "masonry"] as const;
+
+/**
+ * W-1019: pictures from the media library in a grid or masonry columns (1–6 on wide screens; at
+ * most 2 on tablets and 1 on phones). Holds Gallery images only. `lightbox` opts in to a script
+ * that opens each picture large in a native dialog; without it the gallery uses no script.
+ */
+export const GalleryNodeSchema = parentNode(
+  "gallery",
+  z.strictObject({
+    layout: z.enum(GALLERY_LAYOUTS).optional(),
+    columns: z.number().int().min(1).max(6).optional(),
+    lightbox: z.boolean().optional(),
+    /** Names the list for screen readers. Unset = no name. */
+    label: z.string().max(80).optional(),
+  }),
+);
+
+/** W-1019: one picture in a Gallery: an Image's picture keys, alt text and an optional caption. */
+export const GalleryImageNode = leafNode(
+  "gallery-image",
+  z.strictObject({
+    src: z.string().max(2000),
+    alt: z.string().max(500),
+    decorative: z.boolean().optional(),
+    ...PICKED_MEDIA,
+    caption: z.string().max(500).optional(),
+  }),
+).refine((node) => node.props.decorative === true || node.props.alt.length > 0, {
+  message: "Alt text is required unless the picture is marked decorative.",
+  path: ["props", "alt"],
+});
+
+/**
+ * W-1018: slides on a horizontal track that snaps to each one, swiped, scrolled or moved with
+ * the arrow keys, with no script. `arrows`, `dots` and `autoplay` opt in to the carousel
+ * script, which adds those controls. Autoplay is off unless set; when on, a visible Pause button
+ * comes first, hovering or focusing the carousel pauses it, and under reduced motion it starts
+ * paused (WCAG 2.2.2). `perView` slides show at once (at most 2 on tablets, 1 on phones).
+ */
+export const CarouselNodeSchema = parentNode(
+  "carousel",
+  z.strictObject({
+    /** Names the carousel for screen readers. Unset = "Carousel". */
+    label: z.string().max(80).optional(),
+    perView: z.number().int().min(1).max(4).optional(),
+    arrows: z.boolean().optional(),
+    dots: z.boolean().optional(),
+    autoplay: z.boolean().optional(),
+    /** Seconds per slide while playing. Unset = 6. */
+    interval: z.number().int().min(3).max(30).optional(),
+    /** After the last slide, Next and autoplay go back to the first. */
+    loop: z.boolean().optional(),
+  }),
+);
+
+/** W-1018: one slide; holds any elements. `label` names it instead of "2 of 5". */
+export const CarouselSlideNode = parentNode(
+  "carousel-slide",
+  z.strictObject({
+    label: z.string().max(80).optional(),
+  }),
+);
+
+/**
+ * W-1043: a menu-style list of items with prices, such as a restaurant menu or a list of
+ * services. Holds Price list items only. `label` names the list for screen readers.
+ */
+export const PriceListNodeSchema = parentNode(
+  "price-list",
+  z.strictObject({
+    label: z.string().max(80).optional(),
+  }),
+);
+
+/**
+ * W-1043: one row of a Price list: the title, a dotted leader and the price on one line, an
+ * optional description under them, an optional picture before them (its alt text unset: the
+ * picture is decorative) and an optional link on the title.
+ */
+export const PriceListItemNode = leafNode(
+  "price-list-item",
+  z.strictObject({
+    title: z.string().max(120),
+    price: z.string().max(20),
+    description: z.string().max(500).optional(),
+    src: z.string().max(2000).optional(),
+    alt: z.string().max(500).optional(),
+    ...PICKED_MEDIA,
+    href: z.string().max(2000).optional(),
+    newTab: z.boolean().optional(),
+  }),
+);
+
+/** W-1044: where a Call to action puts its picture: behind the words, or above or beside them. */
+export const CTA_LAYOUTS = ["behind", "top", "left", "right"] as const;
+
+/**
+ * W-1044: a box with a picture, title, text and a button. With `href` the title is the link and
+ * the whole box opens it (the button repeats it for the eye only). `layout` (unset `behind`)
+ * puts the picture behind the words under a dark overlay, or above or beside them. `ribbon`
+ * adds a small label in a corner.
+ */
+export const CtaNode = leafNode(
+  "cta",
+  z.strictObject({
+    title: z.string().max(200),
+    /** The title's heading level. Unset = 3. */
+    titleLevel: z.number().int().min(2).max(6).optional(),
+    text: z.string().max(MAX_TEXT_LENGTH).optional(),
+    src: z.string().max(2000).optional(),
+    alt: z.string().max(500).optional(),
+    ...PICKED_MEDIA,
+    layout: z.enum(CTA_LAYOUTS).optional(),
+    buttonText: z.string().max(80).optional(),
+    href: z.string().max(2000).optional(),
+    newTab: z.boolean().optional(),
+    ribbon: z.string().max(30).optional(),
+  }),
+);
+
+/** W-1045: which way a Flip box turns over. */
+export const FLIP_DIRECTIONS = ["left", "right", "up", "down"] as const;
+
+/**
+ * W-1045: a card with a front and a back. It turns over on hover (where the device can hover)
+ * and when keyboard focus reaches the back; a native checkbox ("Turn over") turns it on touch
+ * screens and for keyboards, with no script. Both faces stay in the page for screen readers.
+ * Under reduced motion it swaps faces without the turn.
+ */
+export const FlipBoxNode = leafNode(
+  "flip-box",
+  z.strictObject({
+    frontTitle: z.string().max(200),
+    frontText: z.string().max(MAX_TEXT_LENGTH).optional(),
+    backTitle: z.string().max(200).optional(),
+    backText: z.string().max(MAX_TEXT_LENGTH).optional(),
+    /** Both titles' heading level. Unset = 3. */
+    titleLevel: z.number().int().min(2).max(6).optional(),
+    buttonText: z.string().max(80).optional(),
+    href: z.string().max(2000).optional(),
+    newTab: z.boolean().optional(),
+    direction: z.enum(FLIP_DIRECTIONS).optional(),
+    /** The checkbox's words. Unset = "Turn over". */
+    toggleLabel: z.string().max(40).optional(),
+  }),
+);
+
+/** W-1046: how an Animated headline marks its highlighted words. */
+export const HEADLINE_MARKS = ["underline", "circle", "strike", "none"] as const;
+
+/**
+ * W-1046: a heading (`level`, unset 2) of `before`, the highlighted `highlight` and `after`,
+ * read as one sentence. `mark` (unset underline) is drawn once in CSS, already drawn under
+ * reduced motion. `rotate` lists other words for the highlight: `rotating` asks for the opt-in
+ * headline runtime, which cycles them every `interval` seconds for `turns` rounds and stops on
+ * the first word, with a Pause button; screen readers keep the sentence with the first word.
+ */
+export const HeadlineNode = leafNode(
+  "headline",
+  z.strictObject({
+    level: z.number().int().min(1).max(6).optional(),
+    before: z.string().max(200).optional(),
+    highlight: z.string().min(1).max(120),
+    after: z.string().max(200).optional(),
+    mark: z.enum(HEADLINE_MARKS).optional(),
+    rotate: boundedArray(z.string().max(120), 10).optional(),
+    rotating: z.boolean().optional(),
+    /** Seconds per word. Unset = 2.5. */
+    interval: z.number().min(1.5).max(10).optional(),
+    /** Rounds through the words before it stops. Unset = 2. */
+    turns: z.number().int().min(1).max(5).optional(),
+  }),
+);
+
+/** W-1047: the services a Share link can share to; each has a Social icons preset icon. */
+export const SHARE_NETWORKS = [
+  "facebook",
+  "x",
+  "linkedin",
+  "whatsapp",
+  "telegram",
+  "reddit",
+  "bluesky",
+  "threads",
+  "email",
+] as const;
+
+/**
+ * W-1047: links that share the current page, with no tracking script: each a service's own
+ * share address with the page's URL in it. Holds Share links only. The host gives the page URL
+ * (`resolveEmVBPage` does); without it the public page shows no links. `nativeShare` opts in to
+ * the share runtime, which adds a Share button for the browser's own share sheet where it has
+ * one. `label` names the list (unset "Share this page").
+ */
+export const ShareButtonsNodeSchema = parentNode(
+  "share-buttons",
+  z.strictObject({
+    label: z.string().max(80).optional(),
+    shape: z.enum(SOCIAL_SHAPES).optional(),
+    brandColors: z.boolean().optional(),
+    nativeShare: z.boolean().optional(),
+  }),
+);
+
+/** W-1047: one share link. `label` replaces "Share on Facebook". */
+export const ShareLinkNode = leafNode(
+  "share-link",
+  z.strictObject({
+    network: z.enum(SHARE_NETWORKS),
+    label: z.string().max(80).optional(),
+  }),
+);
+
+/**
+ * W-1048: a picture with numbered markers. Holds Hotspots only. The picture keys are an Image's;
+ * `label` names the list of markers for screen readers (unset "Points on the picture").
+ */
+export const HotspotsNodeSchema = parentNode(
+  "hotspots",
+  z.strictObject({
+    src: z.string().max(2000),
+    alt: z.string().max(500),
+    decorative: z.boolean().optional(),
+    ...PICKED_MEDIA,
+    label: z.string().max(80).optional(),
+  }),
+);
+
+/** A marker's place across or down the picture, in percent. */
+const HotspotPlace = z.number().min(0).max(100);
+
+/**
+ * W-1048: one marker: a numbered button at `x`/`y` percent of the picture (tablet and mobile
+ * values follow the wider device when unset) that opens its note, `title` and `text`, with the
+ * native Popover API: no script, Escape and a click outside close it.
+ */
+export const HotspotNode = leafNode(
+  "hotspot",
+  z.strictObject({
+    title: z.string().min(1).max(120),
+    text: z.string().max(1000).optional(),
+    x: HotspotPlace,
+    y: HotspotPlace,
+    xTablet: HotspotPlace.optional(),
+    yTablet: HotspotPlace.optional(),
+    xMobile: HotspotPlace.optional(),
+    yMobile: HotspotPlace.optional(),
+  }),
+);
+
+const knownTypeSet = new Set<string>(KNOWN_ELEMENT_TYPES);
+
+/**
+ * A node whose `type` EmVB does not implement yet (W-022 / R-033). Kept on save so a newer
+ * plugin version can reclaim it; public pages omit it; the editor shows a placeholder.
+ */
+const UnknownNodeSchema = z.strictObject({
+  id: NodeId,
+  type: z
+    .string()
+    .min(1)
+    // W-927: extension types are ext:<pkg>/<name>; 128 fits the longest allowed id.
+    .max(128)
+    .refine((value) => !knownTypeSet.has(value), "Unknown element type"),
+  props: z.record(z.string(), z.unknown()),
+  ...sharedNodeFields,
+  get children(): z.ZodType<LayoutNode[] | undefined> {
+    return ChildList.optional();
+  },
+});
+
+const KnownLayoutNode = z.discriminatedUnion("type", [
+  ContainerNode,
+  DivBlockNode,
+  LayoutSectionNode,
+  FlexboxNode,
+  GridNode,
+  SvgNode,
+  TabsNodeSchema,
+  TabPanelNode,
+  HeadingNode,
+  TocNode,
+  LanguageSwitcherNode,
+  RatingNode,
+  AlertNode,
+  IconBoxNode,
+  ImageBoxNode,
+  TestimonialNode,
+  SocialIconsNodeSchema,
+  SocialLinkNode,
+  GalleryNodeSchema,
+  GalleryImageNode,
+  CarouselNodeSchema,
+  CarouselSlideNode,
+  PriceListNodeSchema,
+  PriceListItemNode,
+  CtaNode,
+  FlipBoxNode,
+  HeadlineNode,
+  ShareButtonsNodeSchema,
+  ShareLinkNode,
+  HotspotsNodeSchema,
+  HotspotNode,
+  CounterNode,
+  ProgressNode,
+  CountdownNode,
+  MapNode,
+  PriceTableNode,
+  SpacerNode,
+  DividerNode,
+  TextNode,
+  LabelNode,
+  LinkNode,
+  ButtonNode,
+  ListNode,
+  ImageNode,
+  IconNode,
+  VideoNode,
+  FormNode,
+  TextInputNode,
+  TextareaNode,
+  SelectNode,
+  CheckboxNode,
+  RadioNode,
+  SubmitNode,
+  PostTitleNode,
+  PostExcerptNode,
+  PostContentNode,
+  PostImageNode,
+  PostLinkNode,
+  PostDateNode,
+  PostAuthorNode,
+  LoopNode,
+  LoopEmptyNode,
+  PaginationNode,
+  SectionNode,
+  AccordionNode,
+  AccordionItemNode,
+  MenuNode,
+  MenuItemNode,
+]);
+
+/** One strict schema per known element type, for the MCP element catalogue (W-453). */
+export const KNOWN_NODE_SCHEMAS = KnownLayoutNode.options;
+
+export type HeadingNode = z.infer<typeof HeadingNode>;
+export type TocNode = z.infer<typeof TocNode>;
+export type LanguageSwitcherNode = z.infer<typeof LanguageSwitcherNode>;
+export type RatingNode = z.infer<typeof RatingNode>;
+export type AlertNode = z.infer<typeof AlertNode>;
+export type CounterNode = z.infer<typeof CounterNode>;
+export type ProgressNode = z.infer<typeof ProgressNode>;
+export type CountdownNode = z.infer<typeof CountdownNode>;
+export type MapNode = z.infer<typeof MapNode>;
+export type PriceTableNode = z.infer<typeof PriceTableNode>;
+export type PriceListItemNode = z.infer<typeof PriceListItemNode>;
+export type CtaNode = z.infer<typeof CtaNode>;
+export type FlipBoxNode = z.infer<typeof FlipBoxNode>;
+export type HeadlineNode = z.infer<typeof HeadlineNode>;
+export type ShareLinkNode = z.infer<typeof ShareLinkNode>;
+export type HotspotNode = z.infer<typeof HotspotNode>;
+export type IconBoxNode = z.infer<typeof IconBoxNode>;
+export type ImageBoxNode = z.infer<typeof ImageBoxNode>;
+export type TestimonialNode = z.infer<typeof TestimonialNode>;
+export type SocialLinkNode = z.infer<typeof SocialLinkNode>;
+export type GalleryImageNode = z.infer<typeof GalleryImageNode>;
+export type SpacerNode = z.infer<typeof SpacerNode>;
+export type DividerNode = z.infer<typeof DividerNode>;
+export type TextNode = z.infer<typeof TextNode>;
+export type LabelNode = z.infer<typeof LabelNode>;
+export type LinkNode = z.infer<typeof LinkNode>;
+export type ButtonNode = z.infer<typeof ButtonNode>;
+export type ListNode = z.infer<typeof ListNode>;
+export type ImageNode = z.infer<typeof ImageNode>;
+export type IconNode = z.infer<typeof IconNode>;
+export type VideoNode = z.infer<typeof VideoNode>;
+export type TextInputNode = z.infer<typeof TextInputNode>;
+export type TextareaNode = z.infer<typeof TextareaNode>;
+export type SelectNode = z.infer<typeof SelectNode>;
+export type CheckboxNode = z.infer<typeof CheckboxNode>;
+export type RadioNode = z.infer<typeof RadioNode>;
+export type SubmitNode = z.infer<typeof SubmitNode>;
+export type PostTitleNode = z.infer<typeof PostTitleNode>;
+export type PostExcerptNode = z.infer<typeof PostExcerptNode>;
+export type PostContentNode = z.infer<typeof PostContentNode>;
+export type PostImageNode = z.infer<typeof PostImageNode>;
+export type PostLinkNode = z.infer<typeof PostLinkNode>;
+export type PaginationNode = z.infer<typeof PaginationNode>;
+export type PostDateNode = z.infer<typeof PostDateNode>;
+export type PostAuthorNode = z.infer<typeof PostAuthorNode>;
+
+type StyleOf = z.infer<typeof StyleProps>;
+type StatesOf = z.infer<typeof StyleStates>;
+type DevicesOf = z.infer<typeof DeviceStyles>;
+type HiddenOnOf = z.infer<typeof HiddenOn>;
+type ClassesOf = z.infer<typeof ClassIds>;
+type HtmlIdOf = z.infer<typeof HtmlId>;
+type HtmlAttributeOf = z.infer<typeof HtmlAttribute>;
+type IdOf = z.infer<typeof NodeId>;
+
+/** Fields every node may carry beyond its props and style (W-307 onward). */
+export type NodeExtras = {
+  bind?: Record<string, Binding>;
+  variant?: Variant;
+  audience?: Audience;
+  dir?: "ltr" | "rtl" | "auto";
+  container?: true;
+  query?: { min: number; style: StyleOf };
+};
+
+/** Identity, style and extras shared by every node type (W-352). */
+type NodeEnvelope = {
+  id: IdOf;
+  style?: z.infer<typeof OwnStyle>;
+  states?: StatesOf;
+  devices?: DevicesOf;
+  hiddenOn?: HiddenOnOf;
+  classes?: ClassesOf;
+  htmlId?: HtmlIdOf;
+  attributes?: HtmlAttributeOf[];
+  editorLabel?: string;
+} & NodeExtras;
+
+/** Manual recursive types so UnknownNode does not poison `z.infer` of the tree. */
+export type UnknownNode = NodeEnvelope & {
+  type: string;
+  props: Record<string, unknown>;
+  children?: LayoutNode[];
+};
+
+export type ContainerNode = NodeEnvelope & {
+  type: "container";
+  props: { tag?: (typeof CONTAINER_TAGS)[number]; href?: string; newTab?: boolean };
+  children: LayoutNode[];
+};
+
+export type DivBlockNode = NodeEnvelope & {
+  type: "div-block";
+  props: { href?: string; newTab?: boolean };
+  children: LayoutNode[];
+};
+
+export type LayoutSectionNode = NodeEnvelope & {
+  type: "layout-section";
+  props: {
+    tag?: (typeof CONTAINER_TAGS)[number];
+    contentWidth?: z.infer<typeof Length>;
+    fullWidth?: boolean;
+  };
+  children: LayoutNode[];
+};
+
+export type GridNode = NodeEnvelope & {
+  type: "grid";
+  props: {
+    columns: number;
+    columnsTablet?: number;
+    columnsMobile?: number;
+    href?: string;
+    newTab?: boolean;
+  };
+  children: LayoutNode[];
+};
+
+export type FlexboxNode = NodeEnvelope & {
+  type: "flexbox";
+  props: { href?: string; newTab?: boolean };
+  children: LayoutNode[];
+};
+
+export type SvgNode = NodeEnvelope & {
+  type: "svg";
+  props: {
+    markup: string;
+    title?: string;
+    decorative?: boolean;
+    size?: number;
+  };
+};
+
+export type TabPanelNode = NodeEnvelope & {
+  type: "tab-panel";
+  props: { label: string };
+  children: LayoutNode[];
+};
+
+export type TabsNode = NodeEnvelope & {
+  type: "tabs";
+  /** W-790: read from TabsNodeSchema, so the type can't drift from what the schema accepts. */
+  props: z.infer<typeof TabsNodeSchema>["props"];
+  children: LayoutNode[];
+};
+
+export type FormNode = NodeEnvelope & {
+  type: "form";
+  props: { formId: string };
+  children: LayoutNode[];
+};
+
+export type LoopNode = NodeEnvelope & {
+  type: "loop";
+  props: {
+    partId?: string;
+    perPage?: number;
+    collection?: string;
+    limit?: number;
+    order?: (typeof LOOP_ORDERS)[number];
+    display?: (typeof LOOP_DISPLAYS)[number];
+    columns?: number;
+  };
+  children: LayoutNode[];
+};
+
+export type LoopEmptyNode = NodeEnvelope & {
+  type: "loop-empty";
+  props: Record<string, never>;
+  children: LayoutNode[];
+};
+
+export type SectionNode = NodeEnvelope & {
+  type: "part-ref";
+  props: { partId?: string };
+  children: LayoutNode[];
+};
+
+export type AccordionNode = NodeEnvelope & {
+  type: "accordion";
+  props: Record<string, never>;
+  children: LayoutNode[];
+};
+
+export type SocialIconsNode = NodeEnvelope & {
+  type: "social-icons";
+  props: z.infer<typeof SocialIconsNodeSchema>["props"];
+  children: LayoutNode[];
+};
+
+export type CarouselNode = NodeEnvelope & {
+  type: "carousel";
+  props: z.infer<typeof CarouselNodeSchema>["props"];
+  children: LayoutNode[];
+};
+
+export type CarouselSlideNode = NodeEnvelope & {
+  type: "carousel-slide";
+  props: { label?: string };
+  children: LayoutNode[];
+};
+
+export type ShareButtonsNode = NodeEnvelope & {
+  type: "share-buttons";
+  props: z.infer<typeof ShareButtonsNodeSchema>["props"];
+  children: LayoutNode[];
+};
+
+export type HotspotsNode = NodeEnvelope & {
+  type: "hotspots";
+  props: z.infer<typeof HotspotsNodeSchema>["props"];
+  children: LayoutNode[];
+};
+
+export type PriceListNode = NodeEnvelope & {
+  type: "price-list";
+  props: z.infer<typeof PriceListNodeSchema>["props"];
+  children: LayoutNode[];
+};
+
+export type GalleryNode = NodeEnvelope & {
+  type: "gallery";
+  props: z.infer<typeof GalleryNodeSchema>["props"];
+  children: LayoutNode[];
+};
+
+export type MenuNode = NodeEnvelope & {
+  type: "menu";
+  props: { direction: "row" | "column"; label?: string };
+  children: LayoutNode[];
+};
+
+export type MenuItemNode = NodeEnvelope & {
+  type: "menu-item";
+  props: { text: string; href?: string; newTab?: boolean; wide?: boolean };
+  children: LayoutNode[];
+};
+
+export type AccordionItemNode = NodeEnvelope & {
+  type: "accordion-item";
+  props: { summary: string; open?: boolean };
+  children: LayoutNode[];
+};
+
+export type LayoutNode =
+  | ContainerNode
+  | DivBlockNode
+  | LayoutSectionNode
+  | FlexboxNode
+  | GridNode
+  | SvgNode
+  | TabsNode
+  | TabPanelNode
+  | FormNode
+  | LoopNode
+  | LoopEmptyNode
+  | SectionNode
+  | HeadingNode
+  | TocNode
+  | LanguageSwitcherNode
+  | RatingNode
+  | AlertNode
+  | IconBoxNode
+  | ImageBoxNode
+  | TestimonialNode
+  | SocialIconsNode
+  | SocialLinkNode
+  | GalleryNode
+  | GalleryImageNode
+  | CarouselNode
+  | CarouselSlideNode
+  | CounterNode
+  | ProgressNode
+  | CountdownNode
+  | MapNode
+  | PriceTableNode
+  | PriceListNode
+  | PriceListItemNode
+  | CtaNode
+  | FlipBoxNode
+  | HeadlineNode
+  | ShareButtonsNode
+  | ShareLinkNode
+  | HotspotsNode
+  | HotspotNode
+  | SpacerNode
+  | DividerNode
+  | TextNode
+  | LabelNode
+  | LinkNode
+  | ButtonNode
+  | ListNode
+  | ImageNode
+  | IconNode
+  | VideoNode
+  | TextInputNode
+  | TextareaNode
+  | SelectNode
+  | CheckboxNode
+  | RadioNode
+  | SubmitNode
+  | PostTitleNode
+  | PostExcerptNode
+  | PostContentNode
+  | PostImageNode
+  | PostLinkNode
+  | PostDateNode
+  | PostAuthorNode
+  | PaginationNode
+  | AccordionNode
+  | AccordionItemNode
+  | MenuNode
+  | MenuItemNode
+  | UnknownNode;
+
+/** S-03: the issues one element reports before "…and N more". */
+const MAX_NODE_ISSUES = 10;
+
+/**
+ * Prefer the known-type schema when `type` is registered so path-specific Zod issues stay
+ * intact; only fall through to UnknownNode for types EmVB does not implement (W-022 / R-033).
+ * A plain `z.union` would collapse every known-type failure into `invalid_union`.
+ */
+const LayoutNode: z.ZodType<LayoutNode> = z.lazy(() =>
+  z.unknown().transform((input, ctx) => {
+    if (!input || typeof input !== "object" || Array.isArray(input)) {
+      ctx.addIssue({ code: "invalid_type", expected: "object", path: [] });
+      return z.NEVER;
+    }
+    const type = (input as { type?: unknown }).type;
+    if (typeof type !== "string") {
+      // `input` is the type itself; without it Zod describes the whole node ("received object").
+      ctx.addIssue({ code: "invalid_type", expected: "string", input: type, path: ["type"] });
+      return z.NEVER;
+    }
+    const result = knownTypeSet.has(type)
+      ? KnownLayoutNode.safeParse(input)
+      : UnknownNodeSchema.safeParse(input);
+    if (!result.success) {
+      const issues = result.error.issues;
+      for (const issue of issues.slice(0, MAX_NODE_ISSUES)) {
+        ctx.addIssue({
+          code: "custom",
+          path: issue.path,
+          message: issue.message,
+          params: { zodCode: issue.code },
+        });
+      }
+      // S-03: a node re-emits a few issues, not one per bad item, so a parent's count stays small.
+      if (issues.length > MAX_NODE_ISSUES) {
+        ctx.addIssue({
+          code: "custom",
+          path: [],
+          message: `…and ${issues.length - MAX_NODE_ISSUES} more problems in this element.`,
+          params: { zodCode: "too_many_issues" },
+        });
+      }
+      return z.NEVER;
+    }
+    return result.data as LayoutNode;
+  }),
+);
+
+/** S-03: the issues a list of children reports before the rest of them is skipped. */
+const MAX_CHILD_ISSUES = 40;
+
+/**
+ * Children parse one at a time and stop once they have reported MAX_CHILD_ISSUES issues: a
+ * page of a thousand bad elements cost one issue list per element (180 MB on a 512 KB page).
+ */
+const ChildList: z.ZodType<LayoutNode[]> = z.lazy(() =>
+  z.array(z.unknown()).transform((items, ctx) => {
+    const nodes: LayoutNode[] = [];
+    let reported = 0;
+    for (const [index, item] of items.entries()) {
+      if (reported >= MAX_CHILD_ISSUES) {
+        ctx.addIssue({
+          code: "custom",
+          path: [index],
+          message: "…and more problems in the elements after this one.",
+          params: { zodCode: "too_many_issues" },
+        });
+        return z.NEVER;
+      }
+      const result = LayoutNode.safeParse(item);
+      if (result.success) {
+        nodes.push(result.data);
+        continue;
+      }
+      for (const issue of result.error.issues) {
+        const params =
+          "params" in issue ? (issue.params as { zodCode?: unknown } | undefined) : undefined;
+        ctx.addIssue({
+          code: "custom",
+          path: [index, ...issue.path],
+          message: issue.message,
+          params: {
+            zodCode:
+              issue.code === "custom" && typeof params?.zodCode === "string"
+                ? params.zodCode
+                : issue.code,
+          },
+        });
+        reported++;
+      }
+    }
+    return reported > 0 ? z.NEVER : nodes;
+  }),
+);
+
+export const Layout = z.strictObject({
+  schemaVersion: z.literal(LAYOUT_SCHEMA_VERSION),
+  root: ContainerNode,
+});
+
+export type Layout = {
+  schemaVersion: typeof LAYOUT_SCHEMA_VERSION;
+  root: ContainerNode;
+};
+
+export const isContainerNode = (node: LayoutNode): node is ContainerNode =>
+  node.type === "container";
+
+export const isFormNode = (node: LayoutNode): node is FormNode => node.type === "form";
+
+export const isLoopNode = (node: LayoutNode): node is LoopNode => node.type === "loop";
+
+/**
+ * The class name an element type renders with (`emvb-<name>`). A Section reference became
+ * `part-ref` in schema 18 (W-925) but keeps its public class `emvb-section`, so site CSS and
+ * the rendered output are unchanged.
+ */
+export const cssTypeName = (type: string): string => {
+  if (type === "part-ref") return "section";
+  // W-927: every extension element shares the emvb-ext class (type holds : and /).
+  if (type.startsWith("ext:")) return "ext";
+  return type;
+};
+
+export const isSectionNode = (node: LayoutNode): node is SectionNode => node.type === "part-ref";
+
+export const isDivBlockNode = (node: LayoutNode): node is DivBlockNode => node.type === "div-block";
+
+export const isFlexboxNode = (node: LayoutNode): node is FlexboxNode => node.type === "flexbox";
+
+/** Layout parents that accept general children (not form-only / tabs-only). */
+export const isTabsNode = (node: LayoutNode): node is TabsNode => node.type === "tabs";
+
+export const isTabPanelNode = (node: LayoutNode): node is TabPanelNode => node.type === "tab-panel";
+
+/** Layout parents that accept general children (forms may land here). */
+export const isLayoutParentNode = (
+  node: LayoutNode,
+): node is
+  | ContainerNode
+  | DivBlockNode
+  | LayoutSectionNode
+  | FlexboxNode
+  | GridNode
+  | TabPanelNode
+  | SectionNode
+  | LoopEmptyNode
+  | AccordionItemNode
+  | MenuItemNode
+  | CarouselSlideNode =>
+  node.type === "container" ||
+  node.type === "div-block" ||
+  node.type === "layout-section" ||
+  node.type === "flexbox" ||
+  node.type === "grid" ||
+  node.type === "tab-panel" ||
+  node.type === "part-ref" ||
+  node.type === "loop-empty" ||
+  node.type === "accordion-item" ||
+  node.type === "menu-item" ||
+  node.type === "carousel-slide";
+
+/** Nodes that may hold children. */
+export const isParentNode = (
+  node: LayoutNode,
+): node is
+  | ContainerNode
+  | DivBlockNode
+  | LayoutSectionNode
+  | FlexboxNode
+  | GridNode
+  | FormNode
+  | LoopNode
+  | LoopEmptyNode
+  | SectionNode
+  | TabsNode
+  | TabPanelNode
+  | AccordionNode
+  | AccordionItemNode
+  | MenuNode
+  | MenuItemNode
+  | SocialIconsNode
+  | GalleryNode
+  | CarouselNode
+  | CarouselSlideNode
+  | PriceListNode
+  | ShareButtonsNode
+  | HotspotsNode =>
+  node.type === "container" ||
+  node.type === "div-block" ||
+  node.type === "layout-section" ||
+  node.type === "flexbox" ||
+  node.type === "grid" ||
+  node.type === "form" ||
+  node.type === "loop" ||
+  node.type === "loop-empty" ||
+  node.type === "part-ref" ||
+  node.type === "tabs" ||
+  node.type === "tab-panel" ||
+  node.type === "accordion" ||
+  node.type === "accordion-item" ||
+  node.type === "menu" ||
+  node.type === "menu-item" ||
+  node.type === "social-icons" ||
+  node.type === "gallery" ||
+  node.type === "carousel" ||
+  node.type === "carousel-slide" ||
+  node.type === "price-list" ||
+  node.type === "share-buttons" ||
+  node.type === "hotspots";
+
+export const isFormFieldType = (type: string): boolean =>
+  (FORM_FIELD_TYPES as readonly string[]).includes(type);
+
+export const isHeadingNode = (node: LayoutNode): node is HeadingNode => node.type === "heading";
+
+export const isUnknownNode = (node: LayoutNode): node is UnknownNode =>
+  !knownTypeSet.has(node.type);

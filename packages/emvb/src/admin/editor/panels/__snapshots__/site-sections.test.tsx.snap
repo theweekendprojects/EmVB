@@ -1,0 +1,3359 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`VariableSection color: list, filter, rename, value, create: list 1`] = `
+"section.emvb-site-section data-emvb-var-kind="color"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Colors"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="color"
+    input.emvb-field aria-label="Search colors" placeholder="Search colors…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#112233"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="ink"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Ink"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#000000"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Ink" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="paper"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Paper"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#ffffff"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Paper" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="accent"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Accent"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#ff0000"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Accent" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`VariableSection color: list, filter, rename, value, create: no matches 1`] = `
+"section.emvb-site-section data-emvb-var-kind="color"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Colors"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="color"
+    input.emvb-field aria-label="Search colors" placeholder="Search colors…" type="search" value="zz"
+  p.emvb-helper data-emvb-var-nomatch=""
+    "No"
+    "colors"
+    "match ""
+    "zz"
+    ""."
+  ul.emvb-site-items"
+`;
+
+exports[`VariableSection color: list, filter, rename, value, create: filtered 1`] = `
+"section.emvb-site-section data-emvb-var-kind="color"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Colors"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="color"
+    input.emvb-field aria-label="Search colors" placeholder="Search colors…" type="search" value="b"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#112233"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="ink"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Ink"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#000000"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Ink" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="paper"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Paper"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#ffffff"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Paper" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="accent"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Accent"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#ff0000"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Accent" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`VariableSection color: list, filter, rename, value, create: open 1`] = `
+"section.emvb-site-section data-emvb-var-kind="color"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Colors"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="color"
+    input.emvb-field aria-label="Search colors" placeholder="Search colors…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#112233"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-site-picker aria-label="Pick Brand" type="color" value="#112233"
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="#112233"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-c-brand"
+          ")"
+    li.emvb-site-item data-emvb-var-id="ink"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Ink"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#000000"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Ink" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="paper"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Paper"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#ffffff"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Paper" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="accent"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Accent"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#ff0000"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Accent" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`VariableSection color: list, filter, rename, value, create: create row 1`] = `
+"section.emvb-site-section data-emvb-var-kind="color"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Colors"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="color"
+    input.emvb-field aria-label="Search colors" placeholder="Search colors…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#112233"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-site-picker aria-label="Pick Brand" type="color" value="#abcdef"
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="#abcdef"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-c-brand"
+          ")"
+    li.emvb-site-item data-emvb-var-id="ink"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Ink"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#000000"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Ink" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="paper"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Paper"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#ffffff"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Paper" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="accent"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Accent"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#ff0000"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Accent" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+  div.emvb-site-create.emvb-site-elevated data-emvb-var-create="color"
+    label for="(generated)"
+      "Name"
+    input.emvb-field aria-labelledby="(generated)" value=""
+    div data-filled=""
+      label data-filled="" for="(generated)"
+        "Value"
+      input.emvb-field aria-labelledby="(generated)" data-filled="" value="#0055ff"
+    div.emvb-dialog-actions
+      button.emvb-btn type="button"
+        "Cancel"
+      button.emvb-btn type="button"
+        span aria-hidden="true"
+        "Create""
+`;
+
+exports[`VariableSection color: list, filter, rename, value, create: saves 1`] = `
+{
+  "asked": [
+    "brand:Brand",
+  ],
+  "saved": [
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Renamed",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#abcdef",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+          {
+            "id": "fresh",
+            "name": "Fresh",
+            "value": "#0055ff",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+  ],
+}
+`;
+
+exports[`VariableSection color: list, filter, rename, value, create: after 1`] = `
+"section.emvb-site-section data-emvb-var-kind="color"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Colors"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="color"
+    input.emvb-field aria-label="Search colors" placeholder="Search colors…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#112233"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-site-picker aria-label="Pick Brand" type="color" value="#abcdef"
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="#abcdef"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-c-brand"
+          ")"
+    li.emvb-site-item data-emvb-var-id="ink"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Ink"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#000000"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Ink" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="paper"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Paper"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#ffffff"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Paper" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="accent"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-color aria-hidden="true" data-emvb-var-swatch=""
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Accent"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "#ff0000"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Accent" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`VariableSection font: list, filter, rename, value, create: list 1`] = `
+"section.emvb-site-section data-emvb-var-kind="font"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Fonts"
+      span.emvb-site-count data-emvb-var-count=""
+        "1"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Ag"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "Inter, sans-serif"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`VariableSection font: list, filter, rename, value, create: open 1`] = `
+"section.emvb-site-section data-emvb-var-kind="font"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Fonts"
+      span.emvb-site-count data-emvb-var-count=""
+        "1"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Ag"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "Inter, sans-serif"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="Inter, sans-serif"
+        p.emvb-site-font-sample
+          "The quick brown fox jumps · 0123"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-f-brand"
+          ")""
+`;
+
+exports[`VariableSection font: list, filter, rename, value, create: create row 1`] = `
+"section.emvb-site-section data-emvb-var-kind="font"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Fonts"
+      span.emvb-site-count data-emvb-var-count=""
+        "1"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Ag"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "Inter, sans-serif"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="Georgia, serif"
+        p.emvb-site-font-sample
+          "The quick brown fox jumps · 0123"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-f-brand"
+          ")"
+  div.emvb-site-create.emvb-site-elevated data-emvb-var-create="font"
+    label for="(generated)"
+      "Name"
+    input.emvb-field aria-labelledby="(generated)" value=""
+    div data-filled=""
+      label data-filled="" for="(generated)"
+        "Value"
+      input.emvb-field aria-labelledby="(generated)" data-filled="" value="Noto Sans, sans-serif"
+    div.emvb-dialog-actions
+      button.emvb-btn type="button"
+        "Cancel"
+      button.emvb-btn type="button"
+        span aria-hidden="true"
+        "Create""
+`;
+
+exports[`VariableSection font: list, filter, rename, value, create: saves 1`] = `
+{
+  "asked": [
+    "brand:Brand",
+  ],
+  "saved": [
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Renamed",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "-1",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Georgia, serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+          {
+            "id": "fresh",
+            "name": "Fresh",
+            "value": "Noto Sans, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+  ],
+}
+`;
+
+exports[`VariableSection font: list, filter, rename, value, create: after 1`] = `
+"section.emvb-site-section data-emvb-var-kind="font"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Fonts"
+      span.emvb-site-count data-emvb-var-count=""
+        "1"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Ag"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "Inter, sans-serif"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="Georgia, serif"
+        p.emvb-site-font-sample
+          "The quick brown fox jumps · 0123"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-f-brand"
+          ")""
+`;
+
+exports[`VariableSection fontSize: list, filter, rename, value, create: list 1`] = `
+"section.emvb-site-section data-emvb-var-kind="fontSize"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Font sizes"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="fontSize"
+    input.emvb-field aria-label="Search font sizes" placeholder="Search font sizes…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "20px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="small"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Small"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "12px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Small" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="big"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Big"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "32px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Big" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="huge"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Huge"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "48px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Huge" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`VariableSection fontSize: list, filter, rename, value, create: no matches 1`] = `
+"section.emvb-site-section data-emvb-var-kind="fontSize"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Font sizes"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="fontSize"
+    input.emvb-field aria-label="Search font sizes" placeholder="Search font sizes…" type="search" value="zz"
+  p.emvb-helper data-emvb-var-nomatch=""
+    "No"
+    "font sizes"
+    "match ""
+    "zz"
+    ""."
+  ul.emvb-site-items"
+`;
+
+exports[`VariableSection fontSize: list, filter, rename, value, create: filtered 1`] = `
+"section.emvb-site-section data-emvb-var-kind="fontSize"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Font sizes"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="fontSize"
+    input.emvb-field aria-label="Search font sizes" placeholder="Search font sizes…" type="search" value="b"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "20px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="small"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Small"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "12px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Small" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="big"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Big"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "32px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Big" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="huge"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Huge"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "48px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Huge" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`VariableSection fontSize: list, filter, rename, value, create: open 1`] = `
+"section.emvb-site-section data-emvb-var-kind="fontSize"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Font sizes"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="fontSize"
+    input.emvb-field aria-label="Search font sizes" placeholder="Search font sizes…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "20px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="20px"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-fs-brand"
+          ")"
+    li.emvb-site-item data-emvb-var-id="small"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Small"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "12px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Small" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="big"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Big"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "32px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Big" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="huge"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Huge"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "48px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Huge" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`VariableSection fontSize: list, filter, rename, value, create: create row 1`] = `
+"section.emvb-site-section data-emvb-var-kind="fontSize"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Font sizes"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="fontSize"
+    input.emvb-field aria-label="Search font sizes" placeholder="Search font sizes…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "20px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="18"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-fs-brand"
+          ")"
+    li.emvb-site-item data-emvb-var-id="small"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Small"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "12px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Small" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="big"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Big"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "32px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Big" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="huge"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Huge"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "48px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Huge" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+  div.emvb-site-create.emvb-site-elevated data-emvb-var-create="fontSize"
+    label for="(generated)"
+      "Name"
+    input.emvb-field aria-labelledby="(generated)" value=""
+    div data-filled=""
+      label data-filled="" for="(generated)"
+        "Value (px, rem, em or %)"
+      input.emvb-field aria-labelledby="(generated)" data-filled="" value="16"
+    div.emvb-dialog-actions
+      button.emvb-btn type="button"
+        "Cancel"
+      button.emvb-btn type="button"
+        span aria-hidden="true"
+        "Create""
+`;
+
+exports[`VariableSection fontSize: list, filter, rename, value, create: saves 1`] = `
+{
+  "asked": [
+    "brand:Brand",
+  ],
+  "saved": [
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Renamed",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 18,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+          {
+            "id": "fresh",
+            "name": "Fresh",
+            "value": {
+              "unit": "px",
+              "value": 16,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+  ],
+}
+`;
+
+exports[`VariableSection fontSize: list, filter, rename, value, create: after 1`] = `
+"section.emvb-site-section data-emvb-var-kind="fontSize"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Font sizes"
+      span.emvb-site-count data-emvb-var-count=""
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search data-emvb-var-filter="fontSize"
+    input.emvb-field aria-label="Search font sizes" placeholder="Search font sizes…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "20px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="18"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-fs-brand"
+          ")"
+    li.emvb-site-item data-emvb-var-id="small"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Small"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "12px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Small" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="big"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Big"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "32px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Big" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-var-id="huge"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview aria-hidden="true" data-emvb-var-preview=""
+            "Aa"
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Huge"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              "48px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Huge" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`VariableSection spacing: list, filter, rename, value, create: list 1`] = `
+"section.emvb-site-section data-emvb-var-kind="spacing"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Spacing"
+      span.emvb-site-count data-emvb-var-count=""
+        "1"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-icon aria-hidden="true"
+            svg
+              path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              span.emvb-site-bar aria-hidden="true" data-emvb-var-bar=""
+              "8px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`VariableSection spacing: list, filter, rename, value, create: open 1`] = `
+"section.emvb-site-section data-emvb-var-kind="spacing"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Spacing"
+      span.emvb-site-count data-emvb-var-count=""
+        "1"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-icon aria-hidden="true"
+            svg
+              path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              span.emvb-site-bar aria-hidden="true" data-emvb-var-bar=""
+              "8px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="8px"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-s-brand"
+          ")""
+`;
+
+exports[`VariableSection spacing: list, filter, rename, value, create: create row 1`] = `
+"section.emvb-site-section data-emvb-var-kind="spacing"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Spacing"
+      span.emvb-site-count data-emvb-var-count=""
+        "1"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-icon aria-hidden="true"
+            svg
+              path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              span.emvb-site-bar aria-hidden="true" data-emvb-var-bar=""
+              "8px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="24"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-s-brand"
+          ")"
+  div.emvb-site-create.emvb-site-elevated data-emvb-var-create="spacing"
+    label for="(generated)"
+      "Name"
+    input.emvb-field aria-labelledby="(generated)" value=""
+    div data-filled=""
+      label data-filled="" for="(generated)"
+        "Value (px, rem, em or %)"
+      input.emvb-field aria-labelledby="(generated)" data-filled="" value="16"
+    div.emvb-dialog-actions
+      button.emvb-btn type="button"
+        "Cancel"
+      button.emvb-btn type="button"
+        span aria-hidden="true"
+        "Create""
+`;
+
+exports[`VariableSection spacing: list, filter, rename, value, create: saves 1`] = `
+{
+  "asked": [
+    "brand:Brand",
+  ],
+  "saved": [
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Renamed",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 24,
+            },
+          },
+        ],
+      },
+    },
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+          {
+            "id": "fresh",
+            "name": "Fresh",
+            "value": {
+              "unit": "px",
+              "value": 16,
+            },
+          },
+        ],
+      },
+    },
+  ],
+}
+`;
+
+exports[`VariableSection spacing: list, filter, rename, value, create: after 1`] = `
+"section.emvb-site-section data-emvb-var-kind="spacing"
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Spacing"
+      span.emvb-site-count data-emvb-var-count=""
+        "1"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-var-id="brand" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          span.emvb-site-preview.emvb-site-preview-icon aria-hidden="true"
+            svg
+              path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Brand"
+            span.emvb-mono.emvb-site-token data-emvb-var-text=""
+              span.emvb-site-bar aria-hidden="true" data-emvb-var-bar=""
+              "8px"
+        span.emvb-site-usage aria-live="polite" data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Brand" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body data-emvb-var-value=""
+        div.emvb-site-value-row
+          input.emvb-field.emvb-site-value-input aria-label="Value of Brand" value="24"
+        p.emvb-mono.emvb-site-token
+          "var("
+          "--emvb-s-brand"
+          ")""
+`;
+
+exports[`ClassesSection list, filter, duplicate, delete, create: list 1`] = `
+"section.emvb-site-section data-emvb-classes=""
+  p.emvb-helper.emvb-site-cascade data-emvb-cascade-help=""
+    "When two classes set the same property, the one lower in this list wins. Local styles on an element still win. Editing a class updates every element that uses it. Tablet and mobile overrides stay on the Style tab."
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Classes"
+      span.emvb-site-count
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search
+    input.emvb-field aria-label="Search classes" placeholder="Search classes…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-class-def="card"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Card"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-card"
+        span.emvb-site-usage data-emvb-usage=""
+          "1 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Card" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-class-def="hero"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Hero"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-hero"
+        span.emvb-site-usage data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Hero" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-class-def="note"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Note"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-note"
+        span.emvb-site-usage data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Note" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-class-def="badge"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Badge"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-badge"
+        span.emvb-site-usage data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Badge" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`ClassesSection list, filter, duplicate, delete, create: filtered 1`] = `
+"section.emvb-site-section data-emvb-classes=""
+  p.emvb-helper.emvb-site-cascade data-emvb-cascade-help=""
+    "When two classes set the same property, the one lower in this list wins. Local styles on an element still win. Editing a class updates every element that uses it. Tablet and mobile overrides stay on the Style tab."
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Classes"
+      span.emvb-site-count
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search
+    input.emvb-field aria-label="Search classes" placeholder="Search classes…" type="search" value="emvb-k-no"
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-class-def="note"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Note"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-note"
+        span.emvb-site-usage data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Note" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`ClassesSection list, filter, duplicate, delete, create: editing 1`] = `
+"section.emvb-site-section data-emvb-classes=""
+  p.emvb-helper.emvb-site-cascade data-emvb-cascade-help=""
+    "When two classes set the same property, the one lower in this list wins. Local styles on an element still win. Editing a class updates every element that uses it. Tablet and mobile overrides stay on the Style tab."
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Classes"
+      span.emvb-site-count
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search
+    input.emvb-field aria-label="Search classes" placeholder="Search classes…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-class-def="card" data-emvb-class-editing="" data-open="true"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="true" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Card"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-card"
+        span.emvb-site-usage data-emvb-usage=""
+          "1 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Card" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+      div.emvb-site-item-body.emvb-site-class-styles
+        p.emvb-helper
+          "These styles apply everywhere this class is used."
+        div.emvb-state-switch data-emvb-state-switch="normal"
+          div.emvb-state-tabs
+            div aria-label="Style state" role="tablist"
+              button aria-selected="true" data-active="" data-composite-item-active="" role="tab" tabindex="0" type="button"
+                "Normal"
+              button aria-selected="false" role="tab" tabindex="-1" type="button"
+                "Hover"
+              button aria-selected="false" role="tab" tabindex="-1" type="button"
+                "Focus"
+              button aria-selected="false" role="tab" tabindex="-1" type="button"
+                "Active"
+              div role="presentation"
+        div.emvb-site-class-sections aria-label="Class style sections" role="tablist"
+          button.emvb-site-class-section aria-selected="true" data-emvb-class-section="layout" role="tab" type="button"
+            "Layout"
+          button.emvb-site-class-section aria-selected="false" data-emvb-class-section="spacing" role="tab" type="button"
+            "Spacing"
+          button.emvb-site-class-section aria-selected="false" data-emvb-class-section="size" role="tab" type="button"
+            "Size"
+          button.emvb-site-class-section aria-selected="false" data-emvb-class-section="position" role="tab" type="button"
+            "Position"
+          button.emvb-site-class-section aria-selected="false" data-emvb-class-section="typography" role="tab" type="button"
+            "Typography"
+          button.emvb-site-class-section aria-selected="false" data-emvb-class-section="background" role="tab" type="button"
+            "Background"
+          button.emvb-site-class-section aria-selected="false" data-emvb-class-section="border" role="tab" type="button"
+            "Border"
+          button.emvb-site-class-section aria-selected="false" data-emvb-class-section="effects" role="tab" type="button"
+            "Effects"
+        div.emvb-style-row data-emvb-style="flexDirection"
+          div.emvb-choice
+            span.emvb-choice-label id="emvb-choice-direction"
+              "Direction"
+            div.emvb-choice-group aria-labelledby="emvb-choice-direction" role="radiogroup"
+              button aria-checked="false" aria-label="Row" data-emvb-choice="row" role="radio" tabindex="0" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Column" data-emvb-choice="column" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Row reverse" data-emvb-choice="row-reverse" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Column reverse" data-emvb-choice="column-reverse" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+          button.emvb-btn.emvb-reset-btn aria-label="Reset Direction to default" disabled="" type="button"
+            svg aria-hidden="true"
+              path
+        div.emvb-style-row data-emvb-style="flexWrap"
+          div.emvb-choice
+            span.emvb-choice-label id="emvb-choice-wrap"
+              "Wrap"
+            div.emvb-choice-group aria-labelledby="emvb-choice-wrap" role="radiogroup"
+              button aria-checked="false" aria-label="No wrap" data-emvb-choice="nowrap" role="radio" tabindex="0" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Wrap" data-emvb-choice="wrap" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Wrap reverse" data-emvb-choice="wrap-reverse" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+          button.emvb-btn.emvb-reset-btn aria-label="Reset Wrap to default" disabled="" type="button"
+            svg aria-hidden="true"
+              path
+        div.emvb-style-row data-emvb-style="justifyContent"
+          div.emvb-choice
+            span.emvb-choice-label id="emvb-choice-justify"
+              "Justify"
+            div.emvb-choice-group aria-labelledby="emvb-choice-justify" role="radiogroup"
+              button aria-checked="false" aria-label="Start" data-emvb-choice="flex-start" role="radio" tabindex="0" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Center" data-emvb-choice="center" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="End" data-emvb-choice="flex-end" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Space between" data-emvb-choice="space-between" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Space around" data-emvb-choice="space-around" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Space evenly" data-emvb-choice="space-evenly" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+          button.emvb-btn.emvb-reset-btn aria-label="Reset Justify to default" disabled="" type="button"
+            svg aria-hidden="true"
+              path
+        div.emvb-style-row data-emvb-style="alignItems"
+          div.emvb-choice
+            span.emvb-choice-label id="emvb-choice-align"
+              "Align"
+            div.emvb-choice-group aria-labelledby="emvb-choice-align" role="radiogroup"
+              button aria-checked="false" aria-label="Stretch" data-emvb-choice="stretch" role="radio" tabindex="0" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Start" data-emvb-choice="flex-start" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Center" data-emvb-choice="center" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="End" data-emvb-choice="flex-end" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+              button aria-checked="false" aria-label="Baseline" data-emvb-choice="baseline" role="radio" tabindex="-1" type="button"
+                svg aria-hidden="true"
+                  path
+          button.emvb-btn.emvb-reset-btn aria-label="Reset Align to default" disabled="" type="button"
+            svg aria-hidden="true"
+              path
+        div.emvb-style-row data-emvb-style="gap" data-unit="px"
+          div.emvb-length-stack
+            label for="(generated)"
+              "Gap"
+            div.emvb-field.emvb-length data-focus-mode="container" data-slot="input-group"
+              label aria-hidden="true" for="(generated)"
+              input.emvb-mono aria-label="Gap" aria-labelledby="(generated)" value=""
+              div.emvb-unit-addon data-slot="input-group-addon-end"
+                button.emvb-unit-btn aria-expanded="false" aria-haspopup="menu" aria-label="Gap unit (px)" data-emvb-unit="px" tabindex="0" type="button"
+                  "px"
+                  svg aria-hidden="true"
+                    path
+            input.emvb-gap-slider aria-label="Gap slider" type="range" value="0"
+          button.emvb-var-btn aria-expanded="false" aria-haspopup="menu" aria-label="Use a variable for Gap" tabindex="0" type="button"
+            svg aria-hidden="true"
+              path
+          button.emvb-btn.emvb-reset-btn aria-label="Reset Gap to default" disabled="" type="button"
+            svg aria-hidden="true"
+              path
+        div.emvb-style-row data-emvb-style="gridColumnSpan"
+          label for="(generated)"
+            "Column span"
+          input.emvb-field.emvb-mono.emvb-number aria-labelledby="(generated)" data-emvb-number="gridColumnSpan" value=""
+          button.emvb-btn.emvb-reset-btn aria-label="Reset Column span to default" disabled="" type="button"
+            svg aria-hidden="true"
+              path
+        div.emvb-style-row data-emvb-style="gridColumnStart"
+          label for="(generated)"
+            "Column start"
+          input.emvb-field.emvb-mono.emvb-number aria-labelledby="(generated)" data-emvb-number="gridColumnStart" value=""
+          button.emvb-btn.emvb-reset-btn aria-label="Reset Column start to default" disabled="" type="button"
+            svg aria-hidden="true"
+              path
+        div.emvb-style-row data-emvb-style="gridRowSpan"
+          label for="(generated)"
+            "Row span"
+          input.emvb-field.emvb-mono.emvb-number aria-labelledby="(generated)" data-emvb-number="gridRowSpan" value=""
+          button.emvb-btn.emvb-reset-btn aria-label="Reset Row span to default" disabled="" type="button"
+            svg aria-hidden="true"
+              path
+        div.emvb-style-row data-emvb-style="gridRowStart"
+          label for="(generated)"
+            "Row start"
+          input.emvb-field.emvb-mono.emvb-number aria-labelledby="(generated)" data-emvb-number="gridRowStart" value=""
+          button.emvb-btn.emvb-reset-btn aria-label="Reset Row start to default" disabled="" type="button"
+            svg aria-hidden="true"
+              path
+    li.emvb-site-item data-emvb-class-def="hero"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Hero"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-hero"
+        span.emvb-site-usage data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Hero" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-class-def="note"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Note"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-note"
+        span.emvb-site-usage data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Note" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-class-def="badge"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Badge"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-badge"
+        span.emvb-site-usage data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Badge" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;
+
+exports[`ClassesSection list, filter, duplicate, delete, create: saves 1`] = `
+{
+  "asked": [
+    "hero:Hero",
+  ],
+  "saved": [
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+        {
+          "id": "card-copy",
+          "name": "Card copy",
+          "style": {
+            "color": "#112233",
+          },
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+    {
+      "classes": [
+        {
+          "id": "card",
+          "name": "Card",
+          "style": {
+            "color": "#112233",
+          },
+        },
+        {
+          "id": "hero",
+          "name": "Hero",
+          "style": {},
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "style": {},
+        },
+        {
+          "id": "badge",
+          "name": "Badge",
+          "style": {},
+        },
+        {
+          "id": "panel",
+          "name": "Panel",
+          "style": {},
+        },
+      ],
+      "schemaVersion": 17,
+      "variables": {
+        "colors": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "#112233",
+          },
+          {
+            "id": "ink",
+            "name": "Ink",
+            "value": "#000000",
+          },
+          {
+            "id": "paper",
+            "name": "Paper",
+            "value": "#ffffff",
+          },
+          {
+            "id": "accent",
+            "name": "Accent",
+            "value": "#ff0000",
+          },
+        ],
+        "fontSizes": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 20,
+            },
+          },
+          {
+            "id": "small",
+            "name": "Small",
+            "value": {
+              "unit": "px",
+              "value": 12,
+            },
+          },
+          {
+            "id": "big",
+            "name": "Big",
+            "value": {
+              "unit": "px",
+              "value": 32,
+            },
+          },
+          {
+            "id": "huge",
+            "name": "Huge",
+            "value": {
+              "unit": "px",
+              "value": 48,
+            },
+          },
+        ],
+        "fonts": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": "Inter, sans-serif",
+          },
+        ],
+        "spacings": [
+          {
+            "id": "brand",
+            "name": "Brand",
+            "value": {
+              "unit": "px",
+              "value": 8,
+            },
+          },
+        ],
+      },
+    },
+  ],
+}
+`;
+
+exports[`ClassesSection list, filter, duplicate, delete, create: after 1`] = `
+"section.emvb-site-section data-emvb-classes=""
+  p.emvb-helper.emvb-site-cascade data-emvb-cascade-help=""
+    "When two classes set the same property, the one lower in this list wins. Local styles on an element still win. Editing a class updates every element that uses it. Tablet and mobile overrides stay on the Style tab."
+  div.emvb-site-section-head
+    h3.emvb-field-label
+      "Classes"
+      span.emvb-site-count
+        "4"
+    button.emvb-btn type="button"
+      svg aria-hidden="true"
+        path
+      "New"
+  div.emvb-site-search
+    input.emvb-field aria-label="Search classes" placeholder="Search classes…" type="search" value=""
+  ul.emvb-site-items
+    li.emvb-site-item data-emvb-class-def="card"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Card"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-card"
+        span.emvb-site-usage data-emvb-usage=""
+          "1 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Card" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-class-def="hero"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Hero"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-hero"
+        span.emvb-site-usage data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Hero" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-class-def="note"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Note"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-note"
+        span.emvb-site-usage data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Note" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path
+    li.emvb-site-item data-emvb-class-def="badge"
+      div.emvb-site-item-row
+        button.emvb-site-item-main aria-expanded="false" type="button"
+          svg.emvb-site-item-caret aria-hidden="true"
+            path
+          svg.emvb-site-item-icon aria-hidden="true"
+            path
+          span.emvb-site-item-text
+            span.emvb-site-item-name
+              "Badge"
+            span.emvb-mono.emvb-site-token
+              "."
+              "emvb-k-badge"
+        span.emvb-site-usage data-emvb-usage=""
+          "0 on page"
+        button.emvb-site-menu-btn aria-expanded="false" aria-haspopup="menu" aria-label="Actions for Badge" tabindex="0" type="button"
+          svg aria-hidden="true"
+            path"
+`;

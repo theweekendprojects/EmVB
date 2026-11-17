@@ -1,0 +1,33 @@
+# W-1015: weekly update PRs for the Bun workspace (root lockfile) and the pinned CI actions.
+# EmDash, Kumo and Astro are grouped so a host upgrade lands as one PR; CI's EmDash 1.4 and 1.5
+# jobs decide whether it is compatible. Dev tooling is grouped separately.
+version: 2
+updates:
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    # W-1032: Remix Icon 4.9+ is under the custom Remix Icon License v1.0, which doesn't allow
+    # shipping its icons inside another icon library (D-052): stay on 4.8.0, the last Apache-2.0.
+    ignore:
+      - dependency-name: remixicon
+        versions: [">=4.9.0"]
+    groups:
+      emdash:
+        patterns:
+          - emdash
+          - "@emdash-cms/*"
+          - "@cloudflare/kumo"
+      astro:
+        patterns:
+          - astro
+          - "@astrojs/*"
+      dev-tooling:
+        dependency-type: development
+        patterns:
+          - "*"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

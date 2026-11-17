@@ -1,0 +1,25 @@
+---
+import { spotlights } from "../data/spotlights";
+import SectionIntro from "./SectionIntro.astro";
+import Spotlight from "./Spotlight.astro";
+---
+
+<section class="section section--sunk" aria-labelledby="styles-title">
+  <div class="wrap" id="styles">
+    <SectionIntro id="styles-title" eyebrow="Styling" title="Every style property, in every state, on every device" />
+    <div class="list">
+      {
+        spotlights.map((item, index) => (
+          <Spotlight item={item} index={index + 1} total={spotlights.length} flip={index % 2 === 1} />
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .list {
+    display: grid;
+    gap: clamp(var(--space-8), 9vw, 7.5rem);
+  }
+</style>

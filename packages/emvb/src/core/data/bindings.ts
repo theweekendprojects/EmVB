@@ -1,0 +1,268 @@
+import type { Binding, BindSource, LayoutNode } from "../schema/layout.ts";
+import { someNode } from "../tree-ops.ts";
+import { sanitizeHref } from "../sanitize/href.ts";
+import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
+import type { ThemePostFields } from "../theme/dynamic.ts";
+
+/**
+ * Live data bindings (W-307). A text, image or link field can read a post field, a site setting
+ * or a URL parameter instead of its typed value. The typed value stays as the fallback, so a page
+ * never shows an empty heading because a parameter is missing. Values are plain text: the element
+ * still escapes text and sanitizes links and image URLs, exactly as for a typed value.
+ */
+
+/** How a bound value is used, which decides how it's cleaned before the element sees it. */
+export type BindKind = "text" | "url" | "image";
+
+export type BindableField = { key: string; label: string; kind: BindKind };
+
+const TEXT = (label = "Text"): BindableField => ({ key: "text", label, kind: "text" });
+const HREF = (label = "Link"): BindableField => ({ key: "href", label, kind: "url" });
+
+/** Which props of which elements can be bound. Anything else in `bind` is ignored on render. */
+export const BINDABLE_FIELDS: Readonly<Record<string, readonly BindableField[]>> = {
+  heading: [TEXT(), HREF()],
+  text: [TEXT()],
+  label: [TEXT()],
+  link: [TEXT(), HREF("URL")],
+  button: [TEXT(), HREF()],
+  image: [
+    { key: "src", label: "Image", kind: "image" },
+    { key: "alt", label: "Alt text", kind: "text" },
+  ],
+  icon: [HREF(), { key: "title", label: "Title", kind: "text" }],
+  "menu-item": [TEXT("Label"), HREF()],
+  container: [HREF()],
+  "div-block": [HREF()],
+  flexbox: [HREF()],
+  grid: [HREF()],
+};
+
+export const bindableFields = (type: string): readonly BindableField[] =>
+  Object.hasOwn(BINDABLE_FIELDS, type) ? (BINDABLE_FIELDS[type] ?? []) : [];
+
+/** The post fields the editor offers by name; any other key reads the post's own data. */
+export const POST_BIND_KEYS = [
+  { key: "title", label: "Title" },
+  { key: "excerpt", label: "Excerpt" },
+  { key: "permalink", label: "Permalink" },
+  { key: "slug", label: "Slug" },
+  { key: "publishedAt", label: "Published date" },
+  { key: "authorName", label: "Author" },
+  { key: "featuredImageUrl", label: "Featured image" },
+  { key: "featuredImageAlt", label: "Featured image alt" },
+] as const;
+
+/** Site settings hosts pass in by default (EmDash's `getSiteSettings`). */
+export const SITE_BIND_KEYS = [
+  { key: "title", label: "Site title" },
+  { key: "tagline", label: "Tagline" },
+  { key: "url", label: "Site URL" },
+] as const;
+
+export const BIND_SOURCE_LABELS: Readonly<Record<BindSource, string>> = {
+  post: "Post field",
+  site: "Site setting",
+  param: "URL parameter",
+};
+
+/** Where bound values come from on this render. */
+export type BindingData = {
+  post?: ThemePostFields;
+  site?: Readonly<Record<string, string>>;
+  params?: Readonly<Record<string, string>>;
+  /** The page's origin; a URL-parameter link or image must stay on it unless `outside` (W-307). */
+  origin?: string;
+};
+
+/** Longest bound value an element receives; longer values are cut (URL parameters are untrusted). */
+export const MAX_BOUND_LENGTH = 500;
+
+const POST_KEYS = new Set<string>(POST_BIND_KEYS.map((k) => k.key));
+
+function scalar(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "boolean") return value ? "true" : "false";
+  return undefined;
+}
+
+function postValue(post: ThemePostFields | undefined, key: string): string | undefined {
+  if (!post) return undefined;
+  if (POST_KEYS.has(key)) return scalar((post as Record<string, unknown>)[key]);
+  const fields = post.fields;
+  if (!fields || !Object.hasOwn(fields, key)) return undefined;
+  return scalar(fields[key]);
+}
+
+/** Text with control characters removed and its length capped. */
+function clean(value: string): string {
+  let out = "";
+  for (const char of value) {
+    const code = char.codePointAt(0) ?? 0;
+    // W-677: C1 controls and bidi overrides, embeddings and isolates too: a URL parameter
+    // could make a bound heading or link read backwards ("exe.jpg" shown as "gpj.exe").
+    const dropped =
+      code === 127 ||
+      (code >= 0x80 && code <= 0x9f) ||
+      (code >= 0x202a && code <= 0x202e) ||
+      (code >= 0x2066 && code <= 0x2069);
+    const kept = code === 9 ? " " : code === 10 || (code >= 32 && !dropped) ? char : "";
+    // W-502: cutting at a UTF-16 length split an emoji at the limit into a broken half.
+    if (out.length + kept.length > MAX_BOUND_LENGTH) break;
+    out += kept;
+  }
+  return out.trim();
+}
+
+/** The live value of one binding, or undefined when its source has nothing for this key. */
+export function resolveBinding(binding: Binding, data: BindingData): string | undefined {
+  let raw: string | undefined;
+  if (binding.source === "post") raw = postValue(data.post, binding.key);
+  else if (binding.source === "site") {
+    raw = data.site && Object.hasOwn(data.site, binding.key) ? data.site[binding.key] : undefined;
+  } else {
+    raw =
+      data.params && Object.hasOwn(data.params, binding.key) ? data.params[binding.key] : undefined;
+  }
+  if (raw === undefined) return undefined;
+  const value = clean(raw);
+  return value.length > 0 ? value : undefined;
+}
+
+/** True when the node has at least one binding render would use. */
+export function hasBindings(node: LayoutNode): boolean {
+  const bind = node.bind;
+  if (!bind) return false;
+  return bindableFields(node.type).some((field) => Object.hasOwn(bind, field.key));
+}
+
+/**
+ * Whether a URL stays on this site: relative (`/path`, `?q`, `#top`, `page`), or absolute on
+ * `origin`. `//host` and other schemes are outside; without an origin, only relative URLs pass.
+ */
+function isSameSiteUrl(value: string, origin: string | undefined): boolean {
+  const url = value.trim();
+  if (/^[/\\]{2}/.test(url)) return false;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) return true;
+  if (!origin) return false;
+  try {
+    return new URL(url).origin === new URL(origin).origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The value a bound field shows (W-307), after every check render applies, or undefined when
+ * the typed value shows instead: nothing to read, a link or image the sanitizer refuses, or a
+ * URL-parameter link or image to another site without "Allow outside sites".
+ */
+export function boundValue(
+  field: BindableField,
+  binding: Binding,
+  data: BindingData,
+  multiline = false,
+): string | undefined {
+  let value = resolveBinding(binding, data);
+  if (value === undefined) return undefined;
+  if (!multiline) value = value.replace(/\s*\n\s*/g, " ");
+  if (field.kind === "url" && !sanitizeHref(value)) return undefined;
+  if (field.kind === "image" && !sanitizeMediaUrl(value)) return undefined;
+  if (
+    field.kind !== "text" &&
+    binding.source === "param" &&
+    !binding.outside &&
+    !isSameSiteUrl(value, data.origin)
+  ) {
+    return undefined;
+  }
+  return value;
+}
+
+/**
+ * The node with its bound props replaced by live values (W-307). Unbindable keys, empty values and
+ * links or images the sanitizer would refuse leave the typed prop as it is, so a bad URL parameter
+ * can't blank a button or an image. A URL parameter can't send a link or image off the site unless
+ * the binding allows outside sites (see `boundValue`). A bound text field that is single-line stays single-line.
+ */
+export function applyBindings(node: LayoutNode, data: BindingData): LayoutNode {
+  const bind = node.bind;
+  if (!bind) return node;
+  let props: Record<string, unknown> | undefined;
+  for (const field of bindableFields(node.type)) {
+    const binding = Object.hasOwn(bind, field.key) ? bind[field.key] : undefined;
+    if (!binding) continue;
+    const value = boundValue(field, binding, data, field.kind === "text" && node.type === "text");
+    if (value === undefined) continue;
+    props ??= { ...(node.props as Record<string, unknown>) };
+    props[field.key] = value;
+    // A bound image is no longer the media library item it was picked from. W-501: nor are the
+    // typed picture's extra sizes; with `w` descriptors the browser picks only from srcset, so
+    // they hid the bound image on most screens.
+    if (field.kind === "image") {
+      delete props["mediaId"];
+      delete props["sources"];
+    }
+  }
+  return props ? ({ ...node, props } as LayoutNode) : node;
+}
+
+/** Sets or clears one binding, dropping `bind` once it is empty. */
+export function withBinding(
+  node: LayoutNode,
+  key: string,
+  binding: Binding | undefined,
+): LayoutNode {
+  const next: Record<string, Binding> = { ...node.bind };
+  if (binding) next[key] = binding;
+  else delete next[key];
+  const { bind: _old, ...rest } = node;
+  return (Object.keys(next).length > 0 ? { ...rest, bind: next } : rest) as LayoutNode;
+}
+
+/** Search parameters as a plain record, first value per name, with names and values capped. */
+export function paramsFromSearch(search: URLSearchParams): Record<string, string> {
+  const params: Record<string, string> = {};
+  let count = 0;
+  for (const [name, value] of search) {
+    if (count >= 50) break;
+    if (!/^[A-Za-z][A-Za-z0-9_.-]{0,63}$/.test(name) || Object.hasOwn(params, name)) continue;
+    params[name] = value.slice(0, MAX_BOUND_LENGTH * 4);
+    count += 1;
+  }
+  return params;
+}
+
+/** Site settings as flat text for bindings (W-307): `title`, `tagline`, `url`, `social.github`… */
+export function siteBindingValues(settings: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!settings || typeof settings !== "object") return out;
+  const add = (key: string, value: unknown) => {
+    if (typeof value === "string" && value.trim()) out[key] = value.trim();
+    else if (typeof value === "number" && Number.isFinite(value)) out[key] = String(value);
+  };
+  for (const [key, value] of Object.entries(settings as Record<string, unknown>)) {
+    if (key === "seo") continue;
+    if (value && typeof value === "object") {
+      if (key === "logo" || key === "favicon") {
+        const media = value as { src?: unknown; url?: unknown };
+        add(key, media.src ?? media.url);
+        continue;
+      }
+      for (const [inner, innerValue] of Object.entries(value as Record<string, unknown>)) {
+        add(`${key}.${inner}`, innerValue);
+      }
+      continue;
+    }
+    add(key, value);
+  }
+  return out;
+}
+
+/** Whether any node in the tree reads a source (hosts fetch site settings only when needed). */
+export function layoutUsesSource(root: LayoutNode, source: BindSource): boolean {
+  return someNode(root, (node) =>
+    Boolean(node.bind && Object.values(node.bind).some((b) => b.source === source)),
+  );
+}

@@ -1,0 +1,173 @@
+# Import from Elementor
+
+Bring pages and templates you built with Elementor on WordPress into EmVB. The import reads
+Elementor's own JSON, builds an EmVB page from it, and tells you what it kept, what it changed to
+fit EmVB, and what it left out, before anything is created.
+
+## Export from Elementor
+
+In WordPress, go to **Templates → Saved Templates**, then **Export** the template you want. To
+export a page, open it in Elementor, choose **Save as Template** from the Update button's menu,
+then export that template. You get a `.json` file.
+
+You can also paste the page's `_elementor_data` (from the database or a WordPress export tool), or
+an element copied from the Elementor editor.
+
+For exact global colours and fonts, also export your **site kit** (**Elementor → Tools → Import /
+Export Kit → Export**, then take `site-settings.json` from the zip).
+
+## Import it
+
+1. In the admin, open **Pages VisualBuilder** (or **Theme Builder** for headers, footers and other
+   theme templates) and choose **Import from Elementor**.
+2. **Choose file** (or paste the JSON). Optionally **Add site kit**.
+3. Read the report. The title comes from the template; change it if you like, and check the slug.
+4. **Import** creates a draft and opens it in the editor. Nothing is published until you publish.
+
+### Images
+
+The dialog lists the images that still load from your old site. **Copy images** puts them in your
+media library and the page uses the copies. Copying works when your old site lets other sites read
+its files; if it doesn't, download them from the WordPress media library and add them with **Add
+image files** (matched by file name). Copies stay in the media library even if you don't import.
+
+### Page links
+
+Links to pages on your old site become the same address on this site (`https://old-site/contact/` →
+`/contact`), so they work once you import those pages with the same slugs. Links to files, the
+WordPress admin and `?p=` addresses keep their old address.
+
+Elementor 4 links to a WordPress page by its number only. Under **Page links**, enter where each
+page goes on this site (`/contact`) or pick one of your pages; the dialog remembers your answers for
+the next import. A page left empty has its links left out.
+
+### SVG files
+
+SVG icons and the Elementor 4 SVG element point to files on your old site. When the export gives
+their address, the dialog shows **Fetch SVG files** and **Add SVG files**. With the file, the SVG
+becomes an Icon that keeps its own drawing, and parts drawn in `currentColor` take the colour you
+set in EmVB. Fetching works when your old site lets other sites read its files. If it doesn't,
+download the files from the WordPress media library and add them: they are matched by file name. An
+SVG without its file stays an image.
+
+Elementor 4 exports often name an SVG only by its WordPress media number. Those become empty Icon
+elements at the right size; pick each file in the editor (**Icon → My uploads**).
+
+**Give unstyled widgets Elementor's default colours and fonts** is on by default: widgets you never
+styled in Elementor look the way Elementor showed them (its kit colours, Roboto). Turn it off if
+your site had Elementor's default colours and fonts disabled, so those widgets take your EmVB site
+styles instead.
+
+In **Theme Builder**, an Elementor header becomes a Header, a footer a Footer, a popup a Popup, a
+single template a Single post or page, and so on. Other templates import as a reusable Section;
+pick another type in the dialog if you want.
+
+## What is imported faithfully
+
+- **Layout:** Flexbox and Grid containers (direction, gap, alignment, wrap, width, minimum height,
+  boxed or full width, columns per device), legacy sections and columns (column widths, gaps,
+  vertical position, stacking on phones), and inner sections.
+- **Style:** backgrounds (colour, image, gradient, overlay), padding, margins, borders, corner
+  radius, box shadow, typography (family, size, weight, line height, letter spacing, case,
+  decoration), text colour and alignment, entrance animations, visibility per device, and the
+  wide screen, laptop, tablet and mobile values of all of these (wide screen since 1.1).
+- **Sticky (since 1.2):** Elementor's Sticky setting becomes CSS sticky positioning with its edge
+  (top or bottom), offset and devices.
+- **Widgets:** Heading, Text Editor, Image, Button (with its icon and hover colours), Spacer,
+  Divider, Icon, Icon List, Video (YouTube, Vimeo, files), Tabs, Accordion,
+  Toggle, Nested Tabs, Nested Accordion, Menu Anchor, and HTML (as plain elements).
+- **Widgets that become EmVB's own (since 1.2):** Star Rating, Alert (dismiss included), Icon Box,
+  Image Box, Testimonial, Social Icons (when every network is one EmVB knows; otherwise as icons),
+  Basic Gallery and Pro Gallery (as a Gallery, lightbox included), and Image
+  Carousel and Media Carousel (as a Carousel with their arrows, dots and looping; autoplay only
+  when the widget had it on). See [Widgets](widgets.md).
+- **Marketing widgets that become EmVB's own (since 1.3):** Counter (counting up, in 5 seconds at
+  most), Progress Bar (growing in; text inside the bar is left out), Countdown with a due date
+  (ticking, with its ending: hide, message or a link where Elementor redirected; Elementor stores
+  the date without a time zone, so EmVB reads it as UTC; check it), Google Maps (a Map that loads
+  Google's map only when a visitor asks), Price Table (sale price and ribbon included), Price
+  List, Call to Action (picture behind or beside, ribbon), Flip Box (its direction; a front image
+  or icon is left out), Animated Headline (highlight shape or rotating words), Share Buttons (the
+  services EmVB has), Hotspot (each marker's place on every device), and Slides and Testimonial
+  Carousel (as a Carousel of slides, no longer stacked).
+- **Nav Menu (since 1.2):** the Menu is filled with the links of your site's menu of the same name,
+  as EmDash's WordPress import brings it over; links to pages and posts go to their addresses
+  here. When the site has no menu of that name, the Menu stays empty and the report says so.
+- **Theme builder:** Post Title, Post Content, Post Excerpt, Featured Image, Post Info (author and
+  date) and the Elementor Pro dynamic tags for the post title and featured image become EmVB's
+  dynamic elements.
+
+## Elementor 4 (atomic) pages
+
+Pages built with Elementor 4's new elements (Flexbox, Div Block, Heading, Paragraph, Button, Image,
+SVG, Divider, YouTube, Accordion, Tabs and the Form fields) import with their styles. An Elementor 4
+export carries the global classes and variables the page uses. By default EmVB copies their styles
+into each element, so the import never changes your site's classes. Turn on **Add Elementor's
+classes to my site's classes** to keep them as classes instead: each one becomes a class in Site
+styles, and elements point at it and keep only what differs. A class already on your site is never
+changed: an identical one is reused, and a different one with the same name is added as a numbered
+copy ("Card 2"). The page looks the same either way.
+
+- Each class's wide screen, desktop, laptop, tablet and mobile values and its hover and focus
+  states carry over. "Extra" breakpoints fold into Tablet and Mobile, the way Elementor's
+  desktop-first breakpoints reach the other screens. Grid columns set for laptops or wide screens
+  follow the desktop columns.
+- Fluid sizes (`max(32px, min(56px, …))` and `clamp()`) in px or rem stay fluid: they grow from
+  their small value on phones to their large value on wide screens. Centred wrappers (`min(1180px,
+  calc(100% - 48px))`) keep their maximum width and side gutters.
+- Grids keep their columns per device, including uneven ones (`20% repeat(5, 1fr)`), and children
+  that span every column.
+- A class's own custom CSS is applied where EmVB has the property (borders on one side, gaps,
+  weights, overflow and so on).
+- Forms keep their fields, labels and the layout around them.
+- Steps numbered by your site's CSS (separate paragraphs with a `counter()` in `::before`) become
+  one numbered List.
+- A gradient drawn over a background image keeps its gradient as an overlay.
+- Transforms, flex grow and shrink, and links to WordPress pages are listed in the report.
+
+## What is approximated
+
+These keep their content in the closest EmVB form, and the report says so:
+
+- **Pro widgets:** Form (its fields; connect it to a form in the forms plugin), Blockquote, Table
+  of Contents, Code Highlight.
+- **Hover effects** of Call to Action boxes and the exact look of Elementor's highlight shapes
+  (curly, zigzag and double lines become an underline; an X becomes a strike).
+- **Text formatting** inside headings and paragraphs keeps bold, italic, coloured and linked words,
+  including the colour your site's CSS gives emphasised words in a class (the gold word of a hero
+  title). Other formatting (underline, superscript, highlights) becomes plain text. Paragraphs,
+  headings, lists, line breaks, images and video embeds stay separate elements.
+- **Custom CSS** (Pro): rules on `selector` itself are applied where EmVB has the property (colour,
+  background colour, font size and weight, alignment, spacing, radius, opacity and a few more).
+  Rules for inner parts, and properties EmVB has no setting for, are listed.
+- **Other dynamic tags** keep the fixed fallback value Elementor stored.
+- **Third-party widgets** (Essential Addons, ElementsKit, JetElements and others): EmVB keeps their
+  titles, text, images and buttons in a plain layout and names the widget in the report.
+
+## What is left out
+
+WordPress-only things: shortcodes, WordPress widgets and sidebars, menus the site doesn't have (see
+Nav Menu above), the site logo and title, post lists and loops (rebuild them with
+EmVB's Loop element), comments, search and login forms, evergreen countdowns (a timer per
+visitor), share buttons for services EmVB has no link for, Lottie, motion effects and Elementor CSS
+classes. Scripts and styles in HTML
+are always removed.
+
+## After importing
+
+- **Images you didn't copy still load from your old site.** Copy or upload them before that site
+  goes away.
+- **Fonts:** the report lists the font families the page uses. Make sure your site loads them.
+- **Alt text:** images that had none in the export get one from their file name. Check each one.
+- **Icons** come from EmVB's Font Awesome set. A few renamed or missing icons are listed; pick a
+  similar one in the editor.
+
+## Limits
+
+A file can be up to 8 MB. One import reads up to 5,000 Elementor elements and builds up to about
+1,800 EmVB elements; the rest is left out and reported, so import very long pages a section at a
+time. Elements nested more than 16 levels deep are left out. Long text is split across several
+Text elements, never cut.
+
+Every imported text is plain text and every address goes through the same checks as anything you
+type in the editor, so an export can't add scripts or unsafe links to your site.

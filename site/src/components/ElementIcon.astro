@@ -1,0 +1,17 @@
+---
+/**
+ * The icon the editor's Add panel shows for an element type, rendered to static SVG at build time:
+ * no React reaches the browser.
+ */
+import { elementIcon } from "../data/element-icons";
+
+interface Props {
+  type: string;
+  size?: number;
+}
+
+const { type, size = 20 } = Astro.props;
+const Icon = elementIcon(type);
+---
+
+<Icon size={size} aria-hidden="true" focusable="false" />
