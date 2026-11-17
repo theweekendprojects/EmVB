@@ -1,4 +1,4 @@
-import type { DaisyComponentDefinition, VNode } from "../types.ts";
+import type { DaisyComponentDefinition, DaisyVNode } from "../types.ts";
 import { safeHref } from "../render/href.ts";
 const clamp = (value: unknown, min: number, max: number) =>
   Math.min(max, Math.max(min, Number(value)));
@@ -91,7 +91,7 @@ export const STACK: DaisyComponentDefinition = {
   ],
   build(node, classes, children) {
     const count = clamp(node.props.count, 1, 6);
-    const placeholders: Array<VNode> = Array.from(
+    const placeholders: Array<DaisyVNode> = Array.from(
       { length: Math.max(0, count - children.length) },
       (_, i) => ({
         tag: "div",
@@ -367,7 +367,7 @@ export const PHONE_MOCKUP: DaisyComponentDefinition = {
       attrs: { class: classes.join(" ") },
       children: [
         ...(node.props.camera
-          ? [{ tag: "div", attrs: { class: "mockup-phone-camera" }, children: [] } as VNode]
+          ? [{ tag: "div", attrs: { class: "mockup-phone-camera" }, children: [] } as DaisyVNode]
           : []),
         {
           tag: "div",

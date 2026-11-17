@@ -1,4 +1,4 @@
-import type { DaisyComponentNode, VNode } from "../types.ts";
+import type { DaisyComponentNode, DaisyVNode } from "../types.ts";
 import { safeHref } from "../render/href.ts";
 
 export const COMPOUND_PARTS = [
@@ -21,8 +21,8 @@ const text = (node: DaisyComponentNode, key: string, fallback: string) =>
 
 export function renderCompoundNode(
   node: DaisyComponentNode,
-  renderedChildren: VNode[] = [],
-): VNode {
+  renderedChildren: DaisyVNode[] = [],
+): DaisyVNode {
   switch (node.component) {
     case "menu-item":
       return {

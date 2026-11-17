@@ -5,7 +5,7 @@
 // ponytail: classes stop at 100. Countdown values above that are set by the runtime script
 // (`data-daisy-value` / `data-daisy-unit`), which is not limited. Raising VALUE_MAX costs ~30 bytes
 // of CSS per step.
-export const VALUE_MAX = 100;
+const VALUE_MAX = 100;
 
 /** Two-digit display for a countdown unit (`--digits`), written out for the scanner. */
 export const DIGITS_2_CLASS = "[--digits:2]";

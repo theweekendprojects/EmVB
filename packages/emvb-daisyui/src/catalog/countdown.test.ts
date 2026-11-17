@@ -1,3 +1,4 @@
+import { must } from "../test-support.ts";
 import { afterEach, describe, expect, test } from "bun:test";
 import { Window } from "happy-dom";
 import { serialize } from "../../../emvb/src/core/render/vnode.ts";
@@ -339,9 +340,10 @@ describe("recipes", () => {
   const countdownRecipes = DAISY_RECIPES.filter((recipe) => recipe.id.startsWith("countdown-"));
   const create = (id: string) => {
     let n = 0;
-    return countdownRecipes
-      .find((recipe) => recipe.id === id)!
-      .create(() => `rc${String(++n).padStart(6, "0")}`);
+    return must(
+      countdownRecipes.find((recipe) => recipe.id === id),
+      id,
+    ).create(() => `rc${String(++n).padStart(6, "0")}`);
   };
   const find = (
     nodes: ReturnType<typeof create>,
@@ -364,10 +366,11 @@ describe("recipes", () => {
       "countdown-earlybird",
     ]);
     for (const recipe of countdownRecipes) {
-      const counter = find(create(recipe.id), "countdown")!;
+      const counter = must(find(create(recipe.id), "countdown"), recipe.id);
       const target = parseTarget(counter.props.target, counter.props.zone);
       expect(target, recipe.id).toBeDefined();
-      const ms = target!.kind === "instant" ? target.ms : Date.parse(`${target!.wall}Z`);
+      const t = must(target, recipe.id);
+      const ms = t.kind === "instant" ? t.ms : Date.parse(`${t.wall}Z`);
       expect(ms - Date.now(), recipe.id).toBeGreaterThan(DAY * 1000);
     }
   });
@@ -388,11 +391,11 @@ describe("recipes", () => {
 
   test("the variants really differ", () => {
     const layouts = countdownRecipes.map(
-      (recipe) => find(create(recipe.id), "countdown")!.props.layout,
+      (recipe) => must(find(create(recipe.id), "countdown"), recipe.id).props.layout,
     );
     expect(new Set(layouts)).toEqual(new Set(["boxes", "plain", "clock"]));
     const showing = countdownRecipes.map(
-      (recipe) => find(create(recipe.id), "countdown")!.props.units,
+      (recipe) => must(find(create(recipe.id), "countdown"), recipe.id).props.units,
     );
     expect(new Set(showing)).toEqual(new Set(["dhms", "dhm", "hms", "d"]));
   });

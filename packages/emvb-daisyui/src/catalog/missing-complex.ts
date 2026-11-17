@@ -1,4 +1,4 @@
-import type { DaisyComponentDefinition, VNode } from "../types.ts";
+import type { DaisyComponentDefinition, DaisyVNode } from "../types.ts";
 
 const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
 const tones = [
@@ -133,7 +133,7 @@ export const FAB: DaisyComponentDefinition = {
         },
         children: [String(node.props.symbol)],
       },
-      ...lines(node.props.actions, 6).map((label): VNode => ({
+      ...lines(node.props.actions, 6).map((label): DaisyVNode => ({
         tag: "button",
         attrs: { type: "button", class: "btn btn-lg btn-circle", "aria-label": label },
         children: [label.slice(0, 1).toUpperCase()],
@@ -154,7 +154,7 @@ export const HOVER_3D: DaisyComponentDefinition = {
     attrs: { class: classes.join(" "), "aria-label": String(node.props.label) },
     children: [
       ...children,
-      ...Array.from({ length: 8 }, (): VNode => ({
+      ...Array.from({ length: 8 }, (): DaisyVNode => ({
         tag: "div",
         attrs: { "aria-hidden": "true" },
         children: [],
@@ -178,7 +178,7 @@ export const HOVER_GALLERY: DaisyComponentDefinition = {
       return {
         tag: "figure",
         attrs: { class: classes.join(" ") },
-        children: [1, 2].map((): VNode => ({
+        children: [1, 2].map((): DaisyVNode => ({
           tag: "div",
           attrs: { class: "bg-neutral aspect-square" },
           children: [],
@@ -187,7 +187,7 @@ export const HOVER_GALLERY: DaisyComponentDefinition = {
     return {
       tag: "figure",
       attrs: { class: classes.join(" ") },
-      children: urls.map((src): VNode => ({
+      children: urls.map((src): DaisyVNode => ({
         tag: "img",
         attrs: { src: safeImage(src), alt: String(node.props.alt), loading: "lazy" },
         children: [],
@@ -260,7 +260,7 @@ export const MEGAMENU: DaisyComponentDefinition = {
               attrs: { class: "megamenu-active", "aria-hidden": "true" },
               children: [],
             },
-            ...items.flatMap((item): VNode[] => [
+            ...items.flatMap((item): DaisyVNode[] => [
               {
                 tag: "button",
                 attrs: { type: "button", popovertarget: item.id },
@@ -273,7 +273,7 @@ export const MEGAMENU: DaisyComponentDefinition = {
                   {
                     tag: "ul",
                     attrs: { class: "menu" },
-                    children: item.links.map((label): VNode => ({
+                    children: item.links.map((label): DaisyVNode => ({
                       tag: "li",
                       attrs: {},
                       children: [{ tag: "a", attrs: { href: "#" }, children: [label] }],
@@ -327,7 +327,7 @@ export const OTP: DaisyComponentDefinition = {
       tag: "label",
       attrs: { class: classes.join(" "), "aria-label": String(node.props.label) },
       children: [
-        ...Array.from({ length }, (): VNode => ({
+        ...Array.from({ length }, (): DaisyVNode => ({
           tag: "span",
           attrs: { "aria-hidden": "true" },
           children: [],
@@ -366,7 +366,7 @@ export const TEXT_ROTATE: DaisyComponentDefinition = {
       {
         tag: "span",
         attrs: { "aria-hidden": "true" },
-        children: lines(node.props.items, 6).map((text): VNode => ({
+        children: lines(node.props.items, 6).map((text): DaisyVNode => ({
           tag: "span",
           attrs: {},
           children: [text],

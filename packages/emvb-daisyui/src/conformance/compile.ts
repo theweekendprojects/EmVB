@@ -26,7 +26,7 @@ for (const definition of DAISY_COMPONENT_CATALOG) {
 }
 await writeFile(
   resolve(pkg, "conformance/safelist.html"),
-  `<main class="${[...classes].sort().join(" ")}"></main>\n`,
+  `<main class="${[...classes].toSorted().join(" ")}"></main>\n`,
 );
 const command = [
   "bun",
@@ -43,8 +43,10 @@ const exitCode = await child.exited;
 if (exitCode !== 0) throw new Error(`Official CSS compilation failed with exit code ${exitCode}.`);
 const dist = resolve(pkg, "../../demos/cloudflare/dist-daisy-conformance/assets");
 const files = Array.from(new Bun.Glob("*.css").scanSync(dist));
-if (files.length !== 1) throw new Error(`Expected one compiled CSS asset, found ${files.length}.`);
-const compiled = resolve(dist, files[0]!);
+const [only] = files;
+if (files.length !== 1 || only === undefined)
+  throw new Error(`Expected one compiled CSS asset, found ${files.length}.`);
+const compiled = resolve(dist, only);
 await Bun.write(output, Bun.file(compiled));
 const css = await Bun.file(output).text();
 const verifiedBoundary = verifyCompiledCss(css);

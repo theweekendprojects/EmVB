@@ -1,4 +1,4 @@
-import type { DaisyComponentDefinition, VNode } from "../types.ts";
+import type { DaisyComponentDefinition, DaisyVNode } from "../types.ts";
 
 const tones = [
   "neutral",
@@ -183,7 +183,7 @@ export const CARD: DaisyComponentDefinition = {
     },
   ],
   build(node, classes, children) {
-    const content: VNode[] = [
+    const content: DaisyVNode[] = [
       { tag: "h2", attrs: { class: "card-title" }, children: [String(node.props.title)] },
       { tag: "p", attrs: {}, children: [String(node.props.body)] },
       ...children,

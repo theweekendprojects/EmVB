@@ -39,7 +39,7 @@ export function catalogSupportReport(now = new Date()): CatalogSupportReport {
           ? "verified"
           : "experimental",
       fields: definition?.fields.map((field) => field.key) ?? [],
-      ...(definition ? { rootClass: definition.rootClass } : {}),
+      rootClass: definition?.rootClass,
     };
   });
   const verified = components.filter((item) => item.status === "verified").length;

@@ -76,8 +76,19 @@ export function duplicateCompoundItem(
     id: newId(),
     children: node.children?.map(clone),
   });
-  children.splice(index + 1, 0, clone(children[index]!));
+  const original = children[index];
+  if (!original) return parent;
+  children.splice(index + 1, 0, clone(original));
   return { ...parent, children };
+}
+function withProps(child: DaisyComponentNode, props: DaisyProps): DaisyComponentNode {
+  return { ...child, props: { ...child.props, ...props } };
+}
+function withChildren(
+  child: DaisyComponentNode,
+  children: DaisyComponentNode[],
+): DaisyComponentNode {
+  return { ...child, children };
 }
 export function removeCompoundItem(parent: DaisyComponentNode, id: string): DaisyComponentNode {
   return { ...parent, children: (parent.children ?? []).filter((child) => child.id !== id) };
@@ -91,7 +102,11 @@ export function moveCompoundItem(
   const from = children.findIndex((child) => child.id === id);
   const to = from + delta;
   if (from < 0 || to < 0 || to >= children.length) return parent;
-  [children[from], children[to]] = [children[to]!, children[from]!];
+  const moved = children[from];
+  const displaced = children[to];
+  if (!moved || !displaced) return parent;
+  children[from] = displaced;
+  children[to] = moved;
   return { ...parent, children };
 }
 export function moveCompoundItemTo(
@@ -104,7 +119,7 @@ export function moveCompoundItemTo(
   const to = children.findIndex((child) => child.id === targetId);
   if (from < 0 || to < 0 || from === to) return parent;
   const [item] = children.splice(from, 1);
-  children.splice(to, 0, item!);
+  if (item) children.splice(to, 0, item);
   return { ...parent, children };
 }
 export function updateCompoundItem(
@@ -115,7 +130,7 @@ export function updateCompoundItem(
   return {
     ...parent,
     children: (parent.children ?? []).map((child) =>
-      child.id === id ? { ...child, props: { ...child.props, ...props } } : child,
+      child.id === id ? withProps(child, props) : child,
     ),
   };
 }
@@ -127,7 +142,7 @@ export function updateCompoundItemChildren(
   return {
     ...parent,
     children: (parent.children ?? []).map((child) =>
-      child.id === id ? { ...child, children } : child,
+      child.id === id ? withChildren(child, children) : child,
     ),
   };
 }
@@ -214,7 +229,8 @@ export function addTableColumn(
     };
     children.push(body);
   }
-  const headerRow = head.children?.[0]!;
+  const headerRow = head.children?.[0];
+  if (!headerRow) throw new Error("table head has no row");
   headerRow.children = [
     ...(headerRow.children ?? []),
     {

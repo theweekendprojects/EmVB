@@ -2,14 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { DATA_DISPLAY_DAISY_COMPONENTS } from "../catalog/data-display.ts";
 import { LAYOUT_MARKETING_DAISY_COMPONENTS } from "../catalog/layout-marketing.ts";
 import { daisyUIProvider } from "../provider.ts";
-import type { VNode } from "../types.ts";
+import type { DaisyVNode } from "../types.ts";
 const render = (
   component: string,
   props: Record<string, string | number | boolean>,
-  children: VNode[] = [],
+  children: DaisyVNode[] = [],
 ) =>
   daisyUIProvider.render({ id: `x-${component}`, type: "daisy", component, props }, {}, children);
-const walk = (node: VNode): VNode[] => [
+const walk = (node: DaisyVNode): DaisyVNode[] => [
   node,
   ...node.children.flatMap((child) => (typeof child === "string" ? [] : walk(child))),
 ];
@@ -125,9 +125,9 @@ describe("WP9 layout and marketing", () => {
     ).toBe("#");
   });
   test("join preserves children without mutating originals", () => {
-    const child: VNode = { tag: "button", attrs: { class: "btn" }, children: ["A"] };
+    const child: DaisyVNode = { tag: "button", attrs: { class: "btn" }, children: ["A"] };
     const joined = render("join", { label: "Actions", direction: "horizontal" }, [child]);
-    expect((joined.children[0] as VNode).attrs.class).toBe("btn join-item");
+    expect((joined.children[0] as DaisyVNode).attrs.class).toBe("btn join-item");
     expect(child.attrs.class).toBe("btn");
     expect(joined.attrs.role).toBe("group");
   });

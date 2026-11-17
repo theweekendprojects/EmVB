@@ -8,7 +8,7 @@ import type {
   DaisyComponentDefinition,
   DaisyComponentNode,
   GeneratedDaisyComponent,
-  VNode,
+  DaisyVNode,
 } from "../types.ts";
 
 function fieldDefaults(
@@ -82,7 +82,7 @@ export function generateComponent(definition: DaisyComponentDefinition): Generat
       props: { ...fieldDefaults(definition), ...definition.initial?.() },
       ...(definition.container ? { children: [] } : {}),
     }),
-    build(node, attrs = {}, children: VNode[] = []) {
+    build(node, attrs = {}, children: DaisyVNode[] = []) {
       const classes = componentClasses(definition, node.props);
       if (definition.build) return definition.build(node, classes, children);
       return {

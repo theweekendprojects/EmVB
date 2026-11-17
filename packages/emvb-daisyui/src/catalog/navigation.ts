@@ -1,4 +1,4 @@
-import type { DaisyComponentDefinition, VNode } from "../types.ts";
+import type { DaisyComponentDefinition, DaisyVNode } from "../types.ts";
 import { safeHref } from "../render/href.ts";
 
 const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
@@ -9,7 +9,7 @@ const lines = (value: unknown) =>
     .split(/\r?\n/)
     .map((item) => item.trim())
     .filter(Boolean);
-const navItem = (label: string, href = "#"): VNode => ({
+const navItem = (label: string, href = "#"): DaisyVNode => ({
   tag: "li",
   attrs: {},
   children: [{ tag: "a", attrs: { href: safeHref(href) }, children: [label] }],
@@ -210,7 +210,7 @@ export const PAGINATION: DaisyComponentDefinition = {
     const current = Math.min(pages, Math.max(1, Number(node.props.current)));
     // daisyUI has no size classes for a join; the size belongs on each page button (btn-xs ... btn-xl).
     const size = `btn-${String(node.props.size ?? "md")}`;
-    const children: VNode[] = [];
+    const children: DaisyVNode[] = [];
     for (let page = 1; page <= pages; page++)
       children.push({
         tag: "a",

@@ -1,3 +1,4 @@
+import { element } from "../test-support.ts";
 import { describe, expect, test } from "bun:test";
 import { daisyUIProvider } from "../provider.ts";
 import { editorIntegrationAudit } from "../integration/editability.ts";
@@ -20,6 +21,6 @@ describe("WP31 full editor integration contract", () => {
     node.props.visibleLabel = "Uploading 40%";
     const vnode = daisyUIProvider.render(node);
     expect(vnode.attrs["aria-label"]).toBe("Upload progress");
-    expect((vnode.children[0] as any).children).toEqual(["Uploading 40%"]);
+    expect(element(vnode.children[0]).children).toEqual(["Uploading 40%"]);
   });
 });

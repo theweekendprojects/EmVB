@@ -1,6 +1,13 @@
 {
   "$schema": "https://fallow.tools/schema.json",
-  "entry": ["demos/*/src/live.config.ts", "scripts/seed-probe.ts"],
+  "entry": [
+    "demos/*/src/live.config.ts",
+    "scripts/seed-probe.ts",
+    "scripts/daisy-live-check.ts",
+    "packages/emvb-daisyui/scripts/render-sections-preview.ts",
+    "demos/cloudflare/daisy-conformance.vite.config.ts",
+    "demos/cloudflare/conformance/**"
+  ],
   "ignorePatterns": [
     "spikes/**",
     "site/**",

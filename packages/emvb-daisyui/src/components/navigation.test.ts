@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { NAVIGATION_DAISY_COMPONENTS } from "../catalog/navigation.ts";
 import { daisyUIProvider } from "../provider.ts";
-import type { DaisyComponentNode, VNode } from "../types.ts";
+import type { DaisyComponentNode, DaisyVNode } from "../types.ts";
 
 const render = (
   component: string,
   props: Record<string, string | number | boolean>,
-  children: VNode[] = [],
+  children: DaisyVNode[] = [],
 ) =>
   daisyUIProvider.render({ id: `nav-${component}`, type: "daisy", component, props }, {}, children);
-const walk = (node: VNode): VNode[] => [
+const walk = (node: DaisyVNode): DaisyVNode[] => [
   node,
   ...node.children.flatMap((child) => (typeof child === "string" ? [] : walk(child))),
 ];
@@ -127,7 +127,7 @@ describe("WP6 generated navigation components", () => {
   });
 
   test("navbar and footer preserve child VNodes for future editor nesting", () => {
-    const child: VNode = { tag: "button", attrs: { class: "btn" }, children: ["Action"] };
+    const child: DaisyVNode = { tag: "button", attrs: { class: "btn" }, children: ["Action"] };
     expect(
       JSON.stringify(
         render(

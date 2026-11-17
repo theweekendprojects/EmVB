@@ -385,10 +385,14 @@ function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
     // object ({ value, unit }), which a provider node's props refuse, so the page cannot save.
     fields: generated.descriptor.fields
       .filter((field) => !hidden?.has(field.key))
-      .map((field) => (field.kind === "number" ? { ...field, kind: "decimal" as const } : field)),
+      .map((field) => (field.kind === "number" ? asDecimal(field) : field)),
   };
 }
 
+/** A provider number field, saved as a plain decimal. */
+function asDecimal<F extends { kind: string }>(field: F): F & { kind: "decimal" } {
+  return { ...field, kind: "decimal" as const };
+}
 /** Right panel with an element selected (IA / W-021): descriptor Content + Style sections. */
 export function ElementPanel(props: Props) {
   const builtIn =

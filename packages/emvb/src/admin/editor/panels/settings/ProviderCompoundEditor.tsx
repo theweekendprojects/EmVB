@@ -47,7 +47,7 @@ export function ProviderCompoundEditor({
       to = next.findIndex((x) => x.id === target);
     if (from < 0 || to < 0 || from === to) return;
     const [item] = next.splice(from, 1);
-    next.splice(to, 0, item!);
+    if (item) next.splice(to, 0, item);
     change(next);
   };
   const update = (id: string, key: string, value: string | boolean) =>
@@ -157,7 +157,9 @@ export function ProviderCompoundEditor({
             disabled={index === 0}
             onClick={() => {
               const next = [...children];
-              [next[index - 1], next[index]] = [next[index]!, next[index - 1]!];
+              const above = next[index - 1];
+              const current = next[index];
+              if (above && current) next.splice(index - 1, 2, current, above);
               change(next);
             }}
           >
@@ -169,7 +171,9 @@ export function ProviderCompoundEditor({
             disabled={index === children.length - 1}
             onClick={() => {
               const next = [...children];
-              [next[index], next[index + 1]] = [next[index + 1]!, next[index]!];
+              const current = next[index];
+              const below = next[index + 1];
+              if (current && below) next.splice(index, 2, below, current);
               change(next);
             }}
           >

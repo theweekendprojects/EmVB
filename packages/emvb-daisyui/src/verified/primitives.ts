@@ -1,4 +1,4 @@
-import type { DaisyComponentNode, VNode } from "../types.ts";
+import type { DaisyComponentNode, DaisyVNode } from "../types.ts";
 import { daisyUIProvider } from "../provider.ts";
 
 export const VERIFIED_PRIMITIVE_IDS = [
@@ -46,15 +46,15 @@ export function auditVerifiedPrimitive(node: DaisyComponentNode): PrimitiveAudit
   return issues;
 }
 
-export function renderVerifiedPrimitive(node: DaisyComponentNode): VNode {
+export function renderVerifiedPrimitive(node: DaisyComponentNode): DaisyVNode {
   if (!(VERIFIED_PRIMITIVE_IDS as readonly string[]).includes(node.component))
     throw new Error(`${node.component} is not a verified primitive.`);
   return daisyUIProvider.render(node);
 }
 
 /** Stable structural signatures derived from official daisyUI v5 examples. */
-export function primitiveSignature(vnode: VNode): string {
-  const visit = (value: VNode | string): string =>
+export function primitiveSignature(vnode: DaisyVNode): string {
+  const visit = (value: DaisyVNode | string): string =>
     typeof value === "string"
       ? "#text"
       : `${value.tag}.${(value.attrs.class ?? "").split(/\s+/).filter(Boolean).join(".")}[${value.children.map(visit).join(",")}]`;

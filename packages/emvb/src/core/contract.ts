@@ -36,7 +36,7 @@ function isOpenRecordSchema(schema: unknown): boolean {
   };
   if (s.shape) return false;
   if (s.keyType !== undefined && s.valueType !== undefined) return true;
-  const typeName = s.def?.typeName ?? s._def?.typeName;
+  const typeName = s.def?.typeName ?? s["_def"]?.typeName;
   return typeName === "ZodRecord";
 }
 
@@ -269,9 +269,9 @@ export function renderableNode<T>(input: T): T {
   if (!isRecord(input)) return input;
   const node: Record<string, unknown> = input;
   const type = typeof node["type"] === "string" ? node["type"] : "";
-  const known_ = PROP_KEYS.has(type);
+  const isKnown = PROP_KEYS.has(type);
   const propKeys = PROP_KEYS.get(type);
-  const out: Record<string, unknown> = renderableStyles(known_ ? known(node, NODE_KEYS) : node);
+  const out: Record<string, unknown> = renderableStyles(isKnown ? known(node, NODE_KEYS) : node);
   // A `null` entry marks an open-record props (provider nodes): keep every prop key.
   if (propKeys && isRecord(out["props"])) out["props"] = known(out["props"], propKeys);
   const query = out["query"];

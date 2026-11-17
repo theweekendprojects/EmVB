@@ -1,4 +1,4 @@
-import type { DaisyComponentDefinition, VNode } from "../types.ts";
+import type { DaisyComponentDefinition, DaisyVNode } from "../types.ts";
 import { valueClass } from "./value-class.ts";
 
 const tones = [
@@ -351,7 +351,7 @@ export const FILTER: DaisyComponentDefinition = {
     children: String(node.props.items)
       .split(/\r?\n/)
       .filter(Boolean)
-      .map((label, index): VNode => ({
+      .map((label, index): DaisyVNode => ({
         tag: "input",
         attrs: {
           class: "btn btn-square",

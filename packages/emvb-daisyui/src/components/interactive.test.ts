@@ -1,19 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import { INTERACTIVE_DAISY_COMPONENTS } from "../catalog/interactive.ts";
 import { daisyUIProvider } from "../provider.ts";
-import type { VNode } from "../types.ts";
+import type { DaisyVNode } from "../types.ts";
 
 const render = (
   component: string,
   props: Record<string, string | number | boolean>,
-  children: VNode[] = [],
+  children: DaisyVNode[] = [],
 ) =>
   daisyUIProvider.render(
     { id: `interactive-${component}`, type: "daisy", component, props },
     {},
     children,
   );
-const walk = (node: VNode): VNode[] => [
+const walk = (node: DaisyVNode): DaisyVNode[] => [
   node,
   ...node.children.flatMap((child) => (typeof child === "string" ? [] : walk(child))),
 ];

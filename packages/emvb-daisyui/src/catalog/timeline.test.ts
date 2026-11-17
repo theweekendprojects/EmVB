@@ -20,10 +20,10 @@ describe("timeline lines join the items, as in daisyUI's examples", () => {
     const html = build("2024|A|a\n2025|B|b\n2026|C|c\n2027|D|d");
     const items = lis(html);
     expect(items).toHaveLength(4);
-    expect(items[0]!.startsWith('<div class="timeline-start"')).toBe(true);
-    expect(items[0]!.endsWith("<hr></li>") || items[0]!.endsWith("<hr>")).toBe(true);
+    expect(items[0]?.startsWith('<div class="timeline-start"')).toBe(true);
+    expect(items[0]?.endsWith("<hr></li>") || items[0]?.endsWith("<hr>")).toBe(true);
     for (const item of items.slice(1)) expect(item.startsWith("<hr>")).toBe(true);
-    expect(items[3]!.endsWith("<hr>")).toBe(false);
+    expect(items[3]?.endsWith("<hr>")).toBe(false);
     expect(html.match(/<hr>/g)).toHaveLength(6);
   });
 

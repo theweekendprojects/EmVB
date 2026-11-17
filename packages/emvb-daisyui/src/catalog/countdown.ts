@@ -1,25 +1,28 @@
-import type { DaisyComponentDefinition, DaisyComponentNode, VNode } from "../types.ts";
+import type { DaisyComponentDefinition, DaisyComponentNode, DaisyVNode } from "../types.ts";
 import { DIGITS_2_CLASS, valueClass } from "./value-class.ts";
 
 type Unit = "d" | "h" | "m" | "s";
 const ALL_UNITS: readonly Unit[] = ["d", "h", "m", "s"];
 const DEFAULT_LABELS = ["days", "hours", "min", "sec"] as const;
+const DEFAULT_UNITS: readonly Unit[] = ["d", "h", "m", "s"];
+const DEFAULT_SIZE = "text-3xl";
+const DEFAULT_ALIGN: readonly [string, string] = ["justify-center", "text-center"];
 const UNIT_SETS: Readonly<Record<string, readonly Unit[]>> = {
-  dhms: ["d", "h", "m", "s"],
+  dhms: DEFAULT_UNITS,
   dhm: ["d", "h", "m"],
   hms: ["h", "m", "s"],
   d: ["d"],
 };
 const SIZES: Readonly<Record<string, string>> = {
   sm: "text-xl",
-  md: "text-3xl",
+  md: DEFAULT_SIZE,
   lg: "text-5xl",
   xl: "text-7xl",
 };
 // [grid/flex content alignment, text alignment] for each Alignment option.
 const ALIGN: Readonly<Record<string, readonly [string, string]>> = {
   start: ["justify-start", "text-start"],
-  center: ["justify-center", "text-center"],
+  center: DEFAULT_ALIGN,
   end: ["justify-end", "text-end"],
 };
 
@@ -44,16 +47,22 @@ const pad = (n: number) => String(n).padStart(2, "0");
 
 /** `YYYY-MM-DDTHH:mm` for a date, read in UTC or in the machine's own zone. */
 export function pickerTime(date: Date, utc = false): string {
-  const [y, mo, d, h, mi] = utc
-    ? [
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        date.getUTCDate(),
-        date.getUTCHours(),
-        date.getUTCMinutes(),
-      ]
-    : [date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes()];
-  return `${y}-${pad(mo! + 1)}-${pad(d!)}T${pad(h!)}:${pad(mi!)}`;
+  const parts = utc
+    ? {
+        y: date.getUTCFullYear(),
+        mo: date.getUTCMonth(),
+        d: date.getUTCDate(),
+        h: date.getUTCHours(),
+        mi: date.getUTCMinutes(),
+      }
+    : {
+        y: date.getFullYear(),
+        mo: date.getMonth(),
+        d: date.getDate(),
+        h: date.getHours(),
+        mi: date.getMinutes(),
+      };
+  return `${parts.y}-${pad(parts.mo + 1)}-${pad(parts.d)}T${pad(parts.h)}:${pad(parts.mi)}`;
 }
 
 /** A target `days` from now at `hour:00`, in the form the date picker stores. */
@@ -154,8 +163,8 @@ export function parseTarget(raw: unknown, zone: unknown): CountdownTarget | unde
 }
 
 /** Each unit's number for `left` seconds. Without days, hours count every hour left. Daisy stops at 999. */
+const cap = (n: number) => Math.min(n, 999);
 export function remaining(left: number, units: readonly Unit[]): Record<Unit, number> {
-  const cap = (n: number) => Math.min(n, 999);
   const days = units.includes("d");
   return {
     d: cap(Math.floor(left / 86400)),
@@ -175,7 +184,7 @@ const clampNumber = (value: unknown, min: number, max: number) => {
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min;
 };
 
-function fixedNumber(node: DaisyComponentNode, classes: string[]): VNode {
+function fixedNumber(node: DaisyComponentNode, classes: string[]): DaisyVNode {
   const max = clampNumber(node.props.max, 1, 999);
   const value = clampNumber(node.props.value, 0, max);
   const suffix = String(node.props.suffix ?? "").trim();
@@ -195,7 +204,7 @@ function fixedNumber(node: DaisyComponentNode, classes: string[]): VNode {
       },
       // Its own span with a margin: a space at the start of text inside a flex row is dropped.
       ...(suffix
-        ? [{ tag: "span", attrs: { class: "ms-2" }, children: [suffix] } satisfies VNode]
+        ? [{ tag: "span", attrs: { class: "ms-2" }, children: [suffix] } satisfies DaisyVNode]
         : []),
     ],
   };
@@ -205,11 +214,11 @@ function dateCountdown(
   node: DaisyComponentNode,
   classes: string[],
   target: CountdownTarget,
-): VNode {
+): DaisyVNode {
   const p = node.props;
-  const units = UNIT_SETS[String(p.units)] ?? UNIT_SETS.dhms!;
+  const units = UNIT_SETS[String(p.units)] ?? DEFAULT_UNITS;
   const layout = p.layout === "plain" || p.layout === "clock" ? p.layout : "boxes";
-  const [justify, textAlign] = ALIGN[String(p.align)] ?? ALIGN.center!;
+  const [justify, textAlign] = ALIGN[String(p.align)] ?? DEFAULT_ALIGN;
   const message = String(p.expired ?? "")
     .trim()
     .slice(0, 200);
@@ -222,7 +231,7 @@ function dateCountdown(
   const values = remaining(left, units);
   const labels = unitLabels(p.labels);
 
-  const number = (unit: Unit): VNode => ({
+  const number = (unit: Unit): DaisyVNode => ({
     tag: "span",
     attrs: {
       class:
@@ -232,7 +241,7 @@ function dateCountdown(
     children: [String(values[unit])],
   });
 
-  const box = (unit: Unit): VNode => ({
+  const box = (unit: Unit): DaisyVNode => ({
     tag: "div",
     attrs: {
       class:
@@ -245,12 +254,12 @@ function dateCountdown(
       {
         tag: "span",
         attrs: { class: "text-xs opacity-80" },
-        children: [labels[ALL_UNITS.indexOf(unit)]!],
+        children: [labels[ALL_UNITS.indexOf(unit)] ?? ""],
       },
     ],
   });
 
-  const face: VNode =
+  const face: DaisyVNode =
     layout === "clock"
       ? {
           tag: "div",
@@ -271,7 +280,7 @@ function dateCountdown(
           children: units.map(box),
         };
 
-  const size = SIZES[String(p.size)] ?? SIZES.md!;
+  const size = SIZES[String(p.size)] ?? DEFAULT_SIZE;
   return {
     tag: "div",
     attrs: {
@@ -297,7 +306,7 @@ function dateCountdown(
                 class: `${size} font-semibold py-3 ${textAlign}${done ? "" : " hidden"}`,
               },
               children: [message],
-            } satisfies VNode,
+            } satisfies DaisyVNode,
           ]
         : []),
     ],

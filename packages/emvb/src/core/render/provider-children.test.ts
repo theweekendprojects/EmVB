@@ -72,7 +72,7 @@ const stub = {
   ]),
   cssEntryPoints: [],
   createNode(component: string, id: string) {
-    return { id, ...this.components.get(component)!.defaults() } as never;
+    return { id, ...this.components.get(component)?.defaults() } as never;
   },
   render(
     node: { component: string; props: Record<string, unknown> },
@@ -175,7 +175,8 @@ describe("provider containers hold children (step 1)", () => {
     const result = addNode(layout, chip("New"), { parentId: "panel001", index: 0 });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    const placed = (result.layout.root.children?.[0] as { children?: LayoutNode[] }).children ?? [];
+    const first = result.layout.root.children?.[0] as { children?: LayoutNode[] } | undefined;
+    const placed = first?.children ?? [];
     expect(placed.map((node) => node.id)).toContain("chip0001");
   });
 

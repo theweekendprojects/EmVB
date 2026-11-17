@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import AxeBuilder from "@axe-core/playwright";
+import { AxeBuilder } from "@axe-core/playwright";
 
 test.describe("daisyUI release qualification", () => {
   test("published page has no serious accessibility violations", async ({ page }) => {

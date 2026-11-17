@@ -13,7 +13,7 @@ export type DaisyFieldKind = ProviderFieldKind;
 export type DaisyFieldValue = ProviderFieldValue;
 export type DaisyProps = ProviderProps;
 
-export type VNode = ProviderVNode;
+export type DaisyVNode = ProviderVNode;
 
 export interface DaisyComponentNode extends ProviderComponentNode {
   id: string;
@@ -56,7 +56,7 @@ export interface DaisyComponentDefinition {
   role?: string;
   /** Props computed each time a node is created, on top of the fields' static defaults. */
   initial?: () => DaisyProps;
-  build?: (node: DaisyComponentNode, classes: string[], children: VNode[]) => VNode;
+  build?: (node: DaisyComponentNode, classes: string[], children: DaisyVNode[]) => DaisyVNode;
 }
 
 export interface GeneratedDaisyComponent extends ProviderComponent<DaisyComponentNode> {
@@ -83,7 +83,11 @@ export interface GeneratedDaisyComponent extends ProviderComponent<DaisyComponen
     }>;
   };
   defaults: () => Omit<DaisyComponentNode, "id">;
-  build: (node: DaisyComponentNode, attrs?: Record<string, string>, children?: VNode[]) => VNode;
+  build: (
+    node: DaisyComponentNode,
+    attrs?: Record<string, string>,
+    children?: DaisyVNode[],
+  ) => DaisyVNode;
 }
 
 export interface ComponentProvider extends NeutralComponentProvider<DaisyComponentNode> {
@@ -94,8 +98,8 @@ export interface ComponentProvider extends NeutralComponentProvider<DaisyCompone
   render(
     node: DaisyComponentNode,
     attrs?: Record<string, string>,
-    children?: VNode[],
+    children?: DaisyVNode[],
     context?: ProviderRenderContext,
-  ): VNode;
+  ): DaisyVNode;
   cssEntryPoints: readonly string[];
 }

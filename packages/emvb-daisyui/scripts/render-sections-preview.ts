@@ -5,7 +5,7 @@ import { writeFileSync } from "node:fs";
 import { serialize } from "../../emvb/src/core/render/vnode.ts";
 import { daisyUIProvider } from "../src/provider.ts";
 import { DAISY_RECIPES } from "../src/recipes/index.ts";
-import type { DaisyComponentNode, VNode } from "../src/types.ts";
+import type { DaisyComponentNode, DaisyVNode } from "../src/types.ts";
 
 const SECTION_IDS = [
   "section-hero",
@@ -25,7 +25,7 @@ const parts = SECTION_IDS.map((sectionId) => {
   const recipe = DAISY_RECIPES.find((r) => r.id === sectionId);
   if (!recipe) throw new Error(`missing recipe ${sectionId}`);
   // A container's children are rendered first and handed to its build, as the editor's renderer does.
-  const toVNode = (node: DaisyComponentNode): VNode =>
+  const toVNode = (node: DaisyComponentNode): DaisyVNode =>
     daisyUIProvider.render(node, {}, (node.children ?? []).map(toVNode), { mode: "public" });
   const body = recipe
     .create(id)
@@ -42,4 +42,5 @@ writeFileSync(
 <style>body{background:#0f0f1a;color:#fff;margin:0}.shot{max-width:1200px;margin:0 auto}</style>
 </head><body>${parts.join("\n")}</body></html>`,
 );
+// oxlint-disable-next-line no-console -- a script reports what it wrote
 console.log(`wrote ${out} with ${SECTION_IDS.length} sections`);

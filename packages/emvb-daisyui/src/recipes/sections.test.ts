@@ -1,3 +1,4 @@
+import { must } from "../test-support.ts";
 import { describe, expect, test } from "bun:test";
 import { serialize } from "../../../emvb/src/core/render/vnode.ts";
 import { ProviderNode } from "../../../emvb/src/core/schema/layout.ts";
@@ -102,9 +103,11 @@ describe("site sections for non-technical owners", () => {
   test("the call to action keeps its button at natural width, not stretched across the card", () => {
     const [cta] = build("section-cta");
     expect(cta?.props.align).toBe("center");
-    expect(serialize(daisyUIProvider.render(cta!, {}, [], { mode: "public" }) as never)).toContain(
-      'class="card-body items-center text-center"',
-    );
+    expect(
+      serialize(
+        daisyUIProvider.render(must(cta, "call to action"), {}, [], { mode: "public" }) as never,
+      ),
+    ).toContain('class="card-body items-center text-center"');
   });
 
   test("the footer's links are real, safe paths", () => {

@@ -1,4 +1,4 @@
-import type { DaisyComponentDefinition, VNode } from "../types.ts";
+import type { DaisyComponentDefinition, DaisyVNode } from "../types.ts";
 
 const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
 const tones = [
@@ -334,7 +334,7 @@ export const RATING: DaisyComponentDefinition = {
   build(node, classes) {
     const max = Math.min(10, Math.max(1, Number(node.props.max)));
     const selected = Math.min(max, Math.max(0, Number(node.props.value)));
-    const children: VNode[] = [];
+    const children: DaisyVNode[] = [];
     for (let i = 1; i <= max; i++)
       children.push({
         tag: "input",

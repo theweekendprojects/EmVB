@@ -1,3 +1,4 @@
+import { must } from "../test-support.ts";
 import { describe, expect, test } from "bun:test";
 import {
   addCompoundItem,
@@ -28,13 +29,13 @@ describe("WP22 complete compound editing", () => {
     m = addCompoundItem(m, "b", { label: "About", href: "/about" });
     m = updateCompoundItem(m, "b", { href: "/company" });
     m = duplicateCompoundItem(m, "b", ids());
-    m = moveCompoundItemTo(m, m.children![2]!.id, "a");
+    m = moveCompoundItemTo(m, must(m.children?.[2], "third item").id, "a");
     expect(m.children?.map((x) => x.props.href)).toEqual(["/company", "/", "/company"]);
   });
   test("tabs enforce exactly one selected item and preserve rich children", () => {
     let t = addCompoundItem(root("tabs"), "one", { label: "One", selected: true });
     t = addCompoundItem(t, "two", { label: "Two", selected: false });
-    t.children![0]!.children = [
+    must(t.children?.[0], "first tab").children = [
       {
         id: "rich",
         type: "provider",
@@ -44,13 +45,13 @@ describe("WP22 complete compound editing", () => {
       },
     ];
     expect(validateCompoundTree(t)).toEqual([]);
-    t.children![1]!.props.selected = true;
+    must(t.children?.[1], "second tab").props.selected = true;
     expect(validateCompoundTree(t)[0]?.code).toBe("tab-selection");
-    expect(t.children![0]!.children?.[0]?.component).toBe("card");
+    expect(t.children?.[0]?.children?.[0]?.component).toBe("card");
   });
   test("accordion exposes authored initial state", () => {
     const a = addCompoundItem(root("accordion"), "q", { label: "Question", defaultOpen: true });
-    const vnode = renderCompoundNode(a.children![0]!);
+    const vnode = renderCompoundNode(must(a.children?.[0], "question"));
     expect(vnode.tag).toBe("details");
     expect(vnode.attrs.open).toBe("");
   });
@@ -59,8 +60,14 @@ describe("WP22 complete compound editing", () => {
     let table = addTableColumn(root("table"), id, "Name");
     table = addTableRow(table, id);
     table = addTableColumn(table, id, "Role");
-    const head = table.children?.find((x) => x.component === "table-head")!;
-    const body = table.children?.find((x) => x.component === "table-body")!;
+    const head = must(
+      table.children?.find((x) => x.component === "table-head"),
+      "table head",
+    );
+    const body = must(
+      table.children?.find((x) => x.component === "table-body"),
+      "table body",
+    );
     expect(head.children?.[0]?.children).toHaveLength(2);
     expect(body.children?.[0]?.children).toHaveLength(2);
   });

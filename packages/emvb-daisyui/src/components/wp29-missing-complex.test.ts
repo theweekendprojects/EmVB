@@ -1,3 +1,5 @@
+import type { DaisyVNode } from "../types.ts";
+import { element } from "../test-support.ts";
 import { describe, expect, test } from "bun:test";
 import { daisyUIProvider } from "../provider.ts";
 import { catalogSupportReport } from "../conformance/report.ts";
@@ -11,9 +13,9 @@ const added = [
   "otp",
   "text-rotate",
 ] as const;
-const walk = (node: any): any[] => [
+const walk = (node: DaisyVNode): DaisyVNode[] => [
   node,
-  ...(node.children ?? []).flatMap((child: any) => (typeof child === "string" ? [] : walk(child))),
+  ...node.children.flatMap((child) => (typeof child === "string" ? [] : walk(child))),
 ];
 describe("WP29 missing complex components", () => {
   test("registers every remaining official component", () => {
@@ -36,13 +38,15 @@ describe("WP29 missing complex components", () => {
     const node = daisyUIProvider.createNode("fab", "fab");
     node.props.actions = "A\nB\nC\nD\nE\nF\nG";
     const vnode = daisyUIProvider.render(node);
-    expect((vnode.children[0] as any).attrs.role).toBe("button");
+    expect(element(vnode.children[0]).attrs.role).toBe("button");
     expect(vnode.children).toHaveLength(7);
   });
   test("hover 3D emits exactly eight official hover zones", () => {
     const vnode = daisyUIProvider.render(daisyUIProvider.createNode("hover-3d", "hover"));
     expect(vnode.children).toHaveLength(8);
-    expect(vnode.children.every((child: any) => child.attrs["aria-hidden"] === "true")).toBe(true);
+    expect(vnode.children.every((child) => element(child).attrs["aria-hidden"] === "true")).toBe(
+      true,
+    );
   });
   test("hover gallery sanitizes and caps images at ten", () => {
     const node = daisyUIProvider.createNode("hover-gallery", "gallery");
@@ -52,7 +56,7 @@ describe("WP29 missing complex components", () => {
     ].join("\n");
     const vnode = daisyUIProvider.render(node);
     expect(vnode.children).toHaveLength(10);
-    expect((vnode.children[0] as any).attrs.src).toBe("");
+    expect(element(vnode.children[0]).attrs.src).toBe("");
   });
   test("megamenu popover targets resolve to unique IDs", () => {
     const vnode = daisyUIProvider.render(daisyUIProvider.createNode("megamenu", "mega"));
@@ -67,7 +71,7 @@ describe("WP29 missing complex components", () => {
     node.props.length = "4";
     const vnode = daisyUIProvider.render(node);
     expect(vnode.children).toHaveLength(5);
-    const input = vnode.children[4] as any;
+    const input = element(vnode.children[4]);
     expect(input.attrs.maxlength).toBe("4");
     expect(input.attrs.pattern).toBe("[0-9]{4}");
   });
@@ -75,7 +79,7 @@ describe("WP29 missing complex components", () => {
     const node = daisyUIProvider.createNode("text-rotate", "rotate");
     node.props.items = "1\n2\n3\n4\n5\n6\n7";
     const vnode = daisyUIProvider.render(node);
-    expect((vnode.children[0] as any).children).toHaveLength(6);
+    expect(element(vnode.children[0]).children).toHaveLength(6);
   });
   test("official inventory is fully implemented but remains truthfully experimental", () => {
     const report = catalogSupportReport(new Date("2026-01-01T00:00:00Z"));

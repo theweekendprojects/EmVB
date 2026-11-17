@@ -1,4 +1,4 @@
-import type { DaisyComponentDefinition, VNode } from "../types.ts";
+import type { DaisyComponentDefinition, DaisyVNode } from "../types.ts";
 import { safeHref } from "../render/href.ts";
 import { COUNTDOWN } from "./countdown.ts";
 
@@ -170,7 +170,7 @@ export const TIMELINE: DaisyComponentDefinition = {
               ],
             },
             last ? "" : { tag: "hr", attrs: {}, children: [] },
-          ].filter(Boolean) as Array<VNode | string>,
+          ].filter(Boolean) as Array<DaisyVNode | string>,
         };
       }),
     };
@@ -345,7 +345,7 @@ export const LIST: DaisyComponentDefinition = {
       attrs: { class: classes.join(" "), "aria-label": String(node.props.label) },
       children: lines(node.props.items, 50).map((entry) => {
         const [title, description = "", href = ""] = entry.split("|");
-        const content: VNode = {
+        const content: DaisyVNode = {
           tag: "div",
           attrs: {},
           children: [

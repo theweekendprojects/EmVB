@@ -20,7 +20,7 @@ export function catalogClassNames(catalog: readonly DaisyComponentDefinition[]):
   // Classes a build function adds itself rather than through an option.
   for (const name of VALUE_CLASS_NAMES) names.add(name);
   names.add(DIGITS_2_CLASS);
-  return [...names].sort();
+  return [...names].toSorted();
 }
 
 /** The source text of `src/catalog/class-names.ts` for a catalog. */

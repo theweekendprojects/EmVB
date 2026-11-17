@@ -25,7 +25,7 @@ describe("WP15 provider theme field", () => {
     document.body.append(host);
     root = createRoot(host);
     await act(async () =>
-      root!.render(<ProviderMetaFields node={node} onChange={() => undefined} />),
+      root?.render(<ProviderMetaFields node={node} onChange={() => undefined} />),
     );
     expect(document.querySelector('[data-emvb-provider-meta="theme"]')).not.toBeNull();
   });

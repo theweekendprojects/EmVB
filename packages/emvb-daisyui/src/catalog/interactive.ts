@@ -1,4 +1,4 @@
-import type { DaisyComponentDefinition, VNode } from "../types.ts";
+import type { DaisyComponentDefinition, DaisyVNode } from "../types.ts";
 import { safeHref } from "../render/href.ts";
 
 const lines = (value: unknown) =>
@@ -42,7 +42,7 @@ export const TABS: DaisyComponentDefinition = {
       });
     const active = clamp(node.props.active, 1, Math.max(1, items.length));
     const group = `tabs-${node.id}`;
-    const children: VNode[] = [];
+    const children: DaisyVNode[] = [];
     items.forEach((item, index) => {
       const selected = index + 1 === active;
       children.push({
@@ -103,7 +103,7 @@ export const ACCORDION: DaisyComponentDefinition = {
       tag: "div",
       attrs: { class: classes.join(" "), "aria-label": String(node.props.label) },
       children: [
-        ...items.map((entry, index): VNode => {
+        ...items.map((entry, index): DaisyVNode => {
           const [title, content = ""] = entry.split("|");
           return {
             tag: "details",
@@ -373,7 +373,7 @@ export const CAROUSEL: DaisyComponentDefinition = {
         "aria-roledescription": "carousel",
       },
       children: [
-        ...slides.map((entry, index): VNode => {
+        ...slides.map((entry, index): DaisyVNode => {
           const [title, description = ""] = entry.split("|");
           return {
             tag: "article",

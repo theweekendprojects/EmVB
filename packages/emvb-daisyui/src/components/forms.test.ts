@@ -1,16 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import { FORM_DAISY_COMPONENTS } from "../catalog/forms.ts";
 import { daisyUIProvider } from "../provider.ts";
-import type { DaisyComponentNode, VNode } from "../types.ts";
+import type { DaisyComponentNode, DaisyVNode } from "../types.ts";
 
 const node = (
   component: string,
   props: Record<string, string | number | boolean>,
 ): DaisyComponentNode => ({ id: `test-${component}`, type: "daisy", component, props });
-const render = (component: string, props: Record<string, string | number | boolean>): VNode =>
+const render = (component: string, props: Record<string, string | number | boolean>): DaisyVNode =>
   daisyUIProvider.render(node(component, props));
 
-function walk(vnode: VNode): VNode[] {
+function walk(vnode: DaisyVNode): DaisyVNode[] {
   return [
     vnode,
     ...vnode.children.flatMap((child) => (typeof child === "string" ? [] : walk(child))),
@@ -210,7 +210,9 @@ describe("WP5 generated form components", () => {
       value: 99,
       size: "md",
     });
-    const radios = rendered.children.filter((child): child is VNode => typeof child !== "string");
+    const radios = rendered.children.filter(
+      (child): child is DaisyVNode => typeof child !== "string",
+    );
     expect(radios).toHaveLength(10);
     expect(radios.filter((item) => item.attrs.checked === "checked")).toHaveLength(1);
     expect(rendered.attrs.role).toBe("radiogroup");

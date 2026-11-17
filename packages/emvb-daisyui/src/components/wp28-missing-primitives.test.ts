@@ -1,3 +1,4 @@
+import { element } from "../test-support.ts";
 import { describe, expect, test } from "bun:test";
 import { daisyUIProvider } from "../provider.ts";
 import { catalogSupportReport } from "../conformance/report.ts";
@@ -44,8 +45,8 @@ describe("WP28 missing primitive components", () => {
   });
   test("validator produces adjacent validator hint", () => {
     const vnode = daisyUIProvider.render(daisyUIProvider.createNode("validator", "validator"));
-    expect((vnode.children[0] as any).attrs.class).toContain("validator");
-    expect((vnode.children[1] as any).attrs.class).toBe("validator-hint");
+    expect(element(vnode.children[0]).attrs.class).toContain("validator");
+    expect(element(vnode.children[1]).attrs.class).toBe("validator-hint");
   });
   test("link rejects executable URLs", () => {
     const node = daisyUIProvider.createNode("link", "link");

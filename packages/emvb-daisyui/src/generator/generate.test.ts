@@ -23,7 +23,7 @@ const definition = {
 } as const;
 
 describe("component generator", () => {
-  test("creates descriptor defaults and an allowlisted VNode", () => {
+  test("creates descriptor defaults and an allowlisted DaisyVNode", () => {
     const generated = generateComponent(definition);
     expect(generated.descriptor.fields[1]?.key).toBe("tone");
     const node = { id: "x", ...generated.defaults() };

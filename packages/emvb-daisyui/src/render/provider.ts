@@ -4,7 +4,7 @@ import type {
   DaisyComponentDefinition,
   DaisyComponentNode,
   GeneratedDaisyComponent,
-  VNode,
+  DaisyVNode,
 } from "../types.ts";
 import { isCompoundPart, renderCompoundNode } from "../compound/index.ts";
 import { nodeForRender } from "../runtime/index.ts";
@@ -50,7 +50,7 @@ export function createDaisyUIProvider(
     render(
       node: DaisyComponentNode,
       attrs: Record<string, string> = {},
-      children: VNode[] = [],
+      children: DaisyVNode[] = [],
       context = { mode: "public" as const },
     ) {
       const prepared = nodeForRender(node, context);

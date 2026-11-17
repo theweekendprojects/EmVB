@@ -152,7 +152,7 @@ export function elementIcon(type: string): Icon {
 }
 
 /** Allowlisted provider palette icons. Provider metadata carries only these stable string IDs. */
-export const PROVIDER_ICONS: Record<string, Icon> = {
+const PROVIDER_ICONS: Record<string, Icon> = {
   accordion: CaretCircleDoubleDownIcon,
   alert: ArticleIcon,
   avatar: UserIcon,

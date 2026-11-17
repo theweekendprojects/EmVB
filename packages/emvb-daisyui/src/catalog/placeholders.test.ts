@@ -1,3 +1,4 @@
+import { must } from "../test-support.ts";
 import { describe, expect, test } from "bun:test";
 import { createDaisyUIProvider } from "../render/provider.ts";
 import { DAISY_COMPONENT_CATALOG } from "./index.ts";
@@ -45,7 +46,10 @@ describe("default images are placeholders, not missing files", () => {
       ["mask", "src"],
       ["hover-gallery", "images"],
     ] as const) {
-      const def = DAISY_COMPONENT_CATALOG.find((d) => d.id === component)!;
+      const def = must(
+        DAISY_COMPONENT_CATALOG.find((d) => d.id === component),
+        component,
+      );
       expect(def.fields.find((f) => f.key === field)?.default).toBe("");
     }
   });
