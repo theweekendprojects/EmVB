@@ -39,7 +39,7 @@ interface Props {
 	isSearch?: boolean;
 	/** Load provider CSS only for a page that contains provider nodes. */
 	needsProviderStyles?: boolean;
-	needsDaisyRuntime?: boolean;
+	providerRuntimes?: string[];
 	/** Theme parts the route already resolved (numbered archive pages, W-223). */
 	theme?: ResolvedThemeParts;
 	/** The EmVB page's text direction (W-230); else the theme's. */
@@ -50,7 +50,7 @@ interface Props {
 	translations?: { locale: string; href: string; current: boolean }[];
 }
 
-const { title, pageTitle, description, image, content, is404, isFront, isSearch, needsProviderStyles = false, needsDaisyRuntime = false } = Astro.props;
+const { title, pageTitle, description, image, content, is404, isFront, isSearch, needsProviderStyles = false, providerRuntimes = [] } = Astro.props;
 const [settingsResult, menuResult] = await Promise.all([
 	getSiteSettingsWithCacheHint(),
 	getMenuWithCacheHint("primary"),
@@ -120,7 +120,7 @@ const pageCtx = createPublicPageContext({
 	</head>
 	<body>
 		<EmDashBodyStart page={pageCtx} />
-		{needsDaisyRuntime && <DaisyRuntime />}
+		{providerRuntimes.includes("@perkyzz/emvb-daisyui/runtime") && <DaisyRuntime />}
 
 		{
 			theme.header ? (

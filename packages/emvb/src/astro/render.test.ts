@@ -46,7 +46,6 @@ describe("rendering a stored layout (R-031, R-033)", () => {
       needsProviderStyles: false,
       providerStyles: [],
       providerRuntimes: [],
-      needsDaisyRuntime: false,
       baseTypes: expected.baseTypes,
     });
     expect(fromObject.css).toContain("#123456");
@@ -107,7 +106,6 @@ describe("rendering a stored layout (R-031, R-033)", () => {
       needsProviderStyles: false,
       providerStyles: [],
       providerRuntimes: [],
-      needsDaisyRuntime: false,
     };
     const logged = spyOn(console, "error").mockImplementation(() => undefined);
     try {
