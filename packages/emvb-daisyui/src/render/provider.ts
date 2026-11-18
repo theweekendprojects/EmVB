@@ -19,6 +19,9 @@ export function createDaisyUIProvider(
   );
   return {
     id: "daisyui",
+    version: "0.1.0",
+    providerApiVersion: 1,
+    nodeVersion: 1,
     label: "daisyUI",
     nodeType: "daisy",
     components,
@@ -66,7 +69,7 @@ export function createDaisyUIProvider(
     createNode(component, id) {
       const generated = components.get(component);
       if (!generated) throw new Error(`Unknown daisyUI component: ${component}`);
-      return { id, ...generated.defaults() };
+      return { id, providerVersion: 1, ...generated.defaults() };
     },
     render(
       node: DaisyComponentNode,

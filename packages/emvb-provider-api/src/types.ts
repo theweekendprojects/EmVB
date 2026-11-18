@@ -24,6 +24,7 @@ export interface ProviderComponentNode {
   id: string;
   type: string;
   component: string;
+  providerVersion?: number;
   props: ProviderProps;
   children?: ProviderComponentNode[];
 }
@@ -102,6 +103,9 @@ export interface ProviderRenderContext {
 
 export interface ComponentProvider<N extends ProviderComponentNode = ProviderComponentNode> {
   id: string;
+  version?: string;
+  providerApiVersion?: number;
+  nodeVersion?: number;
   label: string;
   nodeType: string;
   components: ReadonlyMap<string, ProviderComponent<N>>;
