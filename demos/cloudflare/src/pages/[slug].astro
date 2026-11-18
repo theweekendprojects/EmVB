@@ -45,7 +45,7 @@ const seo = getSeoMeta(entry, {
 	emvb?.canvasMode === "blank" ? (
 		<>
 		{emvb.needsProviderStyles && <DaisyStyles />}
-		{emvb.needsDaisyRuntime && <DaisyRuntime />}
+		{emvb.providerRuntimes.includes("@perkyzz/emvb-daisyui/runtime") && <DaisyRuntime />}
 		<EmVBPage page={emvb} standalone title={seo.title} description={seo.description} seo={seo}>
 			{emvb.needsFormsRuntime && <EmVBFormsRuntime />}
 			{emvb.needsTabsRuntime && <EmVBTabsRuntime />}
@@ -61,7 +61,7 @@ const seo = getSeoMeta(entry, {
 			content={{ collection: emvb?.collection ?? "pages", id: entry.data.id, slug }}
 			dir={emvb?.dir}
 			needsProviderStyles={emvb?.needsProviderStyles}
-			needsDaisyRuntime={emvb?.needsDaisyRuntime}
+			providerRuntimes={emvb?.providerRuntimes}
 			translations={emvb?.translations}
 		>
 			{emvb ? (

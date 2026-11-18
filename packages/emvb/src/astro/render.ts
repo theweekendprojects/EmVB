@@ -22,7 +22,6 @@ export type RenderedPage = {
   needsProviderStyles: boolean;
   providerStyles: string[];
   providerRuntimes: string[];
-  needsDaisyRuntime: boolean;
   /**
    * W-1025: the opt-in widget scripts this page needs (a dismissible Alert…). `EmVBPage` loads
    * them itself; set only when there is one.
@@ -97,7 +96,6 @@ export function renderStored(
     needsProviderStyles: false,
     providerStyles: [],
     providerRuntimes: [],
-    needsDaisyRuntime: false,
     ...(design.direction ? { dir: design.direction } : {}),
   };
   let result: ReturnType<typeof renderPage>;
@@ -140,14 +138,12 @@ export function renderStored(
   const providerStyles = providerAssets.styles;
   const providerRuntimes = providerAssets.runtimes;
   const needsProviderStyles = providerStyles.length > 0;
-  const needsDaisyRuntime = providerRuntimes.includes("@perkyzz/emvb-daisyui/runtime");
   return {
     html,
     css,
     needsProviderStyles,
     providerStyles,
     providerRuntimes,
-    needsDaisyRuntime,
     needsFormsRuntime,
     needsTabsRuntime,
     needsMenuRuntime,
