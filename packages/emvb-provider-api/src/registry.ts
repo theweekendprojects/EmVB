@@ -1,4 +1,5 @@
 import type { ComponentProvider, ProviderComponentNode } from "./types.ts";
+import { providerCompatibility } from "./compatibility.ts";
 
 // The registry is heterogeneous: each provider is specialized to its own node subtype
 // (e.g. daisyUI -> DaisyComponentNode). ComponentProvider is contravariant in its node type
@@ -23,6 +24,8 @@ const providers: Map<string, AnyComponentProvider> =
 export function registerComponentProvider(provider: AnyComponentProvider): () => void {
   if (!/^[a-z][a-z0-9-]*$/.test(provider.id))
     throw new Error(`Invalid provider id: ${provider.id}`);
+  const incompatible = providerCompatibility(provider)[0];
+  if (incompatible) throw new Error(incompatible.message);
   const current = providers.get(provider.id);
   if (current && current !== provider)
     throw new Error(`Component provider already registered: ${provider.id}`);

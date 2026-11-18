@@ -1144,8 +1144,13 @@ const providerElement: ElementDefinition<ProviderNode> = {
     } catch {
       return {
         tag: "div",
-        attrs: { ...attrs, class: [attrs.class, "emvb-unknown"].filter(Boolean).join(" ") },
-        children: [`Unknown provider component "${node.provider}:${node.component}"`],
+        attrs: {
+          ...attrs,
+          class: [attrs.class, "emvb-unknown"].filter(Boolean).join(" "),
+          "data-emvb-missing-provider": node.provider,
+          "data-emvb-missing-component": node.component,
+        },
+        children: [`Unavailable provider component "${node.provider}:${node.component}". Saved data is preserved.`],
       };
     }
   },

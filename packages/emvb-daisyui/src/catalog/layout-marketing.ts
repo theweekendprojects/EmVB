@@ -249,7 +249,7 @@ export const MASK: DaisyComponentDefinition = {
   tag: "img",
   rootClass: "mask",
   fields: [
-    { key: "src", label: "Image URL", kind: "href", default: "", attribute: "src" },
+    { key: "src", label: "Image", kind: "media", default: "", attribute: "src" },
     {
       key: "alt",
       label: "Alternative text",

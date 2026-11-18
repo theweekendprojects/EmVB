@@ -54,7 +54,7 @@ import {
 import { applyStylePatch } from "./style-target.ts";
 import { FieldControl } from "./settings/FieldControl.tsx";
 import { ProviderMetaFields } from "./settings/ProviderMetaFields.tsx";
-import { ProviderCompoundEditor } from "./settings/ProviderCompoundEditor.tsx";
+import { ProviderCollectionEditor } from "./settings/ProviderCollectionEditor.tsx";
 import { BindingsEditor } from "./settings/BindingsEditor.tsx";
 import { VariantEditor } from "./settings/VariantEditor.tsx";
 import { AudienceEditor } from "./settings/AudienceEditor.tsx";
@@ -683,7 +683,7 @@ function KnownElementPanel({
             })
           )}
           <ProviderMetaFields node={node} onChange={onChange} />
-          <ProviderCompoundEditor node={node} onChange={onChange} />
+          <ProviderCollectionEditor node={node} onChange={onChange} />
           {/* W-1024: an element with its own settings lists its items after them. */}
           {hasItemList(node.type) && descriptor.fields.length > 0 && (
             <ItemList node={node} onChange={onChange} onSelect={onSelect} actions={items} />

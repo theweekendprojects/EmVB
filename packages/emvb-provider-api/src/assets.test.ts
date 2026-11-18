@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { providerAssetEntries, providerStyleEntries } from "./assets.ts";
 import type { ComponentProvider, ProviderComponentNode } from "./types.ts";
 const provider = {
-  id: "daisyui",
+  version: "1.0.0", providerApiVersion: 1, nodeVersion: 1, id: "daisyui",
   label: "daisyUI",
   nodeType: "provider",
   components: new Map(),

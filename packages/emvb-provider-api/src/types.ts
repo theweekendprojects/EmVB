@@ -6,7 +6,8 @@ export type ProviderFieldKind =
   | "boolean"
   | "href"
   /** A date and time picker. The value is a wall-clock string such as `2026-12-31T18:00`. */
-  | "datetime";
+  | "datetime"
+  | "media";
 export type ProviderFieldValue = string | number | boolean;
 export type ProviderProps = Record<string, ProviderFieldValue | undefined>;
 
@@ -23,6 +24,7 @@ export interface ProviderComponentNode {
   id: string;
   type: string;
   component: string;
+  providerVersion?: number;
   props: ProviderProps;
   children?: ProviderComponentNode[];
 }
@@ -31,6 +33,15 @@ export interface ProviderFieldDescriptor {
   key: string;
   kind: ProviderFieldKind;
   label: string;
+  help?: string;
+  options?: Array<{ value: string; label: string }>;
+}
+
+export interface ProviderMetaFieldDescriptor {
+  key: string;
+  kind: "text" | "boolean" | "select";
+  label: string;
+  help?: string;
   options?: Array<{ value: string; label: string }>;
 }
 
@@ -57,6 +68,19 @@ export interface ProviderComponent<N extends ProviderComponentNode = ProviderCom
   build: (node: N, attrs?: Record<string, string>, children?: ProviderVNode[]) => ProviderVNode;
 }
 
+
+export interface ProviderCollectionDefinition<N extends ProviderComponentNode = ProviderComponentNode> {
+  parentComponent: string;
+  itemComponent: string;
+  itemLabel: string;
+  fields: readonly string[];
+  createItem: (id: string, index: number) => N;
+  allowAdd?: boolean;
+  allowDuplicate?: boolean;
+  allowRemove?: boolean;
+  allowReorder?: boolean;
+}
+
 export interface ProviderRecipe<N extends ProviderComponentNode = ProviderComponentNode> {
   id: string;
   name: string;
@@ -79,10 +103,17 @@ export interface ProviderRenderContext {
 
 export interface ComponentProvider<N extends ProviderComponentNode = ProviderComponentNode> {
   id: string;
+  version?: string;
+  providerApiVersion?: number;
+  nodeVersion?: number;
   label: string;
   nodeType: string;
   components: ReadonlyMap<string, ProviderComponent<N>>;
   recipes?: readonly ProviderRecipe<N>[];
+  metaFields?: readonly ProviderMetaFieldDescriptor[];
+  collections?: readonly ProviderCollectionDefinition<N>[];
+  acceptsChildren?(node: N): boolean;
+  migrateNode?(node: N, context: { fromVersion: number; toVersion: number }): N;
   createNode(component: string, id: string): N;
   render(
     node: N,

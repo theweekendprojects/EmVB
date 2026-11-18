@@ -184,7 +184,7 @@ export const AVATAR: DaisyComponentDefinition = {
   tag: "div",
   rootClass: "avatar",
   fields: [
-    { key: "src", label: "Image URL", kind: "href", default: "" },
+    { key: "src", label: "Image", kind: "media", default: "" },
     { key: "alt", label: "Alternative text", kind: "text", default: "User avatar" },
     {
       key: "size",
