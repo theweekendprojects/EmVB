@@ -19,13 +19,7 @@ export function parseProviderComponentId(value: string): ProviderComponentIdenti
   const parts = value.slice(PROVIDER_COMPONENT_PREFIX.length).split(":");
   if (parts.length !== 2) return undefined;
   const [providerId, componentId] = parts;
-  if (!providerId || !componentId || !PART.test(providerId) || !PART.test(componentId)) return undefined;
+  if (!providerId || !componentId || !PART.test(providerId) || !PART.test(componentId))
+    return undefined;
   return { providerId, componentId };
-}
-
-/** Compatibility for layouts and drag payloads created before generic provider identifiers. */
-export function normalizeProviderComponentId(value: string): string {
-  if (!value.startsWith("daisy:")) return value;
-  const componentId = value.slice("daisy:".length);
-  return PART.test(componentId) ? formatProviderComponentId("daisyui", componentId) : value;
 }

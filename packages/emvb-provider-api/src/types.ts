@@ -68,8 +68,9 @@ export interface ProviderComponent<N extends ProviderComponentNode = ProviderCom
   build: (node: N, attrs?: Record<string, string>, children?: ProviderVNode[]) => ProviderVNode;
 }
 
-
-export interface ProviderCollectionDefinition<N extends ProviderComponentNode = ProviderComponentNode> {
+export interface ProviderCollectionDefinition<
+  N extends ProviderComponentNode = ProviderComponentNode,
+> {
   parentComponent: string;
   itemComponent: string;
   itemLabel: string;
@@ -101,6 +102,8 @@ export interface ProviderRenderContext {
   previewState?: Readonly<Record<string, unknown>>;
 }
 
+/** Rewrites one stored legacy node. Children are handled by the caller; the input is not mutated. */
+export type LegacyNodeUpgrade = (node: Record<string, unknown>) => Record<string, unknown>;
 export interface ComponentProvider<N extends ProviderComponentNode = ProviderComponentNode> {
   id: string;
   version?: string;
@@ -114,6 +117,12 @@ export interface ComponentProvider<N extends ProviderComponentNode = ProviderCom
   collections?: readonly ProviderCollectionDefinition<N>[];
   acceptsChildren?(node: N): boolean;
   migrateNode?(node: N, context: { fromVersion: number; toVersion: number }): N;
+  /**
+   * Node types this provider stored before it wrote generic `provider` nodes, each mapped to the
+   * function that rewrites one stored node into a current provider node. Core applies it when a
+   * layout is validated, so stored data loads without the provider naming anything in core.
+   */
+  legacyNodeTypes?: Readonly<Record<string, LegacyNodeUpgrade>>;
   createNode(component: string, id: string): N;
   render(
     node: N,

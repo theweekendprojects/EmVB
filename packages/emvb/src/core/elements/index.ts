@@ -1135,7 +1135,7 @@ const providerElement: ElementDefinition<ProviderNode> = {
         children,
         { mode: "public" },
       ) as VNode;
-      // A provider's build may drop the attributes it is given (daisyUI's card does). The editor id
+      // A provider's build may drop the attributes it is given. The editor id
       // must still reach the root, or clicking the element on the canvas selects its parent instead.
       const editorId = attrs["data-emvb-id"];
       if (editorId && !rendered.attrs["data-emvb-id"])
@@ -1150,7 +1150,9 @@ const providerElement: ElementDefinition<ProviderNode> = {
           "data-emvb-missing-provider": node.provider,
           "data-emvb-missing-component": node.component,
         },
-        children: [`Unavailable provider component "${node.provider}:${node.component}". Saved data is preserved.`],
+        children: [
+          `Unavailable provider component "${node.provider}:${node.component}". Saved data is preserved.`,
+        ],
       };
     }
   },

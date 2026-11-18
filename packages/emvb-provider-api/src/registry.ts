@@ -1,4 +1,4 @@
-import type { ComponentProvider, ProviderComponentNode } from "./types.ts";
+import type { ComponentProvider, LegacyNodeUpgrade, ProviderComponentNode } from "./types.ts";
 import { providerCompatibility } from "./compatibility.ts";
 
 // The registry is heterogeneous: each provider is specialized to its own node subtype
@@ -29,6 +29,13 @@ export function registerComponentProvider(provider: AnyComponentProvider): () =>
   const current = providers.get(provider.id);
   if (current && current !== provider)
     throw new Error(`Component provider already registered: ${provider.id}`);
+  for (const type of Object.keys(provider.legacyNodeTypes ?? {})) {
+    if (type === "provider") throw new Error(`${provider.id} cannot claim the provider node type`);
+    const owner = [...providers.values()].find(
+      (other) => other.id !== provider.id && type in (other.legacyNodeTypes ?? {}),
+    );
+    if (owner) throw new Error(`Legacy node type ${type} is already claimed by ${owner.id}`);
+  }
   providers.set(provider.id, provider);
   return () => {
     if (providers.get(provider.id) === provider) providers.delete(provider.id);
@@ -41,4 +48,14 @@ export const componentProvider = (
   providers.get(id) as ComponentProvider<ProviderComponentNode> | undefined;
 export const componentProviders = (): readonly ComponentProvider<ProviderComponentNode>[] =>
   [...providers.values()] as ComponentProvider<ProviderComponentNode>[];
+
+/** Every registered provider's legacy node types, as one map from the stored type to its upgrade. */
+export function legacyNodeUpgrades(): ReadonlyMap<string, LegacyNodeUpgrade> {
+  const upgrades = new Map<string, LegacyNodeUpgrade>();
+  for (const provider of providers.values())
+    for (const [type, upgrade] of Object.entries(provider.legacyNodeTypes ?? {}))
+      upgrades.set(type, upgrade);
+  return upgrades;
+}
+
 export const clearComponentProvidersForTest = (): void => providers.clear();

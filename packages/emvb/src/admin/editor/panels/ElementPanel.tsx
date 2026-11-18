@@ -361,7 +361,7 @@ function fieldShown(key: string, node: LayoutNode, device: Device = "desktop"): 
   return (props[parent] !== undefined && props[parent] !== "") || bound;
 }
 
-function daisyDescriptor(node: LayoutNode): ElementDescriptor | undefined {
+function providerDescriptor(node: LayoutNode): ElementDescriptor | undefined {
   if (node.type !== "provider") return undefined;
   const component = (node as LayoutNode & { component?: string }).component;
   const providerId = (node as LayoutNode & { provider?: string }).provider;
@@ -397,7 +397,7 @@ function asDecimal<F extends { kind: string }>(field: F): F & { kind: "decimal" 
 export function ElementPanel(props: Props) {
   const builtIn =
     props.node.type === "provider"
-      ? daisyDescriptor(props.node)
+      ? providerDescriptor(props.node)
       : ELEMENT_DESCRIPTORS.find((d) => d.type === props.node.type);
   const extension = useExtensionElement(props.node.type);
   const descriptor: ElementDescriptor | undefined = builtIn

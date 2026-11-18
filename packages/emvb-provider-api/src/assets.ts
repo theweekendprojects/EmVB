@@ -20,7 +20,7 @@ export function providerStyleEntries(
   for (const provider of providers)
     if (layoutUsesProvider(nodes, provider.id))
       for (const css of provider.cssEntryPoints) entries.add(css);
-  return [...entries].sort();
+  return [...entries].toSorted();
 }
 
 export interface ProviderAssetEntries {
@@ -49,5 +49,5 @@ export function providerAssetEntries(
     }
   };
   walk(nodes);
-  return { styles: [...styles].sort(), runtimes: [...runtimes].sort() };
+  return { styles: [...styles].toSorted(), runtimes: [...runtimes].toSorted() };
 }

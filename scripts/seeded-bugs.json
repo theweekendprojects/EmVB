@@ -2755,8 +2755,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "  const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(\n    (d) =>\n      d.type !== \"tab-panel\" &&\n      d.type !== \"daisy\" &&\n      (formsAvailable || d.group !== \"form\") &&\n      matchesSearch(\n        query,\n        d.name,\n        d.group,\n        \"category\" in d ? d.category : \"\",\n        \"keywords\" in d ? d.keywords.join(\" \") : \"\",\n      ),\n  );",
-          "replace": "  const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(\n    (d) =>\n      d.type !== \"tab-panel\" &&\n      d.type !== \"daisy\" &&\n      d.type !== \"flexbox\" && // seeded: hide flexbox\n      (formsAvailable || d.group !== \"form\") &&\n      matchesSearch(\n        query,\n        d.name,\n        d.group,\n        \"category\" in d ? d.category : \"\",\n        \"keywords\" in d ? d.keywords.join(\" \") : \"\",\n      ),\n  );"
+          "search": "  const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(\n    (d) =>\n      d.type !== \"tab-panel\" &&\n      (formsAvailable || d.group !== \"form\") &&\n      matchesSearch(\n        query,\n        d.name,\n        d.group,\n        \"category\" in d ? d.category : \"\",\n        \"keywords\" in d ? d.keywords.join(\" \") : \"\",\n      ),\n  );",
+          "replace": "  const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(\n    (d) =>\n      d.type !== \"tab-panel\" &&\n      d.type !== \"flexbox\" && // seeded: hide flexbox\n      (formsAvailable || d.group !== \"form\") &&\n      matchesSearch(\n        query,\n        d.name,\n        d.group,\n        \"category\" in d ? d.category : \"\",\n        \"keywords\" in d ? d.keywords.join(\" \") : \"\",\n      ),\n  );"
         }
       ],
       "command": [
@@ -7921,7 +7921,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n  15: unchanged,\n  16: unchanged,\n  17: layoutAndProviderTo18,\n};",
+          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n  15: unchanged,\n  16: unchanged,\n  17: layoutTo18,\n};",
           "replace": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  2: unchanged,\n};"
         }
       ],
@@ -8241,7 +8241,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n  15: unchanged,\n  16: unchanged,\n  17: layoutAndProviderTo18,\n};",
+          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n  15: unchanged,\n  16: unchanged,\n  17: layoutTo18,\n};",
           "replace": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n};"
         }
       ],
@@ -40454,8 +40454,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "  16: unchanged,\n  17: layoutAndProviderTo18,\n};",
-          "replace": "  17: layoutAndProviderTo18,\n};"
+          "search": "  16: unchanged,\n  17: layoutTo18,\n};",
+          "replace": "  17: layoutTo18,\n};"
         }
       ]
     },
@@ -41408,7 +41408,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "  17: layoutAndProviderTo18,\n",
+          "search": "  17: layoutTo18,\n",
           "replace": ""
         }
       ],

@@ -30,6 +30,8 @@ const editableKinds = new Set([
   "boolean",
   "href",
   "datetime",
+  // The editor's media picker edits an image or video field.
+  "media",
 ]);
 export interface EditorIntegrationAudit {
   id: string;

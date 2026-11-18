@@ -53,7 +53,6 @@ export function AddPanel({
   const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(
     (d) =>
       d.type !== "tab-panel" &&
-      d.type !== "daisy" &&
       (formsAvailable || d.group !== "form") &&
       matchesSearch(
         query,
@@ -139,10 +138,7 @@ export function AddPanel({
           </Button>
         </div>
       ) : (
-        [
-          ...GROUPS,
-          ...providerPaletteGroups(providerDescriptors),
-        ].map((group) => {
+        [...GROUPS, ...providerPaletteGroups(providerDescriptors)].map((group) => {
           const tiles = matched.filter((descriptor) => descriptor.group === group.id);
           if (tiles.length === 0) return null;
           return (

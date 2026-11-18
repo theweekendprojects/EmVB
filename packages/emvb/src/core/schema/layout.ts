@@ -2012,7 +2012,13 @@ const providerAcceptsChildren = (node: unknown): boolean => {
   return (
     typeof provider === "string" &&
     typeof component === "string" &&
-    (() => { const registered = componentProvider(provider); return registered?.components.get(component)?.descriptor.container === true || registered?.acceptsChildren?.(node as never) === true; })()
+    (() => {
+      const registered = componentProvider(provider);
+      return (
+        registered?.components.get(component)?.descriptor.container === true ||
+        registered?.acceptsChildren?.(node as never) === true
+      );
+    })()
   );
 };
 

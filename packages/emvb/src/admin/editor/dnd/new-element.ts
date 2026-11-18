@@ -11,7 +11,7 @@ import {
 import type { ThemePartType } from "../../../core/theme/part-types.ts";
 import { indexLayout } from "../../../core/tree-ops.ts";
 import { isSharedPart } from "../panels/settings/heading-warning.ts";
-import { componentProvider, normalizeProviderComponentId, parseProviderComponentId } from "@perkyzz/emvb-provider-api";
+import { componentProvider, parseProviderComponentId } from "@perkyzz/emvb-provider-api";
 
 const hasH1 = (node: LayoutNode): boolean =>
   ((node.type === "heading" || node.type === "post-title") &&
@@ -169,9 +169,8 @@ export function newElement(
   random?: () => number,
   extensionDefaults?: Record<string, unknown>,
 ): LayoutNode | null {
-  // Registered external provider components use one toolkit-neutral identifier. Legacy Daisy
-  // drag payloads are normalized at this boundary and never leak into the generic creation path.
-  const providerComponent = parseProviderComponentId(normalizeProviderComponentId(type));
+  // Registered provider components use one toolkit-neutral identifier, `provider:<id>:<component>`.
+  const providerComponent = parseProviderComponentId(type);
   if (providerComponent) {
     const provider = componentProvider(providerComponent.providerId);
     if (!provider?.components.has(providerComponent.componentId)) return null;

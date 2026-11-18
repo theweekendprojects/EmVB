@@ -246,22 +246,19 @@ export function useNodeActions({
       ? builtInName
       : type.startsWith("provider:")
         ? type.slice(type.lastIndexOf(":") + 1).replace(/-/g, " ")
-        : type.startsWith("daisy:")
-          ? type.slice("daisy:".length).replace(/-/g, " ")
-          : type.startsWith("ext:")
-            ? type.slice(type.lastIndexOf("/") + 1)
-            : type;
+        : type.startsWith("ext:")
+          ? type.slice(type.lastIndexOf("/") + 1)
+          : type;
     place(layout, node, label);
   };
 
   /** A section recipe built from the site's styles (W-320). */
   const addRecipe = (id: string) => {
     const layout = latest.current.page.layout ?? startingLayout();
-    if (id.startsWith("provider:") || id.startsWith("daisy:")) {
-      const legacy = id.startsWith("daisy:");
+    if (id.startsWith("provider:")) {
       const parts = id.split(":");
-      const providerId = legacy ? "daisyui" : (parts[1] ?? "");
-      const recipeId = legacy ? (parts[1] ?? "") : parts.slice(2).join(":");
+      const providerId = parts[1] ?? "";
+      const recipeId = parts.slice(2).join(":");
       const provider = componentProvider(providerId);
       const recipe = provider?.recipes?.find((candidate) => candidate.id === recipeId);
       if (!provider || !recipe) {

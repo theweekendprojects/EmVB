@@ -520,7 +520,7 @@ export function addNodeNear(
 
 /**
  * Adds a whole section (a W-320 recipe): right after the outermost Section, or provider component
- * (a daisyUI card holds children, so a recipe must not nest in it), the selection is in; with
+ * (a provider container holds children, so a recipe must not nest in it), the selection is in; with
  * neither around the selection, like `addNodeNear`.
  */
 export function addSectionNear(

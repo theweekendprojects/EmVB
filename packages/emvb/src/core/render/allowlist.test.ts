@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { serialize, type VNode } from "./vnode.ts";
 
-// Step 2: the output allowlist must carry what daisyUI's markup needs, and nothing that can run
+// The output allowlist must carry the inert HTML that provider markup uses, and nothing that can run
 // script or restyle the page. Tags and attributes below are inert; `style` and `popovertarget`
-// are allowed only in the narrow forms daisyUI uses.
+// are allowed only in the narrow forms providers use.
 const el = (
   tag: string,
   attrs: Record<string, string> = {},
@@ -14,7 +14,7 @@ const el = (
   children,
 });
 
-describe("allowlist carries daisyUI's inert markup", () => {
+describe("allowlist carries inert markup that providers use", () => {
   test.each([
     [
       "table",

@@ -41,7 +41,7 @@ const TAGS = new Set([
   "details",
   "summary",
   "time",
-  // daisyUI tables and key hints. Inert: no script, no event handlers.
+  // Table markup and key hints. Inert: no script, no event handlers.
   "table",
   "caption",
   "thead",

@@ -11,6 +11,7 @@ import {
 } from "./migrate/index.ts";
 import { DESIGN_SCHEMA_VERSION, DesignSystem } from "./schema/design.ts";
 import { Layout, LAYOUT_SCHEMA_VERSION } from "./schema/layout.ts";
+import { upgradeLegacyNodes } from "./migrate/legacy-nodes.ts";
 
 export type LayoutIssue = { path: string; code: string; message: string };
 export type LayoutValidation =
@@ -174,12 +175,13 @@ export function validateLayout(
   if (sizeIssue) return { ok: false, issues: [sizeIssue] };
   const upgraded = upgradeLayout(input, migrations, LAYOUT_SCHEMA_VERSION);
   if (!upgraded.ok) return { ok: false, issues: [upgradeIssue(upgraded)] };
-  const structure = checkStructure(upgraded.doc["root"]);
+  const doc = upgradeLegacyNodes(upgraded.doc);
+  const structure = checkStructure(doc["root"]);
   if (structure) return { ok: false, issues: [structure] };
   // D-065: keys a newer 1.x wrote are set aside, checked, and put back after the strict parse.
-  const extras = splitLayoutExtras(upgraded.doc);
+  const extras = splitLayoutExtras(doc);
   if (extras.issues.length > 0) return { ok: false, issues: extras.issues };
-  const parsed = Layout.safeParse(upgraded.doc);
+  const parsed = Layout.safeParse(doc);
   if (!parsed.success) {
     return {
       ok: false,
