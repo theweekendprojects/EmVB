@@ -2,6 +2,7 @@ import { Button, Input } from "@cloudflare/kumo";
 import * as React from "react";
 import { elementIcon, providerIcon } from "../element-chrome.ts";
 import { componentProviders } from "@perkyzz/emvb-provider-api";
+import { providerPaletteDescriptors, providerPaletteGroups } from "../provider-palette.ts";
 import {
   ELEMENT_DESCRIPTORS,
   SECTION_RECIPES,
@@ -48,28 +49,7 @@ export function AddPanel({
     setQuery("");
     searchRef.current?.focus();
   };
-  const providerDescriptors = componentProviders()
-    .flatMap((provider) =>
-      [...provider.components.values()].map((generated) => ({
-        type: `provider:${provider.id}:${generated.descriptor.component}`,
-        name:
-          generated.descriptor.support === "experimental"
-            ? `${generated.descriptor.name} (experimental)`
-            : generated.descriptor.name,
-        group: "daisyui" as const,
-        category: generated.descriptor.category ?? provider.label,
-        verified: generated.descriptor.support !== "experimental",
-        icon: generated.descriptor.icon,
-        keywords: generated.descriptor.keywords ?? [],
-        order: generated.descriptor.order ?? 999,
-      })),
-    )
-    .toSorted(
-      (left, right) =>
-        Number(right.verified) - Number(left.verified) ||
-        left.order - right.order ||
-        left.name.localeCompare(right.name),
-    );
+  const providerDescriptors = providerPaletteDescriptors(componentProviders());
   const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(
     (d) =>
       d.type !== "tab-panel" &&
@@ -161,18 +141,9 @@ export function AddPanel({
       ) : (
         [
           ...GROUPS,
-          ...[...new Set(providerDescriptors.map((descriptor) => descriptor.category))].map(
-            (category) => ({ id: `daisyui:${category}`, label: `daisyUI · ${category}` }),
-          ),
+          ...providerPaletteGroups(providerDescriptors),
         ].map((group) => {
-          const tiles = group.id.startsWith("daisyui:")
-            ? matched.filter(
-                (descriptor) =>
-                  descriptor.group === "daisyui" &&
-                  "category" in descriptor &&
-                  descriptor.category === group.id.slice("daisyui:".length),
-              )
-            : matched.filter((descriptor) => descriptor.group === group.id);
+          const tiles = matched.filter((descriptor) => descriptor.group === group.id);
           if (tiles.length === 0) return null;
           return (
             <div key={group.id} className="emvb-add-group">
