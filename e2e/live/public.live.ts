@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // Public pages on the live site: they render, load without script errors, and their images
 // resolve. Nothing here signs in or writes content.
 
-const pages = ["/", "/posts", "/search", "/pages/daisyui-test"];
+const pages = ["/", "/posts", "/search", "/pages/daisyui-test-v3"];
 
 for (const path of pages) {
   test(`${path} renders with no page errors`, async ({ page }) => {
@@ -35,16 +35,16 @@ test("an unknown page answers 404 instead of a server error", async ({ request }
   expect(response.status()).toBe(404);
 });
 
-test("the daisyUI test page shows its sections as cards", async ({ page }) => {
-  await page.goto("/pages/daisyui-test", { waitUntil: "load" });
+test("the daisyUI sections page shows its sections as cards", async ({ page }) => {
+  await page.goto("/pages/daisyui-test-v3", { waitUntil: "load" });
   const cards = page.locator(".card");
   await expect(cards.first()).toBeVisible();
   expect(await cards.count()).toBeGreaterThan(10);
   await expect(page.getByRole("heading", { name: "Starter", exact: true }).first()).toBeVisible();
 });
 
-test("images on the daisyUI test page all load", async ({ page }) => {
-  await page.goto("/pages/daisyui-test", { waitUntil: "load" });
+test("images on the daisyUI sections page all load", async ({ page }) => {
+  await page.goto("/pages/daisyui-test-v3", { waitUntil: "load" });
   const broken = await page.evaluate(() =>
     [...document.images]
       .filter((img) => img.complete && img.naturalWidth === 0)
