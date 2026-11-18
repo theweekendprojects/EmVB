@@ -20,7 +20,9 @@ export type Migration = (doc: Record<string, unknown>) => Record<string, unknown
  * button icons, table of contents, container queries), and layout v15 → v16 (W-481) adds the
  * optional image `edit` record, and layout v17 → v18 / design v16 → v17 (W-925, contract 1.0)
  * rename `section` to `part-ref`, a node's `label` to `editorLabel` and a Loop's `itemPartId` to
- * `partId`, and fold the four motion style keys under `motion`. Every other value is unchanged.
+ * `partId`, and fold the four motion style keys under `motion`, and the fork's layout v17 → v18
+ * step also renames legacy `daisy` nodes to generic `provider` nodes. Every other value is
+ * unchanged.
  */
 const unchanged: Migration = (doc) => doc;
 
@@ -63,6 +65,40 @@ function walkGradients(value: unknown): unknown {
 const gradients: Migration = (doc) => walkGradients(doc) as Record<string, unknown>;
 
 /** 0.8.0 (W-885, D-031, D-059): layout 16 -> 17 and design 15 -> 16 add only the optional `loop`. */
+
+const providerNodes: Migration = (doc) => {
+  const walk = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(walk);
+    if (!isRecord(value)) return value;
+    const next = Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [key, key === "children" ? walk(child) : child]),
+    );
+    if (next["type"] === "daisy") {
+      const props = isRecord(next["props"]) ? { ...next["props"] } : {};
+      const theme = typeof props["theme"] === "string" ? props["theme"] : undefined;
+      delete props["theme"];
+      return {
+        ...next,
+        type: "provider",
+        provider: "daisyui",
+        providerVersion: 2,
+        props,
+        ...(theme ? { providerMeta: { theme } } : {}),
+      };
+    }
+    return next;
+  };
+  return walk(doc) as Record<string, unknown>;
+};
+
+/**
+ * v17 → v18 runs two independent renames: upstream's `section`/`label`/`itemPartId`/motion
+ * rename (`layoutTo18`), then the fork's `daisy` → `provider` rename. They touch disjoint node
+ * types and keys, so either order yields the same result; upstream runs first to keep its own
+ * contract tests meaningful.
+ */
+const layoutAndProviderTo18: Migration = (doc) => providerNodes(layoutTo18(doc));
+
 /** `LAYOUT_MIGRATIONS[n]` upgrades a version-n layout to version n + 1. Migrations must be pure. */
 export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {
   1: unchanged,
@@ -81,7 +117,7 @@ export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {
   14: unchanged,
   15: unchanged,
   16: unchanged,
-  17: layoutTo18,
+  17: layoutAndProviderTo18,
 };
 
 /** `DESIGN_MIGRATIONS[n]` upgrades a version-n design document to version n + 1. */

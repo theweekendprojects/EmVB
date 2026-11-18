@@ -1,0 +1,3 @@
+import { describe,expect,test } from "bun:test";
+import type { ComponentProvider } from "./types.ts";
+describe("provider collections",()=>{test("a toolkit owns its structural item factory",()=>{const provider={id:"kit",label:"Kit",nodeType:"provider",components:new Map(),collections:[{parentComponent:"tabs",itemComponent:"tab",itemLabel:"Tab",fields:["label"],createItem:(id:string,index:number)=>({id,type:"provider",component:"tab",props:{label:`Tab ${index+1}`}})}],createNode(){throw 0},render(){return{tag:"div",attrs:{},children:[]}},cssEntryPoints:[]} satisfies ComponentProvider;expect(provider.collections?.[0]?.createItem("x",1).props.label).toBe("Tab 2");});});

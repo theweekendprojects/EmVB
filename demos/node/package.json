@@ -14,12 +14,18 @@
     "@astrojs/react": "^7.1.9",
     "@emdash-cms/plugin-forms": "0.2.13",
     "@perkyzz/emvb": "workspace:*",
+    "@perkyzz/emvb-daisyui": "workspace:*",
     "astro": "7.4.12",
+    "daisyui": "5.7.50",
     "emdash": "1.5.0",
     "emvb-ext-hello": "workspace:*",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "sharp": "0.35.5"
+    "sharp": "0.35.5",
+    "tailwindcss": "4.1.17"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.1.17"
   },
   "emdash": {
     "label": "EmVB demo (Node + SQLite)",

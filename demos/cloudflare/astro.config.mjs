@@ -5,6 +5,7 @@ import { defineConfig } from "astro/config";
 import { formsPlugin } from "@emdash-cms/plugin-forms";
 import { emvb } from "@perkyzz/emvb";
 import emdash from "emdash/astro";
+import tailwindcss from "@tailwindcss/vite";
 
 /** W-1035: e2e runs give the demo a fresh folder for local D1 and R2 (default .wrangler/state). */
 const data = process.env["EMVB_DEMO_DATA"];
@@ -12,6 +13,7 @@ const data = process.env["EMVB_DEMO_DATA"];
 export default defineConfig({
   output: "server",
   adapter: cloudflare(data ? { persistState: { path: data } } : {}),
+  vite: { plugins: [tailwindcss()] },
   image: {
     layout: "constrained",
     responsiveStyles: true,
@@ -28,7 +30,17 @@ export default defineConfig({
       mcp: true,
       database: d1({ binding: "DB", session: "auto" }),
       storage: r2({ binding: "MEDIA" }),
-      plugins: [formsPlugin(), emvb({ canvasStyles: ["/site.css"], canvasCollections: ["pages"] })],
+      plugins: [
+        formsPlugin(),
+        emvb({
+          canvasStyles: ["/site.css"],
+          canvasCollections: ["pages"],
+          // Register the daisyUI provider: on the server (render) via `providers`, and in the
+          // browser editor via the `adminEntry` wrapper that imports it.
+          providers: ["@perkyzz/emvb-daisyui"],
+          adminEntry: "/src/emvb-admin.ts",
+        }),
+      ],
     }),
   ],
   // W-935 (D-068): English at /, French at /fr/. prefixDefaultLocale stays false: EmDash's admin

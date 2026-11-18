@@ -190,7 +190,7 @@
       "edits": [
         {
           "file": "demos/node/astro.config.mjs",
-          "search": "      plugins: [\n        formsPlugin(),\n        emvb({\n          canvasStyles: [\"/site.css\"],\n          canvasCollections: [\"pages\"],\n          extensions: [hello],\n          // The e2e sends Cloudflare's country header to this local server (S-10, W-999).\n          trustGeoHeaders: true,\n        }),\n      ],",
+          "search": "      plugins: [\n        formsPlugin(),\n        emvb({\n          canvasStyles: [\"/site.css\"],\n          canvasCollections: [\"pages\"],\n          // Register the daisyUI provider: on the server (render) via `providers`, and in the\n          // browser editor via the `adminEntry` wrapper that imports it.\n          providers: [\"@perkyzz/emvb-daisyui\"],\n          adminEntry: \"/src/emvb-admin.ts\",\n          extensions: [hello],\n          // The e2e sends Cloudflare's country header to this local server (S-10, W-999).\n          trustGeoHeaders: true,\n        }),\n      ],",
           "replace": "      plugins: [\n        formsPlugin(),\n      ],"
         }
       ],
@@ -1381,7 +1381,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "      matchesSearch(query, d.name, d.group),",
+          "search": "      matchesSearch(\n        query,\n        d.name,\n        d.group,\n        \"category\" in d ? d.category : \"\",\n        \"keywords\" in d ? d.keywords.join(\" \") : \"\",\n      ),",
           "replace": "      true,"
         }
       ],
@@ -2755,8 +2755,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "  const matched = ELEMENT_DESCRIPTORS.filter(\n    (d) =>\n      d.type !== \"tab-panel\" &&\n      (formsAvailable || d.group !== \"form\") &&\n      matchesSearch(query, d.name, d.group),\n  );",
-          "replace": "  const matched = ELEMENT_DESCRIPTORS.filter(\n    (d) =>\n      d.type !== \"tab-panel\" &&\n      d.type !== \"flexbox\" && // seeded: hide flexbox\n      (formsAvailable || d.group !== \"form\") &&\n      matchesSearch(query, d.name, d.group),\n  );"
+          "search": "  const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(\n    (d) =>\n      d.type !== \"tab-panel\" &&\n      d.type !== \"daisy\" &&\n      (formsAvailable || d.group !== \"form\") &&\n      matchesSearch(\n        query,\n        d.name,\n        d.group,\n        \"category\" in d ? d.category : \"\",\n        \"keywords\" in d ? d.keywords.join(\" \") : \"\",\n      ),\n  );",
+          "replace": "  const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(\n    (d) =>\n      d.type !== \"tab-panel\" &&\n      d.type !== \"daisy\" &&\n      d.type !== \"flexbox\" && // seeded: hide flexbox\n      (formsAvailable || d.group !== \"form\") &&\n      matchesSearch(\n        query,\n        d.name,\n        d.group,\n        \"category\" in d ? d.category : \"\",\n        \"keywords\" in d ? d.keywords.join(\" \") : \"\",\n      ),\n  );"
         }
       ],
       "command": [
@@ -7921,7 +7921,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n  15: unchanged,\n  16: unchanged,\n  17: layoutTo18,\n};",
+          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n  15: unchanged,\n  16: unchanged,\n  17: layoutAndProviderTo18,\n};",
           "replace": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  2: unchanged,\n};"
         }
       ],
@@ -8241,7 +8241,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n  15: unchanged,\n  16: unchanged,\n  17: layoutTo18,\n};",
+          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n  15: unchanged,\n  16: unchanged,\n  17: layoutAndProviderTo18,\n};",
           "replace": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n};"
         }
       ],
@@ -9996,13 +9996,13 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "  const matched = ELEMENT_DESCRIPTORS.filter(",
-          "replace": "  const found = ELEMENT_DESCRIPTORS.filter("
+          "search": "  const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].filter(",
+          "replace": "  const matched = [...ELEMENT_DESCRIPTORS, ...providerDescriptors].slice(0, 1).filter("
         },
         {
           "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "      matchesSearch(query, d.name, d.group),\n  );",
-          "replace": "      matchesSearch(query, d.name, d.group),\n  );\n  const pinned = ELEMENT_DESCRIPTORS.filter((d) => d.type === \"container\");\n  const matched = found.length > 0 ? [...new Set([...pinned, ...found])] : found;"
+          "search": "      matchesSearch(\n        query,\n        d.name,\n        d.group,\n        \"category\" in d ? d.category : \"\",\n        \"keywords\" in d ? d.keywords.join(\" \") : \"\",\n      ),\n  );",
+          "replace": "      false,\n  );"
         }
       ],
       "command": [
@@ -19808,8 +19808,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "onClick={() => onAdd(tile.type as ElementType)}",
-          "replace": "onClick={() => onAdd(tile.type as ElementType)}\n                      onKeyDown={(event) => {\n                        if (event.key === \"Enter\") onAdd(tile.type as ElementType);\n                      }}"
+          "search": "\n                onClick={() => onAdd(tile.type)}",
+          "replace": "\n                onClick={() => { onAdd(tile.type); onAdd(tile.type); }}"
         }
       ],
       "command": [
@@ -26770,8 +26770,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "matchesSearch(query, r.name, r.description, \"recipe section\")",
-          "replace": "!query.trim() && matchesSearch(query, r.name, r.description, \"recipe section\")"
+          "search": "matchesSearch(query, recipe.name, recipe.description, recipe.provider, \"recipe section\")",
+          "replace": "!query.trim() && matchesSearch(query, recipe.name, recipe.description, recipe.provider, \"recipe section\")"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/recipes-panel.test.tsx"],
@@ -26896,7 +26896,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/arrange.ts",
-          "search": "    if (at.node.type === \"layout-section\") outer = at;",
+          "search": "    if (at.node.type === \"layout-section\" || at.node.type === \"provider\") outer = at;",
           "replace": "    if (at.node.type === \"no-such-type\") outer = at;"
         }
       ],
@@ -31612,8 +31612,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "matchesSearch(query, d.name, d.group)",
-          "replace": "d.name.toLowerCase().includes(query.trim().toLowerCase())"
+          "search": "matchesSearch(\n        query,\n        d.name,\n        d.group,\n        \"category\" in d ? d.category : \"\",\n        \"keywords\" in d ? d.keywords.join(\" \") : \"\",\n      )",
+          "replace": "d.name.includes(query)"
         }
       ],
       "command": [
@@ -31632,8 +31632,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "matchesSearch(query, r.name, r.description, \"recipe section\")",
-          "replace": "`${r.name} ${r.description} recipe section`.toLowerCase().includes(query.trim().toLowerCase())"
+          "search": "matchesSearch(query, recipe.name, recipe.description, recipe.provider, \"recipe section\")",
+          "replace": "recipe.name.includes(query)"
         }
       ],
       "command": [
@@ -40454,8 +40454,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "  16: unchanged,\n  17: layoutTo18,\n};",
-          "replace": "  17: layoutTo18,\n};"
+          "search": "  16: unchanged,\n  17: layoutAndProviderTo18,\n};",
+          "replace": "  17: layoutAndProviderTo18,\n};"
         }
       ]
     },
@@ -40748,8 +40748,8 @@
       "edits": [
         {
           "file": "demos/node/astro.config.mjs",
-          "search": "        emvb({\n          canvasStyles: [\"/site.css\"],\n          canvasCollections: [\"pages\"],\n          extensions: [hello],\n          // The e2e sends Cloudflare's country header to this local server (S-10, W-999).\n          trustGeoHeaders: true,\n        }),",
-          "replace": "        emvb({\n          canvasStyles: [\"/site.css\"],\n          extensions: [hello],\n          // The e2e sends Cloudflare's country header to this local server (S-10, W-999).\n          trustGeoHeaders: true,\n        }),"
+          "search": "        emvb({\n          canvasStyles: [\"/site.css\"],\n          canvasCollections: [\"pages\"],\n          // Register the daisyUI provider: on the server (render) via `providers`, and in the\n          // browser editor via the `adminEntry` wrapper that imports it.\n          providers: [\"@perkyzz/emvb-daisyui\"],\n          adminEntry: \"/src/emvb-admin.ts\",\n          extensions: [hello],\n          // The e2e sends Cloudflare's country header to this local server (S-10, W-999).\n          trustGeoHeaders: true,\n        }),",
+          "replace": "        emvb({\n          canvasStyles: [\"/site.css\"],\n          // Register the daisyUI provider: on the server (render) via `providers`, and in the\n          // browser editor via the `adminEntry` wrapper that imports it.\n          providers: [\"@perkyzz/emvb-daisyui\"],\n          adminEntry: \"/src/emvb-admin.ts\",\n          extensions: [hello],\n          // The e2e sends Cloudflare's country header to this local server (S-10, W-999).\n          trustGeoHeaders: true,\n        }),"
         },
         {
           "file": "packages/emvb/src/server/hooks.ts",
@@ -41408,7 +41408,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "  17: layoutTo18,\n",
+          "search": "  17: layoutAndProviderTo18,\n",
           "replace": ""
         }
       ],

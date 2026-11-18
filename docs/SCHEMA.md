@@ -162,6 +162,7 @@ Element types and their props (see layout-format.md for each prop's type and lim
 | `hotspot` | title, text, x, y, xTablet, yTablet, xMobile, yMobile |
 | `spacer` | height |
 | `divider` | (none) |
+| `provider` | (none) |
 | `text` | text, tag, marks |
 | `label` | text |
 | `link` | text, href, newTab |

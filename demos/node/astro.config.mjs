@@ -6,6 +6,7 @@ import { emvb } from "@perkyzz/emvb";
 import hello from "emvb-ext-hello";
 import emdash, { local } from "emdash/astro";
 import { sqlite } from "emdash/db";
+import tailwindcss from "@tailwindcss/vite";
 import { join } from "node:path";
 
 /** W-1035: e2e runs give the demo a fresh data folder of its own; by default it keeps ./data.db. */
@@ -16,6 +17,7 @@ export default defineConfig({
   adapter: node({
     mode: "standalone",
   }),
+  vite: { plugins: [tailwindcss()] },
   image: {
     layout: "constrained",
     responsiveStyles: true,
@@ -40,6 +42,10 @@ export default defineConfig({
         emvb({
           canvasStyles: ["/site.css"],
           canvasCollections: ["pages"],
+          // Register the daisyUI provider: on the server (render) via `providers`, and in the
+          // browser editor via the `adminEntry` wrapper that imports it.
+          providers: ["@perkyzz/emvb-daisyui"],
+          adminEntry: "/src/emvb-admin.ts",
           extensions: [hello],
           // The e2e sends Cloudflare's country header to this local server (S-10, W-999).
           trustGeoHeaders: true,

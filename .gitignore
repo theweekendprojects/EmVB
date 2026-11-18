@@ -38,3 +38,11 @@ e2e/.results/
 e2e/.data/
 .seeded-bug-cache.json
 upgrade-check.json
+
+# project bundle text export (copyToFIle.py output)
+project_bundle.txt
+packages/emvb-daisyui/generated/official-daisyui.css
+packages/emvb-daisyui/generated/official-conformance.json
+packages/emvb-daisyui/conformance/safelist.html
+demos/cloudflare/dist-daisy-conformance/
+artifacts/daisy-release/

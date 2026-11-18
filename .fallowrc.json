@@ -1,13 +1,28 @@
 {
   "$schema": "https://fallow.tools/schema.json",
-  "entry": ["demos/*/src/live.config.ts", "scripts/seed-probe.ts"],
-  "ignorePatterns": ["site/**", "demos/*/public/**"],
+  "entry": [
+    "demos/*/src/live.config.ts",
+    "scripts/seed-probe.ts",
+    "scripts/daisy-live-check.ts",
+    "packages/emvb-daisyui/scripts/render-sections-preview.ts",
+    "demos/cloudflare/daisy-conformance.vite.config.ts",
+    "demos/cloudflare/conformance/**"
+  ],
+  "ignorePatterns": [
+    "spikes/**",
+    "site/**",
+    "demos/*/public/**",
+    "packages/emvb-daisyui/generated/**",
+    "packages/emvb-daisyui/styles/**"
+  ],
   "ignoreDependencies": [
     "@fortawesome/fontawesome-free",
     "@tabler/icons",
     "lucide-static",
     "remixicon",
-    "sharp"
+    "sharp",
+    "@perkyzz/emvb-daisyui",
+    "@perkyzz/emvb-provider-api"
   ],
   "boundaries": {
     "zones": [

@@ -73,6 +73,7 @@ export type ElementIconComponent = typeof SquaresFourIcon;
 
 export const ELEMENT_ICONS: Record<string, ElementIconComponent> = {
   container: SquaresFourIcon,
+  provider: SquaresFourIcon,
   "div-block": SquareIcon,
   "layout-section": RowsIcon,
   "part-ref": StackIcon,

@@ -1,0 +1,15 @@
+/* Tailwind + daisyUI for EmVB provider pages. Compiled by @tailwindcss/vite (added in
+   astro.config). The @source lines tell Tailwind which classes to keep: the daisyUI provider's
+   build output and its generated safelist, so every allowlisted class ships even though the
+   class strings only appear at runtime in VNode attrs. */
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes:
+    light --default,
+    dark --prefersdark,
+    corporate,
+    business,
+    cupcake;
+}
+@source "../../../../packages/emvb-daisyui/src/**/*.{ts,tsx}";
+@source "../../../../packages/emvb-daisyui/generated/safelist.css";

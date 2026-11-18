@@ -1,0 +1,546 @@
+[
+  {
+    "id": "button",
+    "label": "Button",
+    "category": "Actions",
+    "defaults": {
+      "label": "Button",
+      "tone": "primary",
+      "variant": "solid",
+      "size": "md",
+      "disabled": false
+    }
+  },
+  {
+    "id": "badge",
+    "label": "Badge",
+    "category": "Data display",
+    "defaults": {
+      "label": "Badge",
+      "tone": "neutral",
+      "variant": "solid"
+    }
+  },
+  {
+    "id": "alert",
+    "label": "Alert",
+    "category": "Feedback",
+    "defaults": {
+      "message": "Your message goes here.",
+      "tone": "info",
+      "variant": "soft"
+    }
+  },
+  {
+    "id": "card",
+    "label": "Card",
+    "category": "Layout",
+    "defaults": {
+      "title": "Card title",
+      "body": "Add supporting content to this card.",
+      "bordered": true,
+      "size": "md"
+    }
+  },
+  {
+    "id": "progress",
+    "label": "Progress",
+    "category": "Data display",
+    "defaults": {
+      "value": 40,
+      "max": 100,
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "stats",
+    "label": "Statistic",
+    "category": "Data display",
+    "defaults": {
+      "title": "Total users",
+      "value": "31K",
+      "description": "12% increase",
+      "direction": "horizontal"
+    }
+  },
+  {
+    "id": "input",
+    "label": "Input",
+    "category": "Actions",
+    "defaults": {
+      "type": "text",
+      "placeholder": "Type here",
+      "value": "",
+      "name": "field",
+      "label": "Field",
+      "disabled": false,
+      "required": false,
+      "size": "md",
+      "tone": "neutral",
+      "variant": "default"
+    }
+  },
+  {
+    "id": "textarea",
+    "label": "Textarea",
+    "category": "Actions",
+    "defaults": {
+      "placeholder": "Write here",
+      "value": "",
+      "rows": 4,
+      "name": "field",
+      "label": "Field",
+      "disabled": false,
+      "required": false,
+      "size": "md",
+      "tone": "neutral",
+      "variant": "default"
+    }
+  },
+  {
+    "id": "select",
+    "label": "Select",
+    "category": "Actions",
+    "defaults": {
+      "options": "First option\nSecond option\nThird option",
+      "selected": "First option",
+      "name": "field",
+      "label": "Field",
+      "disabled": false,
+      "required": false,
+      "size": "md",
+      "tone": "neutral",
+      "variant": "default"
+    }
+  },
+  {
+    "id": "checkbox",
+    "label": "Checkbox",
+    "category": "Actions",
+    "defaults": {
+      "name": "checkbox",
+      "value": "on",
+      "label": "Checkbox",
+      "checked": false,
+      "disabled": false,
+      "size": "md",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "radio",
+    "label": "Radio",
+    "category": "Actions",
+    "defaults": {
+      "name": "radio",
+      "value": "on",
+      "label": "Radio",
+      "checked": false,
+      "disabled": false,
+      "size": "md",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "toggle",
+    "label": "Toggle",
+    "category": "Actions",
+    "defaults": {
+      "name": "toggle",
+      "value": "on",
+      "label": "Toggle",
+      "checked": false,
+      "disabled": false,
+      "size": "md",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "file-input",
+    "label": "File-Input",
+    "category": "Actions",
+    "defaults": {
+      "name": "upload",
+      "label": "Choose file",
+      "accept": "image/*",
+      "multiple": false,
+      "disabled": false,
+      "size": "md",
+      "tone": "neutral"
+    }
+  },
+  {
+    "id": "range",
+    "label": "Range",
+    "category": "Actions",
+    "defaults": {
+      "name": "range",
+      "label": "Range",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "value": 50,
+      "size": "md",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "rating",
+    "label": "Rating",
+    "category": "Actions",
+    "defaults": {
+      "name": "rating",
+      "label": "Rating",
+      "max": 5,
+      "value": 3,
+      "size": "md"
+    }
+  },
+  {
+    "id": "navbar",
+    "label": "Navbar",
+    "category": "Navigation",
+    "defaults": {
+      "ariaLabel": "Primary navigation",
+      "brand": "EmDash",
+      "brandHref": "/",
+      "items": "Home|/\nAbout|/about\nContact|/contact",
+      "position": "static"
+    }
+  },
+  {
+    "id": "menu",
+    "label": "Menu",
+    "category": "Navigation",
+    "defaults": {
+      "ariaLabel": "Menu",
+      "items": "Dashboard|/dashboard\nSettings|/settings",
+      "direction": "vertical",
+      "size": "md"
+    }
+  },
+  {
+    "id": "breadcrumbs",
+    "label": "Breadcrumbs",
+    "category": "Navigation",
+    "defaults": {
+      "ariaLabel": "Breadcrumb",
+      "items": "Home|/\nDocuments|/documents\nCurrent|"
+    }
+  },
+  {
+    "id": "pagination",
+    "label": "Pagination",
+    "category": "Navigation",
+    "defaults": {
+      "ariaLabel": "Pagination",
+      "pages": 5,
+      "current": 1,
+      "baseHref": "?page=",
+      "size": "md"
+    }
+  },
+  {
+    "id": "steps",
+    "label": "Steps",
+    "category": "Navigation",
+    "defaults": {
+      "items": "Register\nChoose plan\nPurchase\nReceive product",
+      "current": 2,
+      "direction": "horizontal"
+    }
+  },
+  {
+    "id": "dock",
+    "label": "Dock",
+    "category": "Navigation",
+    "defaults": {
+      "ariaLabel": "Mobile navigation",
+      "items": "Home|/\nSearch|/search\nProfile|/profile",
+      "active": "Home",
+      "size": "md"
+    }
+  },
+  {
+    "id": "footer",
+    "label": "Footer",
+    "category": "Navigation",
+    "defaults": {
+      "brand": "EmDash",
+      "description": "Visual publishing for modern teams.",
+      "links": "About|/about\nContact|/contact\nPrivacy|/privacy",
+      "layout": "horizontal"
+    }
+  },
+  {
+    "id": "tabs",
+    "label": "Tabs",
+    "category": "Navigation",
+    "defaults": {
+      "label": "Content tabs",
+      "items": "Overview|Overview content\nDetails|Details content\nReviews|Reviews content",
+      "active": 1,
+      "style": "box"
+    }
+  },
+  {
+    "id": "accordion",
+    "label": "Accordion",
+    "category": "Layout",
+    "defaults": {
+      "label": "Frequently asked questions",
+      "items": "What is EmVB?|A visual editor for EmDash.\nDoes it support themes?|Yes, through daisyUI themes.",
+      "open": 1,
+      "icon": "arrow"
+    }
+  },
+  {
+    "id": "dropdown",
+    "label": "Dropdown",
+    "category": "Navigation",
+    "defaults": {
+      "label": "Open menu",
+      "items": "Profile|/profile\nSettings|/settings\nSign out|/logout",
+      "open": false,
+      "align": "start"
+    }
+  },
+  {
+    "id": "modal",
+    "label": "Modal",
+    "category": "Feedback",
+    "defaults": {
+      "title": "Confirm action",
+      "body": "Review the information before continuing.",
+      "open": true,
+      "closeLabel": "Close",
+      "position": "middle"
+    }
+  },
+  {
+    "id": "drawer",
+    "label": "Drawer",
+    "category": "Layout",
+    "defaults": {
+      "label": "Navigation drawer",
+      "buttonLabel": "Open drawer",
+      "side": "start",
+      "open": false
+    }
+  },
+  {
+    "id": "carousel",
+    "label": "Carousel",
+    "category": "Layout",
+    "defaults": {
+      "label": "Featured content",
+      "slides": "First slide|Welcome to EmVB\nSecond slide|Build with daisyUI\nThird slide|Publish with Astro",
+      "current": 1,
+      "width": "full"
+    }
+  },
+  {
+    "id": "collapse",
+    "label": "Collapse",
+    "category": "Layout",
+    "defaults": {
+      "title": "More information",
+      "content": "Additional details appear here.",
+      "open": false,
+      "icon": "arrow"
+    }
+  },
+  {
+    "id": "swap",
+    "label": "Swap",
+    "category": "Actions",
+    "defaults": {
+      "label": "Toggle state",
+      "on": "ON",
+      "off": "OFF",
+      "active": false,
+      "effect": "rotate"
+    }
+  },
+  {
+    "id": "table",
+    "label": "Table",
+    "category": "Data display",
+    "defaults": {
+      "caption": "Data table",
+      "headers": "Name|Role|Status",
+      "rows": "Jane|Designer|Active\nJohn|Developer|Away",
+      "style": "zebra",
+      "size": "md"
+    }
+  },
+  {
+    "id": "timeline",
+    "label": "Timeline",
+    "category": "Data display",
+    "defaults": {
+      "label": "Project milestones",
+      "items": "2024|Started|Initial release\n2025|Expanded|New components",
+      "direction": "vertical"
+    }
+  },
+  {
+    "id": "avatar",
+    "label": "Avatar",
+    "category": "Data display",
+    "defaults": {
+      "src": "/avatar.png",
+      "alt": "User avatar",
+      "size": "md",
+      "status": "none",
+      "shape": "round"
+    }
+  },
+  {
+    "id": "chat-bubble",
+    "label": "Chat Bubble",
+    "category": "Data display",
+    "defaults": {
+      "name": "Alice",
+      "message": "Hello from EmVB!",
+      "time": "12:45",
+      "side": "start",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "list",
+    "label": "List",
+    "category": "Data display",
+    "defaults": {
+      "label": "Items",
+      "items": "First|Description|/first\nSecond|Description|/second",
+      "striped": false
+    }
+  },
+  {
+    "id": "status",
+    "label": "Status",
+    "category": "Data display",
+    "defaults": {
+      "label": "Online",
+      "tone": "success",
+      "size": "md",
+      "animate": false
+    }
+  },
+  {
+    "id": "tooltip",
+    "label": "Tooltip",
+    "category": "Data display",
+    "defaults": {
+      "tip": "Helpful information",
+      "content": "Hover me",
+      "position": "top",
+      "open": false
+    }
+  },
+  {
+    "id": "countdown",
+    "label": "Countdown",
+    "category": "Data display",
+    "defaults": {
+      "label": "Time remaining",
+      "value": 42,
+      "max": 99,
+      "suffix": " seconds",
+      "size": "md"
+    }
+  },
+  {
+    "id": "hero",
+    "label": "Hero",
+    "category": "Marketing",
+    "defaults": {
+      "title": "Build beautiful pages",
+      "body": "Compose EmDash pages visually with daisyUI.",
+      "action": "Get started",
+      "href": "#start",
+      "height": "md",
+      "align": "center"
+    }
+  },
+  {
+    "id": "stack",
+    "label": "Stack",
+    "category": "Layout",
+    "defaults": {
+      "label": "Stacked content",
+      "count": 3,
+      "size": "md"
+    }
+  },
+  {
+    "id": "divider",
+    "label": "Divider",
+    "category": "Layout",
+    "defaults": {
+      "label": "OR",
+      "direction": "horizontal",
+      "tone": "neutral"
+    }
+  },
+  {
+    "id": "join",
+    "label": "Join",
+    "category": "Layout",
+    "defaults": {
+      "label": "Joined controls",
+      "direction": "horizontal"
+    }
+  },
+  {
+    "id": "indicator",
+    "label": "Indicator",
+    "category": "Layout",
+    "defaults": {
+      "badge": "New",
+      "position": "top-end",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "mask",
+    "label": "Mask",
+    "category": "Layout",
+    "defaults": {
+      "src": "/image.jpg",
+      "alt": "Masked image",
+      "shape": "squircle",
+      "size": "md"
+    }
+  },
+  {
+    "id": "browser-mockup",
+    "label": "Browser Mockup",
+    "category": "Marketing",
+    "defaults": {
+      "url": "https://emdash.dev",
+      "content": "Your page preview"
+    }
+  },
+  {
+    "id": "phone-mockup",
+    "label": "Phone Mockup",
+    "category": "Marketing",
+    "defaults": {
+      "camera": true,
+      "content": "Mobile preview"
+    }
+  },
+  {
+    "id": "code-mockup",
+    "label": "Code Mockup",
+    "category": "Marketing",
+    "defaults": {
+      "code": "npm install @perkyzz/emvb-daisyui",
+      "prefix": "$",
+      "tone": "neutral"
+    }
+  }
+]
