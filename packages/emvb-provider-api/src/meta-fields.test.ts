@@ -1,0 +1,3 @@
+import { describe,expect,test } from "bun:test";
+import type { ComponentProvider } from "./types.ts";
+describe("provider metadata contract",()=>{test("a provider owns its theme choices",()=>{const provider={id:"kit",label:"Kit",nodeType:"provider",components:new Map(),metaFields:[{key:"theme",kind:"select",label:"Theme",options:[{value:"",label:"Inherit"},{value:"night",label:"Night"}]}],createNode(){throw 0},render(){return{tag:"div",attrs:{},children:[]}},cssEntryPoints:[]} satisfies ComponentProvider;expect(provider.metaFields?.[0]?.options?.[1]).toEqual({value:"night",label:"Night"});});test("media is a public provider field kind",()=>{const field={key:"src",kind:"media",label:"Image"} as const;expect(field.kind).toBe("media");});});
