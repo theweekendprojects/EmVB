@@ -38,8 +38,9 @@
     "defaults": {
       "title": "Card title",
       "body": "Add supporting content to this card.",
-      "bordered": true,
-      "size": "md"
+      "bordered": false,
+      "size": "md",
+      "align": "stretch"
     }
   },
   {
@@ -48,6 +49,8 @@
     "category": "Data display",
     "defaults": {
       "value": 40,
+      "label": "Progress",
+      "visibleLabel": "",
       "max": 100,
       "tone": "primary"
     }
@@ -389,7 +392,7 @@
     "label": "Avatar",
     "category": "Data display",
     "defaults": {
-      "src": "/avatar.png",
+      "src": "",
       "alt": "User avatar",
       "size": "md",
       "status": "none",
@@ -446,10 +449,17 @@
     "category": "Data display",
     "defaults": {
       "label": "Time remaining",
+      "target": "",
+      "zone": "viewer",
+      "units": "dhms",
+      "layout": "boxes",
+      "align": "center",
+      "size": "md",
+      "labels": "days|hours|min|sec",
+      "expired": "",
       "value": 42,
       "max": 99,
-      "suffix": " seconds",
-      "size": "md"
+      "suffix": " seconds"
     }
   },
   {
@@ -509,7 +519,7 @@
     "label": "Mask",
     "category": "Layout",
     "defaults": {
-      "src": "/image.jpg",
+      "src": "",
       "alt": "Masked image",
       "shape": "squircle",
       "size": "md"
@@ -541,6 +551,208 @@
       "code": "npm install @perkyzz/emvb-daisyui",
       "prefix": "$",
       "tone": "neutral"
+    }
+  },
+  {
+    "id": "loading",
+    "label": "Loading",
+    "category": "Feedback",
+    "defaults": {
+      "style": "spinner",
+      "size": "md",
+      "label": "Loading"
+    }
+  },
+  {
+    "id": "skeleton",
+    "label": "Skeleton",
+    "category": "Feedback",
+    "defaults": {
+      "text": false,
+      "label": "Loading content"
+    }
+  },
+  {
+    "id": "radial-progress",
+    "label": "Radial progress",
+    "category": "Feedback",
+    "defaults": {
+      "value": 70,
+      "label": "70%",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "toast",
+    "label": "Toast",
+    "category": "Feedback",
+    "defaults": {
+      "horizontal": "end",
+      "vertical": "bottom",
+      "message": "Notification"
+    }
+  },
+  {
+    "id": "label",
+    "label": "Label",
+    "category": "Actions",
+    "defaults": {
+      "text": "Label",
+      "for": ""
+    }
+  },
+  {
+    "id": "fieldset",
+    "label": "Fieldset",
+    "category": "Actions",
+    "defaults": {
+      "legend": "Details"
+    }
+  },
+  {
+    "id": "kbd",
+    "label": "Kbd",
+    "category": "Data display",
+    "defaults": {
+      "text": "Ctrl",
+      "size": "md"
+    }
+  },
+  {
+    "id": "link",
+    "label": "Link",
+    "category": "Navigation",
+    "defaults": {
+      "label": "Link",
+      "href": "#",
+      "tone": "primary",
+      "hover": false
+    }
+  },
+  {
+    "id": "window-mockup",
+    "label": "Window mockup",
+    "category": "Layout",
+    "defaults": {
+      "title": "Application window"
+    }
+  },
+  {
+    "id": "theme-controller",
+    "label": "Theme Controller",
+    "category": "Actions",
+    "defaults": {
+      "theme": "light",
+      "label": "Change theme"
+    }
+  },
+  {
+    "id": "validator",
+    "label": "Validator",
+    "category": "Actions",
+    "defaults": {
+      "type": "email",
+      "placeholder": "mail@site.com",
+      "hint": "Enter a valid value",
+      "required": true
+    }
+  },
+  {
+    "id": "diff",
+    "label": "Diff",
+    "category": "Data display",
+    "defaults": {
+      "before": "Before",
+      "after": "After"
+    }
+  },
+  {
+    "id": "filter",
+    "label": "Filter",
+    "category": "Actions",
+    "defaults": {
+      "name": "filter",
+      "items": "All\nActive\nArchived"
+    }
+  },
+  {
+    "id": "aura",
+    "label": "Aura",
+    "category": "Layout",
+    "defaults": {
+      "style": "default",
+      "size": "md"
+    }
+  },
+  {
+    "id": "calendar",
+    "label": "Calendar",
+    "category": "Actions",
+    "defaults": {
+      "label": "Choose date",
+      "name": "date",
+      "value": "",
+      "required": false
+    }
+  },
+  {
+    "id": "fab",
+    "label": "FAB / Speed Dial",
+    "category": "Actions",
+    "defaults": {
+      "label": "Open actions",
+      "symbol": "+",
+      "actions": "Create\nUpload\nShare",
+      "flower": false
+    }
+  },
+  {
+    "id": "hover-3d",
+    "label": "Hover 3D Card",
+    "category": "Layout",
+    "defaults": {
+      "label": "3D card"
+    }
+  },
+  {
+    "id": "hover-gallery",
+    "label": "Hover Gallery",
+    "category": "Data display",
+    "defaults": {
+      "images": "",
+      "alt": "Product gallery"
+    }
+  },
+  {
+    "id": "megamenu",
+    "label": "Megamenu",
+    "category": "Navigation",
+    "defaults": {
+      "label": "Main navigation",
+      "items": "Products|Overview,Features,Pricing\nCompany|About,Careers,Contact",
+      "size": "md",
+      "width": "normal"
+    }
+  },
+  {
+    "id": "otp",
+    "label": "OTP",
+    "category": "Actions",
+    "defaults": {
+      "label": "Verification code",
+      "length": "6",
+      "joined": false,
+      "size": "md",
+      "tone": "primary"
+    }
+  },
+  {
+    "id": "text-rotate",
+    "label": "Text Rotate",
+    "category": "Data display",
+    "defaults": {
+      "items": "DESIGN\nDEVELOP\nDEPLOY",
+      "label": "Rotating text"
     }
   }
 ]
