@@ -113,6 +113,7 @@ export interface ComponentProvider<N extends ProviderComponentNode = ProviderCom
   metaFields?: readonly ProviderMetaFieldDescriptor[];
   collections?: readonly ProviderCollectionDefinition<N>[];
   acceptsChildren?(node: N): boolean;
+  migrateNode?(node: N, context: { fromVersion: number; toVersion: number }): N;
   createNode(component: string, id: string): N;
   render(
     node: N,

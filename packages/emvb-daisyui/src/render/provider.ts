@@ -34,6 +34,10 @@ export function createDaisyUIProvider(
       { parentComponent: "table", itemComponent: "table-row", itemLabel: "Row", fields: [], createItem: (id) => ({ id, type: "provider", provider: "daisyui", component: "table-row", props: {}, children: [{ id: `${id}-cell`, type: "provider", provider: "daisyui", component: "table-cell", props: { text: "Cell" }, children: [] }] }) },
     ],
     acceptsChildren: (node) => components.get(node.component)?.descriptor.container === true || isCompoundPart(node.component),
+    migrateNode: (node, context) => {
+      if (context.fromVersion !== 1 || context.toVersion !== 1) throw new Error(`Unsupported daisyUI migration ${context.fromVersion} -> ${context.toVersion}`);
+      return structuredClone(node);
+    },
     metaFields: [{
       key: "theme",
       kind: "select",
