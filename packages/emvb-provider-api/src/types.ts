@@ -67,6 +67,19 @@ export interface ProviderComponent<N extends ProviderComponentNode = ProviderCom
   build: (node: N, attrs?: Record<string, string>, children?: ProviderVNode[]) => ProviderVNode;
 }
 
+
+export interface ProviderCollectionDefinition<N extends ProviderComponentNode = ProviderComponentNode> {
+  parentComponent: string;
+  itemComponent: string;
+  itemLabel: string;
+  fields: readonly string[];
+  createItem: (id: string, index: number) => N;
+  allowAdd?: boolean;
+  allowDuplicate?: boolean;
+  allowRemove?: boolean;
+  allowReorder?: boolean;
+}
+
 export interface ProviderRecipe<N extends ProviderComponentNode = ProviderComponentNode> {
   id: string;
   name: string;
@@ -94,6 +107,8 @@ export interface ComponentProvider<N extends ProviderComponentNode = ProviderCom
   components: ReadonlyMap<string, ProviderComponent<N>>;
   recipes?: readonly ProviderRecipe<N>[];
   metaFields?: readonly ProviderMetaFieldDescriptor[];
+  collections?: readonly ProviderCollectionDefinition<N>[];
+  acceptsChildren?(node: N): boolean;
   createNode(component: string, id: string): N;
   render(
     node: N,

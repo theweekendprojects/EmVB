@@ -23,6 +23,14 @@ export function createDaisyUIProvider(
     nodeType: "daisy",
     components,
     recipes,
+    collections: [
+      { parentComponent: "menu", itemComponent: "menu-item", itemLabel: "Menu item", fields: ["label", "href", "disabled"], createItem: (id, index) => ({ id, type: "provider", provider: "daisyui", component: "menu-item", props: { label: `Item ${index + 1}`, href: "#", disabled: false }, children: [] }) },
+      { parentComponent: "tabs", itemComponent: "tab-item", itemLabel: "Tab", fields: ["label", "selected"], createItem: (id, index) => ({ id, type: "provider", provider: "daisyui", component: "tab-item", props: { label: `Tab ${index + 1}`, selected: index === 0 }, children: [] }) },
+      { parentComponent: "accordion", itemComponent: "accordion-item", itemLabel: "Accordion item", fields: ["label", "defaultOpen"], createItem: (id, index) => ({ id, type: "provider", provider: "daisyui", component: "accordion-item", props: { label: `Question ${index + 1}`, defaultOpen: false }, children: [] }) },
+      { parentComponent: "carousel", itemComponent: "carousel-item", itemLabel: "Slide", fields: ["label"], createItem: (id, index) => ({ id, type: "provider", provider: "daisyui", component: "carousel-item", props: { label: `Slide ${index + 1}` }, children: [] }) },
+      { parentComponent: "table", itemComponent: "table-row", itemLabel: "Row", fields: [], createItem: (id) => ({ id, type: "provider", provider: "daisyui", component: "table-row", props: {}, children: [{ id: `${id}-cell`, type: "provider", provider: "daisyui", component: "table-cell", props: { text: "Cell" }, children: [] }] }) },
+    ],
+    acceptsChildren: (node) => components.get(node.component)?.descriptor.container === true || isCompoundPart(node.component),
     metaFields: [{
       key: "theme",
       kind: "select",
