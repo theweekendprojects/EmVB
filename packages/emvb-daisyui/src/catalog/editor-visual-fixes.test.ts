@@ -76,15 +76,16 @@ describe("editor canvas fixes", () => {
     expect(serialize(daisyUIProvider.render(node) as never)).toContain("md:grid-cols-3");
   });
 
-  test("modal on the canvas is laid out in the page; on the public page it keeps the overlay", () => {
+  test("modal on the canvas is a box in the page, not an open dialog that locks scrolling", () => {
     const node = daisyUIProvider.createNode("modal", "vf000006");
     node.props.open = true;
     const canvas = serialize(daisyUIProvider.render(node, {}, [], { mode: "editor" }) as never);
-    expect(canvas).toContain("relative");
-    expect(canvas).toContain("inset-auto!");
+    expect(canvas).toMatch(/^<div class="modal-box/);
+    expect(canvas).not.toContain("<dialog");
+    expect(canvas).not.toContain("modal-open");
     // The public page keeps the overlay and stays closed: transient open state is not published.
     const page = serialize(daisyUIProvider.render(node, {}, [], { mode: "public" }) as never);
-    expect(page).not.toContain("inset-auto!");
+    expect(page).toContain("<dialog");
     expect(page).not.toContain("modal-open");
   });
 

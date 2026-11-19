@@ -5,9 +5,6 @@ const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
 const sizeMap = (prefix: string) =>
   Object.fromEntries(sizes.map((size) => [size, `${prefix}-${size}`]));
 
-// Canvas-only: lay the open modal out in the page instead of pinning it over the page.
-const EDITOR_MODAL_CLASSES = ["relative", "inset-auto!", "w-auto!", "h-auto!", "max-w-full"];
-
 const lines = (value: unknown) =>
   String(value ?? "")
     .split(/\r?\n/)
@@ -257,46 +254,41 @@ export const MODAL: DaisyComponentDefinition = {
   ],
   build(node, classes, children, options) {
     const titleId = `${node.id}-title`;
+    const content: DaisyVNode[] = [
+      {
+        tag: "h2",
+        attrs: { id: titleId, class: "text-lg font-bold" },
+        children: [String(node.props.title)],
+      },
+      { tag: "p", attrs: { class: "py-4" }, children: [String(node.props.body)] },
+      ...children,
+      {
+        tag: "form",
+        attrs: { method: "dialog", class: "modal-action" },
+        children: [
+          { tag: "button", attrs: { class: "btn" }, children: [String(node.props.closeLabel)] },
+        ],
+      },
+    ];
+    // On the canvas an open modal is shown as its box in the page. An open <dialog> makes daisyUI
+    // lock the page's scrolling, so the canvas could no longer be scrolled with the wheel.
+    if (options?.mode === "editor" && node.props.open)
+      return {
+        tag: "div",
+        attrs: { class: "modal-box mx-auto my-4 w-full max-w-md", "aria-labelledby": titleId },
+        children: content,
+      };
     return {
       tag: "dialog",
       attrs: {
         // daisyUI slides a drawer (start or end) in only with modal-open; the open attribute alone
         // leaves it off the page.
-        class: [
-          ...classes,
-          ...(node.props.open ? ["modal-open"] : []),
-          // On the canvas an open modal is laid out in the page, not pinned over it, so the blocks
-          // around it stay visible and clickable. The public page keeps daisyUI's overlay.
-          ...(options?.mode === "editor" ? EDITOR_MODAL_CLASSES : []),
-        ].join(" "),
+        class: [...classes, ...(node.props.open ? ["modal-open"] : [])].join(" "),
         "aria-labelledby": titleId,
         ...(node.props.open ? { open: "open" } : {}),
       },
       children: [
-        {
-          tag: "div",
-          attrs: { class: "modal-box" },
-          children: [
-            {
-              tag: "h2",
-              attrs: { id: titleId, class: "text-lg font-bold" },
-              children: [String(node.props.title)],
-            },
-            { tag: "p", attrs: { class: "py-4" }, children: [String(node.props.body)] },
-            ...children,
-            {
-              tag: "form",
-              attrs: { method: "dialog", class: "modal-action" },
-              children: [
-                {
-                  tag: "button",
-                  attrs: { class: "btn" },
-                  children: [String(node.props.closeLabel)],
-                },
-              ],
-            },
-          ],
-        },
+        { tag: "div", attrs: { class: "modal-box" }, children: content },
         {
           tag: "form",
           attrs: { method: "dialog", class: "modal-backdrop" },
