@@ -128,7 +128,7 @@ describe("WP9 layout and marketing", () => {
   test("join preserves children without mutating originals", () => {
     const child: DaisyVNode = { tag: "button", attrs: { class: "btn" }, children: ["A"] };
     const joined = render("join", { label: "Actions", direction: "horizontal" }, [child]);
-    expect((joined.children[0] as DaisyVNode).attrs.class).toBe("btn join-item");
+    expect((joined.children[0] as DaisyVNode).attrs.class).toBe("btn join-item w-auto!");
     expect(child.attrs.class).toBe("btn");
     expect(joined.attrs.role).toBe("group");
   });

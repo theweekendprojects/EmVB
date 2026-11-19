@@ -26,7 +26,7 @@ describe("WP4 basic daisyUI components", () => {
       }),
     ).toEqual({
       tag: "button",
-      attrs: { class: "btn btn-success btn-outline btn-lg w-fit mx-auto my-4" },
+      attrs: { class: "btn btn-success btn-outline btn-lg w-auto! w-fit mx-auto my-4" },
       children: ["Save"],
     }));
   test("alert receives an accessible role", () =>

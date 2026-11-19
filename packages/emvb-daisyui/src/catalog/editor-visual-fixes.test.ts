@@ -98,6 +98,15 @@ describe("editor canvas fixes", () => {
     }
   });
 
+  test("buttons keep natural width unless their shape asks for full width", () => {
+    expect(render("button")).toMatch(/<button class="btn [^"]*w-auto!/);
+    const node = daisyUIProvider.createNode("button", "vf000008");
+    node.props.shape = "block";
+    const block = serialize(daisyUIProvider.render(node) as never);
+    expect(block).not.toContain("w-auto!");
+    expect(block).toContain("btn-block");
+  });
+
   test("countdown boxes wrap on a phone instead of overflowing the screen", () => {
     const html = render("countdown");
     expect(html).toContain("flex flex-wrap");

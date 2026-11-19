@@ -205,7 +205,14 @@ export const JOIN: DaisyComponentDefinition = {
         Object.assign({}, child, {
           attrs: {
             ...child.attrs,
-            class: [child.attrs.class, "join-item"].filter(Boolean).join(" "),
+            // Buttons in a join keep their natural width, as they do in a row of their own.
+            class: [
+              child.attrs.class,
+              "join-item",
+              /\bbtn\b/.test(String(child.attrs.class ?? "")) ? "w-auto!" : "",
+            ]
+              .filter(Boolean)
+              .join(" "),
           },
         }),
       ),

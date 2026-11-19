@@ -38,6 +38,7 @@ const RUNTIME_UTILITIES = [
   "step-error",
   "p-6",
   "bg-base-200",
+  "w-auto!",
   "bg-linear-to-br",
   "from-primary",
   "to-secondary",

@@ -29,7 +29,7 @@ describe("component generator", () => {
     const node = { id: "x", ...generated.defaults() };
     expect(generated.build(node)).toEqual({
       tag: "button",
-      attrs: { class: "btn btn-primary w-fit mx-auto my-4" },
+      attrs: { class: "btn btn-primary w-auto! w-fit mx-auto my-4" },
       children: ["Button"],
     });
   });

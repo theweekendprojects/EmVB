@@ -223,7 +223,8 @@ export const PAGINATION: DaisyComponentDefinition = {
       children.push({
         tag: "a",
         attrs: {
-          class: `join-item btn ${size}${page === current ? " btn-active" : ""}`,
+          // w-auto!: keeps each page button natural width; see componentClasses for why.
+          class: `join-item btn ${size}${page === current ? " btn-active" : ""} w-auto!`,
           href: safeHref(`${node.props.baseHref}${page}`),
           ...(page === current ? { "aria-current": "page" } : {}),
         },
