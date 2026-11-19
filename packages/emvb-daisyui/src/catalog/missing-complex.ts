@@ -80,7 +80,8 @@ export const AURA: DaisyComponentDefinition = {
     // a width: shrunk to its content in a centred flex column it became a 4px streak.
     return {
       tag: "div",
-      attrs: { class: `${classes.join(" ")} w-full max-w-md` },
+      // opacity-60: at full strength the glow is a harsh white block on the dark theme.
+      attrs: { class: `${classes.join(" ")} w-full max-w-md opacity-60` },
       children: children.length
         ? children
         : [{ tag: "div", attrs: { class: "min-h-24 w-full" }, children: [] }],

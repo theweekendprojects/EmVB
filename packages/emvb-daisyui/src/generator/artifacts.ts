@@ -19,6 +19,8 @@ const RUNTIME_UTILITIES = [
   "justify-center",
   "rounded-box",
   "text-base-content/60",
+  "my-4",
+  "opacity-60",
   "bg-linear-to-br",
   "from-primary",
   "to-secondary",

@@ -28,9 +28,10 @@ export function componentClasses(
     const className = field.classMap[value];
     if (className) classes.push(className);
   }
-  // Every daisyUI element is centred in its parent by default.
+  // Every daisyUI element is centred in its parent, with room above and below so stacked blocks
+  // do not run into each other.
   if (INLINE_ROOTS.has(definition.rootClass)) classes.push("w-fit");
-  classes.push("mx-auto");
+  classes.push("mx-auto", "my-4");
   return classes;
 }
 

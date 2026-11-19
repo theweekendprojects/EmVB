@@ -164,7 +164,7 @@ describe("WP5 generated form components", () => {
     expect(restored).toEqual(original);
     expect(JSON.stringify(restored)).not.toContain("input-success");
     expect(daisyUIProvider.render(restored).attrs.class).toBe(
-      "input input-lg input-success input-ghost mx-auto",
+      "input input-lg input-success input-ghost mx-auto my-4",
     );
   });
 
@@ -231,6 +231,6 @@ describe("WP5 generated form components", () => {
       tone: "[color:red]",
       variant: "default",
     });
-    expect(rendered.attrs.class).toBe("input mx-auto");
+    expect(rendered.attrs.class).toBe("input mx-auto my-4");
   });
 });

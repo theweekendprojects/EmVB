@@ -13,7 +13,7 @@ const render = (component: string, props: Record<string, unknown> = {}) => {
 describe("editor canvas fixes", () => {
   test("indicator: the root keeps its centring class and the badge keeps its position", () => {
     const html = render("indicator");
-    expect(html).toMatch(/<div class="indicator w-fit mx-auto"/);
+    expect(html).toMatch(/<div class="indicator w-fit mx-auto my-4"/);
     expect(html).toMatch(/<span class="indicator-item badge indicator-top indicator-end/);
   });
 
@@ -28,7 +28,7 @@ describe("editor canvas fixes", () => {
   });
 
   test("aura: the root has a width, so the glow is not a 4px streak", () => {
-    expect(render("aura")).toMatch(/<div class="aura [^"]*w-full max-w-md"/);
+    expect(render("aura")).toMatch(/<div class="aura [^"]*w-full max-w-md opacity-60"/);
   });
 
   test("skeleton: the default fill is tinted, not the page colour", () => {

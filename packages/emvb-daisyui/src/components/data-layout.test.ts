@@ -90,7 +90,7 @@ describe("WP8 data display", () => {
         side: "fixed",
         tone: "[color:red]",
       }).attrs.class,
-    ).toBe("chat mx-auto"));
+    ).toBe("chat mx-auto my-4"));
 });
 
 describe("WP9 layout and marketing", () => {
@@ -163,5 +163,5 @@ describe("WP9 layout and marketing", () => {
   test("invalid option values cannot inject classes", () =>
     expect(
       render("divider", { label: "OR", direction: "fixed top-0", tone: "[color:red]" }).attrs.class,
-    ).toBe("divider mx-auto"));
+    ).toBe("divider mx-auto my-4"));
 });
