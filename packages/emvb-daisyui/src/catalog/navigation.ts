@@ -204,6 +204,14 @@ export const PAGINATION: DaisyComponentDefinition = {
       default: "md",
       options: sizes,
     },
+    {
+      key: "direction",
+      label: "Direction",
+      kind: "select",
+      default: "horizontal",
+      options: ["horizontal", "vertical"],
+      classMap: { horizontal: "join-horizontal", vertical: "join-vertical" },
+    },
   ],
   build(node, classes) {
     const pages = Math.min(20, Math.max(1, Number(node.props.pages)));
@@ -251,9 +259,18 @@ export const STEPS: DaisyComponentDefinition = {
       options: ["horizontal", "vertical"],
       classMap: { horizontal: "steps-horizontal", vertical: "steps-vertical" },
     },
+    {
+      // Colours the completed steps; daisyUI puts the colour on each step, not on the list.
+      key: "tone",
+      label: "Completed colour",
+      kind: "select",
+      default: "primary",
+      options: ["neutral", "primary", "secondary", "accent", "info", "success", "warning", "error"],
+    },
   ],
   build(node, classes) {
     const items = lines(node.props.items);
+    const tone = String(node.props.tone ?? "primary");
     const current = Math.min(items.length, Math.max(0, Number(node.props.current)));
     return {
       tag: "ol",
@@ -261,7 +278,7 @@ export const STEPS: DaisyComponentDefinition = {
       children: items.map((label, index) => ({
         tag: "li",
         attrs: {
-          class: `step${index < current ? " step-primary" : ""}`,
+          class: `step${index < current ? ` step-${tone}` : ""}`,
           ...(index + 1 === current ? { "aria-current": "step" } : {}),
         },
         children: [label],

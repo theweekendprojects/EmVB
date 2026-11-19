@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { daisyUIProvider } from "../provider.ts";
 import { VERIFIED_PRIMITIVE_IDS } from "../verified/primitives.ts";
 
-const implemented = new Set(["text", "textarea", "number", "select", "boolean", "href"]);
+const implemented = new Set(["text", "textarea", "number", "select", "boolean", "href", "media"]);
 
 describe("WP16 verified component edit descriptors", () => {
   test("all verified components expose editable fields supported by EmVB", () => {

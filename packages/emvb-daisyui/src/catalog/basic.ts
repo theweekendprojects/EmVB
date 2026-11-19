@@ -56,6 +56,34 @@ export const BUTTON: DaisyComponentDefinition = {
       classMap: sizeMap("btn"),
     },
     {
+      key: "shape",
+      label: "Shape",
+      kind: "select",
+      default: "default",
+      options: ["default", "wide", "block", "square", "circle"],
+      optionLabels: {
+        default: "Natural width",
+        wide: "Wide",
+        block: "Full width",
+        square: "Square",
+        circle: "Circle",
+      },
+      classMap: {
+        default: "",
+        wide: "btn-wide",
+        block: "btn-block",
+        square: "btn-square",
+        circle: "btn-circle",
+      },
+    },
+    {
+      key: "active",
+      label: "Active",
+      kind: "boolean",
+      default: false,
+      classMap: { true: "btn-active", false: "" },
+    },
+    {
       key: "disabled",
       label: "Disabled",
       kind: "boolean",
@@ -94,6 +122,14 @@ export const BADGE: DaisyComponentDefinition = {
         soft: "badge-soft",
         ghost: "badge-ghost",
       },
+    },
+    {
+      key: "size",
+      label: "Size",
+      kind: "select",
+      default: "md",
+      options: sizes,
+      classMap: sizeMap("badge"),
     },
   ],
 };
@@ -134,6 +170,15 @@ export const ALERT: DaisyComponentDefinition = {
       options: ["solid", "outline", "dash", "soft"],
       classMap: { solid: "", outline: "alert-outline", dash: "alert-dash", soft: "alert-soft" },
     },
+    {
+      key: "direction",
+      label: "Layout",
+      kind: "select",
+      default: "horizontal",
+      options: ["horizontal", "vertical"],
+      optionLabels: { horizontal: "Icon beside the text", vertical: "Icon above the text" },
+      classMap: { horizontal: "alert-horizontal", vertical: "alert-vertical" },
+    },
   ],
 };
 
@@ -159,6 +204,33 @@ export const CARD: DaisyComponentDefinition = {
       // Off by default, as daisyUI's own card is; a border is a choice the owner makes.
       default: false,
       classMap: { true: "card-border", false: "" },
+    },
+    {
+      key: "dash",
+      label: "Dashed border",
+      kind: "boolean",
+      default: false,
+      classMap: { true: "card-dash", false: "" },
+    },
+    {
+      key: "side",
+      label: "Image beside the text",
+      kind: "boolean",
+      default: false,
+      classMap: { true: "card-side", false: "" },
+    },
+    {
+      key: "image",
+      label: "Image",
+      kind: "media",
+      default: "",
+    },
+    {
+      key: "imageFull",
+      label: "Image behind the text",
+      kind: "boolean",
+      default: false,
+      classMap: { true: "image-full", false: "" },
     },
     {
       key: "size",
@@ -194,10 +266,29 @@ export const CARD: DaisyComponentDefinition = {
         : node.props.align === "center"
           ? " items-center text-center"
           : "";
+    // The picture is decorative here: the card's title names it.
+    const figure: DaisyVNode[] = node.props.image
+      ? [
+          {
+            tag: "figure",
+            attrs: {},
+            children: [
+              {
+                tag: "img",
+                attrs: { src: String(node.props.image), alt: "", loading: "lazy" },
+                children: [],
+              },
+            ],
+          },
+        ]
+      : [];
     return {
       tag: "article",
       attrs: { class: classes.filter(Boolean).join(" ") },
-      children: [{ tag: "div", attrs: { class: `card-body${start}` }, children: content }],
+      children: [
+        ...figure,
+        { tag: "div", attrs: { class: `card-body${start}` }, children: content },
+      ],
     };
   },
 };

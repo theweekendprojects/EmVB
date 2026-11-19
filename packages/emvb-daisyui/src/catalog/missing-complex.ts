@@ -210,6 +210,14 @@ export const MEGAMENU: DaisyComponentDefinition = {
       default: "Products|Overview,Features,Pricing\nCompany|About,Careers,Contact",
     },
     {
+      key: "direction",
+      label: "Direction",
+      kind: "select",
+      default: "horizontal",
+      options: ["horizontal", "vertical"],
+      classMap: { horizontal: "", vertical: "megamenu-vertical" },
+    },
+    {
       key: "size",
       label: "Size",
       kind: "select",

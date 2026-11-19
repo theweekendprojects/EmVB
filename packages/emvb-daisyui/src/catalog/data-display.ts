@@ -138,6 +138,26 @@ export const TIMELINE: DaisyComponentDefinition = {
       options: ["vertical", "horizontal"],
       classMap: { vertical: "timeline-vertical", horizontal: "timeline-horizontal" },
     },
+    {
+      key: "snap",
+      label: "Snap the icon to the line",
+      kind: "boolean",
+      default: false,
+      classMap: { true: "timeline-snap-icon", false: "" },
+    },
+    {
+      key: "compact",
+      label: "Compact",
+      kind: "boolean",
+      default: false,
+      classMap: { true: "timeline-compact", false: "" },
+    },
+    {
+      key: "boxed",
+      label: "Boxed milestones",
+      kind: "boolean",
+      default: true,
+    },
   ],
   build(node, classes) {
     return {
@@ -163,7 +183,12 @@ export const TIMELINE: DaisyComponentDefinition = {
               tag: "div",
               // daisyUI's box paints base-100, which is white in the light theme this provider
               // ships; the text inherits from the page, so the box is transparent like a card.
-              attrs: { class: "timeline-end timeline-box bg-transparent" },
+              attrs: {
+                class:
+                  node.props.boxed === false
+                    ? "timeline-end"
+                    : "timeline-end timeline-box bg-transparent",
+              },
               children: [
                 { tag: "strong", attrs: {}, children: [title || "Milestone"] },
                 { tag: "p", attrs: {}, children: [description] },
@@ -448,6 +473,31 @@ export const TOOLTIP: DaisyComponentDefinition = {
         bottom: "tooltip-bottom",
         left: "tooltip-left",
         right: "tooltip-right",
+      },
+    },
+    {
+      key: "alignment",
+      label: "Alignment",
+      kind: "select",
+      default: "center",
+      options: ["start", "center", "end"],
+      classMap: { start: "tooltip-start", center: "tooltip-center", end: "tooltip-end" },
+    },
+    {
+      key: "tone",
+      label: "Color",
+      kind: "select",
+      default: "neutral",
+      options: ["neutral", "primary", "secondary", "accent", "info", "success", "warning", "error"],
+      classMap: {
+        neutral: "",
+        primary: "tooltip-primary",
+        secondary: "tooltip-secondary",
+        accent: "tooltip-accent",
+        info: "tooltip-info",
+        success: "tooltip-success",
+        warning: "tooltip-warning",
+        error: "tooltip-error",
       },
     },
     {

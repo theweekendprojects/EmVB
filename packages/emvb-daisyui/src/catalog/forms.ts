@@ -239,6 +239,14 @@ export const FILE_INPUT: DaisyComponentDefinition = formControl("input", "file-i
     options: tones,
     classMap: toneMap("file-input"),
   },
+  {
+    key: "variant",
+    label: "Variant",
+    kind: "select",
+    default: "solid",
+    options: ["solid", "ghost"],
+    classMap: { solid: "", ghost: "file-input-ghost" },
+  },
 ]);
 FILE_INPUT.build = (node, classes) => ({
   tag: "input",
@@ -289,6 +297,14 @@ export const RANGE: DaisyComponentDefinition = {
       options: tones,
       classMap: toneMap("range"),
     },
+    {
+      key: "direction",
+      label: "Direction",
+      kind: "select",
+      default: "horizontal",
+      options: ["horizontal", "vertical"],
+      classMap: { horizontal: "", vertical: "range-vertical" },
+    },
   ],
   build(node, classes) {
     const min = Number(node.props.min),
@@ -330,24 +346,55 @@ export const RATING: DaisyComponentDefinition = {
       options: sizes,
       classMap: sizeMap("rating"),
     },
+    {
+      key: "half",
+      label: "Half stars",
+      kind: "boolean",
+      default: false,
+      classMap: { true: "rating-half", false: "" },
+    },
+    {
+      // daisyUI hides the first radio, so a visitor can clear the rating.
+      key: "clearable",
+      label: "Allow clearing",
+      kind: "boolean",
+      default: false,
+    },
   ],
   build(node, classes) {
     const max = Math.min(10, Math.max(1, Number(node.props.max)));
     const selected = Math.min(max, Math.max(0, Number(node.props.value)));
+    const name = String(node.props.name);
+    const half = node.props.half === true;
     const children: DaisyVNode[] = [];
-    for (let i = 1; i <= max; i++)
+    if (node.props.clearable === true)
       children.push({
         tag: "input",
-        attrs: {
-          type: "radio",
-          name: String(node.props.name),
-          value: String(i),
-          class: "mask mask-star-2 bg-orange-400",
-          "aria-label": `${node.props.label} ${i} of ${max}`,
-          ...(i === selected ? { checked: "checked" } : {}),
-        },
+        attrs: { type: "radio", name, value: "0", class: "rating-hidden" },
         children: [],
       });
+    for (let i = 1; i <= max; i++) {
+      // A half rating has two inputs per star: the left half is the lower value.
+      const parts = half
+        ? [
+            { value: i - 0.5, cls: "mask mask-star-2 mask-half-1 bg-orange-400" },
+            { value: i, cls: "mask mask-star-2 mask-half-2 bg-orange-400" },
+          ]
+        : [{ value: i, cls: "mask mask-star-2 bg-orange-400" }];
+      for (const part of parts)
+        children.push({
+          tag: "input",
+          attrs: {
+            type: "radio",
+            name,
+            value: String(part.value),
+            class: part.cls,
+            "aria-label": `${node.props.label} ${part.value} of ${max}`,
+            ...(part.value === selected ? { checked: "checked" } : {}),
+          },
+          children: [],
+        });
+    }
     return {
       tag: "div",
       attrs: {
