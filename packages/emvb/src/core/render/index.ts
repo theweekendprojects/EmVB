@@ -732,14 +732,17 @@ export function renderPage(
       }
     }
     if (isParentNode(node)) {
-      return finish(node, def.build(node as never, attrs, ctx.children(node.children, dynamic)));
+      return finish(
+        node,
+        def.build(node as never, attrs, ctx.children(node.children, dynamic), { mode }),
+      );
     }
     if (mode === "editor" && node.type === "video") {
       const preview = videoPreview(node, attrs);
       if (preview) return finish(node, preview);
     }
     const built = withFieldOptions(
-      def.build(node as never, attrs, []),
+      def.build(node as never, attrs, [], { mode }),
       node,
       ctx.definitions,
       ctx.formId,

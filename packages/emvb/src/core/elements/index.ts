@@ -1119,7 +1119,7 @@ const providerElement: ElementDefinition<ProviderNode> = {
     defaultTab: "content",
     fields: [],
   },
-  build: (node, attrs, children) => {
+  build: (node, attrs, children, options) => {
     try {
       const provider = componentProvider(node.provider);
       if (!provider) throw new Error(`Provider is not registered: ${node.provider}`);
@@ -1133,7 +1133,8 @@ const providerElement: ElementDefinition<ProviderNode> = {
         contractNode,
         { ...attrs, ...(theme ? { "data-theme": theme } : {}) },
         children,
-        { mode: "public" },
+        // The canvas passes its mode so a provider can show editor-only previews (a modal open).
+        { mode: options?.mode ?? "public" },
       ) as VNode;
       // A provider's build may drop the attributes it is given. The editor id
       // must still reach the root, or clicking the element on the canvas selects its parent instead.
