@@ -272,9 +272,7 @@
 .max-w-2xl {}
 .max-w-md {}
 .max-w-xs {}
-.md:grid-cols-2 {}
 .md:grid-cols-3 {}
-.md:grid-cols-[16rem_1fr] {}
 .megamenu {}
 .megamenu-full {}
 .megamenu-lg {}

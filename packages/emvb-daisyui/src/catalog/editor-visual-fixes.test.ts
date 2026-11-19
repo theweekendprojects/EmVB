@@ -52,15 +52,19 @@ describe("editor canvas fixes", () => {
     expect(nodeForRender(node, { mode: "public" }).props.open).not.toBe(true);
   });
 
-  test("container: each preset is a column, a split, a sidebar or a row of cards", () => {
+  test("container: presets stack on phones and split from medium with the chosen ratio", () => {
     const node = daisyUIProvider.createNode("container", "vf000004");
-    node.props.layout = "split";
     expect(render("container")).toMatch(/<div class="container mx-auto my-4"/);
-    expect(serialize(daisyUIProvider.render(node) as never)).toContain(
-      "grid grid-cols-1 md:grid-cols-2 gap-6 items-center",
-    );
+    node.props.layout = "split";
+    node.props.ratio = "1:2";
+    const split = serialize(daisyUIProvider.render(node) as never);
+    expect(split).toContain("grid grid-cols-1 gap-6 items-center");
+    expect(split).toContain("md:grid-cols-[1fr_2fr]");
     node.props.layout = "sidebar";
+    node.props.ratio = "1:1";
     expect(serialize(daisyUIProvider.render(node) as never)).toContain("md:grid-cols-[16rem_1fr]");
+    node.props.layout = "cards";
+    expect(serialize(daisyUIProvider.render(node) as never)).toContain("md:grid-cols-3");
   });
 
   test("steps: a line can set its own colour, the others keep the shared tone", () => {

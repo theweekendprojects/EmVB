@@ -512,6 +512,25 @@ export const COLUMNS: DaisyComponentDefinition = {
   },
 };
 
+// Column templates for the split preset, keyed by the ratio the author picks. Full class names
+// on purpose: Tailwind only generates classes it can see as literals in the source.
+const SPLIT_COLUMNS: Record<string, string> = {
+  "1:1": "md:grid-cols-2",
+  "1:2": "md:grid-cols-[1fr_2fr]",
+  "2:1": "md:grid-cols-[2fr_1fr]",
+  "1:3": "md:grid-cols-[1fr_3fr]",
+  "3:1": "md:grid-cols-[3fr_1fr]",
+};
+
+// The sidebar preset keeps its narrow default at 1:1; the other ratios widen or narrow it.
+const SIDEBAR_COLUMNS: Record<string, string> = {
+  "1:1": "md:grid-cols-[16rem_1fr]",
+  "1:2": "md:grid-cols-[1fr_2fr]",
+  "2:1": "md:grid-cols-[2fr_1fr]",
+  "1:3": "md:grid-cols-[1fr_3fr]",
+  "3:1": "md:grid-cols-[3fr_1fr]",
+};
+
 // daisyUI has no container. These presets are the common page structures (single column, two
 // columns, sidebar and content, card row); they stack on phones and split from the medium breakpoint.
 export const CONTAINER: DaisyComponentDefinition = {
@@ -536,17 +555,40 @@ export const CONTAINER: DaisyComponentDefinition = {
       },
       classMap: {
         centered: "",
-        split: "grid grid-cols-1 md:grid-cols-2 gap-6 items-center",
-        sidebar: "grid grid-cols-1 md:grid-cols-[16rem_1fr] gap-6",
+        split: "grid grid-cols-1 gap-6 items-center",
+        sidebar: "grid grid-cols-1 gap-6",
         cards: "grid grid-cols-1 md:grid-cols-3 gap-6",
       },
     },
+    {
+      // Used by the split and sidebar presets. Each class is written out in full so Tailwind
+      // generates it. Phones always get one column; the ratio applies from the medium breakpoint.
+      key: "ratio",
+      label: "Column ratio",
+      kind: "select",
+      default: "1:1",
+      options: ["1:1", "1:2", "2:1", "1:3", "3:1"],
+      optionLabels: {
+        "1:1": "Equal (sidebar: narrow)",
+        "1:2": "1 to 2",
+        "2:1": "2 to 1",
+        "1:3": "1 to 3",
+        "3:1": "3 to 1",
+      },
+    },
   ],
-  build(_node, classes, children) {
+  build(node, classes, children) {
+    const ratio = String(node.props.ratio ?? "1:1");
+    const columns =
+      node.props.layout === "sidebar"
+        ? SIDEBAR_COLUMNS[ratio]
+        : node.props.layout === "split"
+          ? SPLIT_COLUMNS[ratio]
+          : undefined;
     // An empty container still needs a visible box, or the editor shows nothing to drop into.
     return {
       tag: "div",
-      attrs: { class: classes.join(" ") },
+      attrs: { class: [...classes, columns ?? ""].filter(Boolean).join(" ") },
       children: children.length
         ? children
         : [

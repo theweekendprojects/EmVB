@@ -587,7 +587,8 @@
     "label": "Container",
     "category": "Layout",
     "defaults": {
-      "layout": "centered"
+      "layout": "centered",
+      "ratio": "1:1"
     }
   },
   {
