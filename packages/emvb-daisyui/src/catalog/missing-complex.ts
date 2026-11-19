@@ -76,15 +76,21 @@ export const AURA: DaisyComponentDefinition = {
     },
   ],
   build(_node, classes, children) {
-    // With nothing inside, the glow has no height; a placeholder box gives it one. The root needs
-    // a width: shrunk to its content in a centred flex column it became a 4px streak.
+    // opacity-60: at full strength the glow is a harsh white block on the dark theme.
+    // With a child, the glow hugs it: the aura shrinks to the child and the child's own vertical
+    // margin is reset (`[&>*]:my-0!`), so the ring meets the element like daisyUI's example.
+    if (children.length)
+      return {
+        tag: "div",
+        attrs: { class: `${classes.join(" ")} w-fit opacity-60 [&>*]:my-0!` },
+        children,
+      };
+    // Empty: a placeholder box gives the glow a height. The root needs a width: shrunk to its
+    // content in a centred flex column it became a 4px streak.
     return {
       tag: "div",
-      // opacity-60: at full strength the glow is a harsh white block on the dark theme.
       attrs: { class: `${classes.join(" ")} w-full max-w-md opacity-60` },
-      children: children.length
-        ? children
-        : [{ tag: "div", attrs: { class: "min-h-24 w-full" }, children: [] }],
+      children: [{ tag: "div", attrs: { class: "min-h-24 w-full" }, children: [] }],
     };
   },
 };

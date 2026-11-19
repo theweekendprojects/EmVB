@@ -28,6 +28,15 @@ describe("editor canvas fixes", () => {
     expect(html).toContain('class="diff-item-2 text-end p-4"');
   });
 
+  test("aura with a child: the glow hugs the child, its vertical margin reset", () => {
+    const node = daisyUIProvider.createNode("aura", "vf000005");
+    const button = { tag: "button", attrs: { class: "btn" }, children: ["Go"] } as const;
+    const html = serialize(daisyUIProvider.render(node, {}, [button as never]) as never);
+    // The serializer escapes & and > in attributes; browsers read them back as [&>*].
+    expect(html).toMatch(/<div class="aura [^"]*w-fit opacity-60 \[&amp;&gt;\*\]:my-0!"/);
+    expect(html).not.toContain("w-full max-w-md");
+  });
+
   test("aura: the root has a width, so the glow is not a 4px streak", () => {
     expect(render("aura")).toMatch(/<div class="aura [^"]*w-full max-w-md opacity-60"/);
   });
