@@ -19,16 +19,18 @@ describe("default images are placeholders, not missing files", () => {
     expect(out).toContain("UA");
   });
 
-  test("mask with no picture shows a neutral block, not a file request", () => {
+  test("mask with no picture shows a visible gradient block, not a file request", () => {
     const out = render("mask", { src: "" });
     expect(out).not.toContain(".jpg");
-    expect(out).toContain("bg-neutral");
+    expect(out).toContain("bg-linear-to-br");
+    expect(out).not.toContain("bg-neutral");
   });
 
-  test("hover gallery with no pictures shows neutral slots, not file requests", () => {
+  test("hover gallery with no pictures shows labelled slots, not file requests", () => {
     const out = render("hover-gallery", { images: "" });
     expect(out).not.toContain(".jpg");
-    expect(out).toContain("bg-neutral");
+    expect(out).toContain("bg-base-300");
+    expect(out).not.toContain("bg-neutral");
   });
 
   test("a set picture still renders its own address", () => {

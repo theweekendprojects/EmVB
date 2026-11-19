@@ -76,10 +76,11 @@ export const AURA: DaisyComponentDefinition = {
     },
   ],
   build(_node, classes, children) {
-    // With nothing inside, the glow has no height; a placeholder box gives it one.
+    // With nothing inside, the glow has no height; a placeholder box gives it one. The root needs
+    // a width: shrunk to its content in a centred flex column it became a 4px streak.
     return {
       tag: "div",
-      attrs: { class: classes.join(" ") },
+      attrs: { class: `${classes.join(" ")} w-full max-w-md` },
       children: children.length
         ? children
         : [{ tag: "div", attrs: { class: "min-h-24 w-full" }, children: [] }],
@@ -191,10 +192,14 @@ export const HOVER_GALLERY: DaisyComponentDefinition = {
       return {
         tag: "figure",
         attrs: { class: classes.join(" ") },
-        children: [1, 2].map((): DaisyVNode => ({
+        // Visible slots with a label: a near-black square read as a hole on the dark theme.
+        children: [1, 2].map((n): DaisyVNode => ({
           tag: "div",
-          attrs: { class: "bg-neutral aspect-square" },
-          children: [],
+          attrs: {
+            class:
+              "bg-base-300 aspect-video w-full max-w-xs flex items-center justify-center rounded-box text-base-content/60",
+          },
+          children: [`Image ${n}`],
         })),
       };
     return {

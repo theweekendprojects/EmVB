@@ -151,6 +151,7 @@ export const CATALOG_CLASS_NAMES = [
   "bg-accent",
   "bg-base-100",
   "bg-base-200",
+  "bg-base-content/15",
   "bg-neutral",
   "bg-primary",
   "bg-secondary",

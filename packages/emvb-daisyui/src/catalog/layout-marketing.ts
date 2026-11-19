@@ -211,6 +211,9 @@ export const JOIN: DaisyComponentDefinition = {
     };
   },
 };
+// Position and tone classes belong to the badge; the rest of the classes belong to the root.
+const isBadgeClass = (c: string) => c.startsWith("indicator-") || c.startsWith("badge-");
+
 export const INDICATOR: DaisyComponentDefinition = {
   id: "indicator",
   label: "Indicator",
@@ -264,12 +267,11 @@ export const INDICATOR: DaisyComponentDefinition = {
     },
   ],
   build(node, classes, children) {
-    const badgeClasses = classes.filter(
-      (c) => c.startsWith("indicator-") || c.startsWith("badge-"),
-    );
+    // Position and tone belong to the badge; everything else (root class, centring) to the root.
+    const badgeClasses = classes.filter(isBadgeClass);
     return {
       tag: "div",
-      attrs: { class: "indicator" },
+      attrs: { class: classes.filter((c) => !isBadgeClass(c)).join(" ") },
       children: [
         {
           tag: "span",
@@ -365,7 +367,8 @@ export const MASK: DaisyComponentDefinition = {
       return {
         tag: "div",
         attrs: {
-          class: [...classes, "bg-neutral"].join(" "),
+          // A brand gradient: neutral black read as a hole on the dark theme.
+          class: [...classes, "bg-linear-to-br from-primary to-secondary"].join(" "),
           role: "img",
           "aria-label": String(node.props.alt),
         },

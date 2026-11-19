@@ -73,7 +73,13 @@ export const SKELETON: DaisyComponentDefinition = {
       kind: "select",
       default: "md",
       options: ["sm", "md", "lg"],
-      classMap: { sm: "h-8 w-full", md: "h-16 w-full", lg: "h-32 w-full" },
+      // The base-content tint keeps the block visible on the dark canvas, where the default
+      // base-300 fill is almost the page colour.
+      classMap: {
+        sm: "h-8 w-full bg-base-content/15",
+        md: "h-16 w-full bg-base-content/15",
+        lg: "h-32 w-full bg-base-content/15",
+      },
     },
     {
       key: "label",
@@ -340,8 +346,17 @@ export const DIFF: DaisyComponentDefinition = {
     tag: "div",
     attrs: { class: classes.join(" "), tabindex: "0" },
     children: [
-      { tag: "div", attrs: { class: "diff-item-1" }, children: [String(node.props.before)] },
-      { tag: "div", attrs: { class: "diff-item-2" }, children: [String(node.props.after)] },
+      // Both slots fill the same grid cell. Pin each label to its own side so they cannot stack.
+      {
+        tag: "div",
+        attrs: { class: "diff-item-1 text-start p-4" },
+        children: [String(node.props.before)],
+      },
+      {
+        tag: "div",
+        attrs: { class: "diff-item-2 text-end p-4" },
+        children: [String(node.props.after)],
+      },
       { tag: "div", attrs: { class: "diff-resizer" }, children: [] },
     ],
   }),

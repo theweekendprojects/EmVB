@@ -321,7 +321,12 @@ export const DOCK: DaisyComponentDefinition = {
   build(node, classes) {
     return {
       tag: "nav",
-      attrs: { class: classes.join(" "), "aria-label": String(node.props.ariaLabel) },
+      // daisyUI pins the dock to the viewport bottom, where it covers the page in the editor
+      // canvas and every block under it. In flow it sits where it is placed, like the other blocks.
+      attrs: {
+        class: `${classes.join(" ")} relative`,
+        "aria-label": String(node.props.ariaLabel),
+      },
       children: lines(node.props.items).map((entry) => {
         const [label, href = "#"] = entry.split("|");
         return {

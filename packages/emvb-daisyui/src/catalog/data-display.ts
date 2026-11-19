@@ -255,7 +255,8 @@ export const AVATAR: DaisyComponentDefinition = {
         children: [
           {
             tag: "div",
-            attrs: { class: ["bg-neutral text-neutral-content", ...image].join(" ") },
+            // Primary, not neutral: a neutral disc is near-black and reads as a hole on the dark theme.
+            attrs: { class: ["bg-primary text-primary-content", ...image].join(" ") },
             children: [{ tag: "span", attrs: {}, children: [initialsOf(node.props.alt)] }],
           },
         ],

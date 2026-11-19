@@ -11,6 +11,7 @@
 .alert-warning {}
 .animate-ping {}
 .aspect-square {}
+.aspect-video {}
 .aura {}
 .aura-dual {}
 .aura-glow {}
@@ -46,6 +47,9 @@
 .badge-xs {}
 .bg-accent {}
 .bg-base-200 {}
+.bg-base-300 {}
+.bg-base-content/15 {}
+.bg-linear-to-br {}
 .bg-neutral {}
 .bg-primary {}
 .bg-secondary {}
@@ -164,9 +168,11 @@
 .file-input-xl {}
 .file-input-xs {}
 .filter {}
+.flex {}
 .footer {}
 .footer-center {}
 .footer-vertical {}
+.from-primary {}
 .grid-flow-row {}
 .h-16 {}
 .h-32 {}
@@ -197,10 +203,12 @@
 .input-warning {}
 .input-xl {}
 .input-xs {}
+.items-center {}
 .join {}
 .join join-vertical {}
 .join-horizontal {}
 .join-vertical {}
+.justify-center {}
 .kbd {}
 .kbd-lg {}
 .kbd-md {}
@@ -250,6 +258,8 @@
 .max-sm:megamenu-vertical {}
 .max-sm:timeline-vertical {}
 .max-w-2xl {}
+.max-w-md {}
+.max-w-xs {}
 .megamenu {}
 .megamenu-full {}
 .megamenu-lg {}
@@ -298,6 +308,7 @@
 .otp-xl {}
 .otp-xs {}
 .overflow-x-auto {}
+.p-4 {}
 .progress {}
 .progress-accent {}
 .progress-error {}
@@ -344,7 +355,9 @@
 .rating-sm {}
 .rating-xl {}
 .rating-xs {}
+.relative {}
 .rounded {}
+.rounded-box {}
 .rounded-full {}
 .select {}
 .select-accent {}
@@ -411,7 +424,9 @@
 .text-accent {}
 .text-accent-content {}
 .text-base-content {}
+.text-base-content/60 {}
 .text-center {}
+.text-end {}
 .text-error {}
 .text-info {}
 .text-left {}
@@ -422,6 +437,7 @@
 .text-rotate {}
 .text-secondary {}
 .text-secondary-content {}
+.text-start {}
 .text-success {}
 .text-warning {}
 .text-xl {}
@@ -446,6 +462,7 @@
 .timeline-horizontal {}
 .timeline-snap-icon {}
 .timeline-vertical {}
+.to-secondary {}
 .toast {}
 .toast-bottom {}
 .toast-center {}
