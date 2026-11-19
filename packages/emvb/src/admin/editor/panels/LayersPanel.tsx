@@ -14,6 +14,7 @@ import {
   SCRIPT_LABELS,
   type PageScript,
 } from "../../../core/index.ts";
+import { componentProvider } from "@perkyzz/emvb-provider-api";
 import { clipText } from "../../../core/limits.ts";
 import { indexLayout } from "../../../core/tree-ops.ts";
 import { EXISTING_ELEMENT_MIME } from "../dnd/drop-target.ts";
@@ -363,7 +364,14 @@ const LayerRow = React.memo(function LayerRow({
   const onMenu = (open: boolean) => menuRow(node.id, open);
   const Icon = elementIcon(node.type);
   const preview = layerPreview(node);
-  const typeName = ELEMENT_NAMES[node.type] ?? node.type;
+  // A provider block (daisyUI and other providers) is named after its component, not the generic
+  // "Provider component" type, so older blocks without a label still read correctly.
+  const providerName =
+    node.type === "provider" && "provider" in node && "component" in node
+      ? componentProvider(String(node.provider))?.components.get(String(node.component))?.descriptor
+          .name
+      : undefined;
+  const typeName = providerName ?? ELEMENT_NAMES[node.type] ?? node.type;
   // A label names the row in place of the type (W-157); the type stays in the tooltip.
   const name = node.editorLabel ?? typeName;
   // Names and previews truncate, so the tooltip carries them in full (DESIGN.md, W-168).

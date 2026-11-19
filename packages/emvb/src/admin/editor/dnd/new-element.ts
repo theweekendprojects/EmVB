@@ -174,7 +174,13 @@ export function newElement(
   if (providerComponent) {
     const provider = componentProvider(providerComponent.providerId);
     if (!provider?.components.has(providerComponent.componentId)) return null;
-    return provider.createNode(providerComponent.componentId, newNodeId(random)) as LayoutNode;
+    const node = provider.createNode(
+      providerComponent.componentId,
+      newNodeId(random),
+    ) as LayoutNode;
+    // The Layers row names the block after its Add panel tile, not the generic "Provider component".
+    const name = provider.components.get(providerComponent.componentId)?.descriptor.name;
+    return name ? ({ ...node, editorLabel: name } as LayoutNode) : node;
   }
   // W-927: extension elements are stored as UnknownNodes with namespaced types.
   if (isExtensionType(type)) {
