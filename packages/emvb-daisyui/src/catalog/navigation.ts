@@ -237,6 +237,17 @@ export const PAGINATION: DaisyComponentDefinition = {
   },
 };
 
+const STEP_TONES = [
+  "neutral",
+  "primary",
+  "secondary",
+  "accent",
+  "info",
+  "success",
+  "warning",
+  "error",
+];
+
 export const STEPS: DaisyComponentDefinition = {
   id: "steps",
   label: "Steps",
@@ -246,7 +257,7 @@ export const STEPS: DaisyComponentDefinition = {
   fields: [
     {
       key: "items",
-      label: "Steps, one per line",
+      label: "Steps, Label or Label|colour per line",
       kind: "textarea",
       default: "Register\nChoose plan\nPurchase\nReceive product",
     },
@@ -275,14 +286,19 @@ export const STEPS: DaisyComponentDefinition = {
     return {
       tag: "ol",
       attrs: { class: classes.join(" "), "aria-label": "Progress" },
-      children: items.map((label, index) => ({
-        tag: "li",
-        attrs: {
-          class: `step${index < current ? ` step-${tone}` : ""}`,
-          ...(index + 1 === current ? { "aria-current": "step" } : {}),
-        },
-        children: [label],
-      })),
+      children: items.map((entry, index) => {
+        // "Label|colour" sets one step's colour; otherwise completed steps take the shared tone.
+        const [label = "", own = ""] = entry.split("|");
+        const colour = STEP_TONES.includes(own.trim()) ? own.trim() : index < current ? tone : "";
+        return {
+          tag: "li",
+          attrs: {
+            class: colour ? `step step-${colour}` : "step",
+            ...(index + 1 === current ? { "aria-current": "step" } : {}),
+          },
+          children: [label.trim()],
+        };
+      }),
     };
   },
 };

@@ -1,6 +1,10 @@
 import type { DaisyComponentDefinition, DaisyVNode } from "../types.ts";
 import { safeHref } from "../render/href.ts";
 
+const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
+const sizeMap = (prefix: string) =>
+  Object.fromEntries(sizes.map((size) => [size, `${prefix}-${size}`]));
+
 const lines = (value: unknown) =>
   String(value ?? "")
     .split(/\r?\n/)
@@ -31,6 +35,22 @@ export const TABS: DaisyComponentDefinition = {
       default: "box",
       options: ["box", "border", "lift"],
       classMap: { box: "tabs-box", border: "tabs-border", lift: "tabs-lift" },
+    },
+    {
+      key: "size",
+      label: "Size",
+      kind: "select",
+      default: "md",
+      options: sizes,
+      classMap: sizeMap("tabs"),
+    },
+    {
+      key: "placement",
+      label: "Placement",
+      kind: "select",
+      default: "top",
+      options: ["top", "bottom"],
+      classMap: { top: "tabs-top", bottom: "tabs-bottom" },
     },
   ],
   build(node, classes) {
@@ -371,6 +391,14 @@ export const CAROUSEL: DaisyComponentDefinition = {
         "First slide|Welcome to EmVB\nSecond slide|Build with daisyUI\nThird slide|Publish with Astro",
     },
     { key: "current", label: "Current slide", kind: "number", default: 1 },
+    {
+      key: "align",
+      label: "Slide alignment",
+      kind: "select",
+      default: "start",
+      options: ["start", "center", "end"],
+      classMap: { start: "carousel-start", center: "carousel-center", end: "carousel-end" },
+    },
     {
       key: "width",
       label: "Width",

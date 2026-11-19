@@ -135,7 +135,9 @@ describe("WP7 generated interactive components", () => {
     const restored = JSON.parse(JSON.stringify(original));
     expect(restored).toEqual(original);
     expect(JSON.stringify(restored)).not.toContain("tabs-lift");
-    expect(daisyUIProvider.render(restored).attrs.class).toBe("tabs tabs-lift mx-auto my-4");
+    expect(daisyUIProvider.render(restored).attrs.class).toBe(
+      "tabs tabs-lift tabs-md tabs-top mx-auto my-4",
+    );
   });
 
   test("invalid class options cannot inject utilities", () => {

@@ -377,6 +377,20 @@ export const LIST: DaisyComponentDefinition = {
       default: false,
       classMap: { true: "bg-base-200", false: "" },
     },
+    {
+      key: "wrap",
+      label: "Wrap long text",
+      kind: "boolean",
+      default: false,
+      classMap: { true: "list-col-wrap", false: "" },
+    },
+    {
+      key: "grow",
+      label: "Grow the text column",
+      kind: "boolean",
+      default: false,
+      classMap: { true: "list-col-grow", false: "" },
+    },
   ],
   build(node, classes) {
     return {

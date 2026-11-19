@@ -45,6 +45,16 @@ describe("editor canvas fixes", () => {
     expect(render("radial-progress")).toMatch(/class="radial-progress [^"]*size-24!"/);
   });
 
+  test("steps: a line can set its own colour, the others keep the shared tone", () => {
+    const node = daisyUIProvider.createNode("steps", "vf000002");
+    node.props.items = "Plan|info\nPay\nShip";
+    node.props.current = 2;
+    const html = serialize(daisyUIProvider.render(node) as never);
+    expect(html).toContain('<li class="step step-info"');
+    expect(html).toContain('<li class="step step-primary" aria-current="step"');
+    expect(html).toContain('<li class="step">Ship</li>');
+  });
+
   test("checkbox: the control has visible text beside it", () => {
     const html = render("checkbox", { label: "Accept terms" });
     expect(html).toMatch(/^<label class="[^"]*flex items-center gap-2/);

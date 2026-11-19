@@ -297,7 +297,9 @@
       "label": "Content tabs",
       "items": "Overview|Overview content\nDetails|Details content\nReviews|Reviews content",
       "active": 1,
-      "style": "box"
+      "style": "box",
+      "size": "md",
+      "placement": "top"
     }
   },
   {
@@ -354,6 +356,7 @@
       "label": "Featured content",
       "slides": "First slide|Welcome to EmVB\nSecond slide|Build with daisyUI\nThird slide|Publish with Astro",
       "current": 1,
+      "align": "start",
       "width": "full",
       "direction": "horizontal"
     }
@@ -437,7 +440,9 @@
     "defaults": {
       "label": "Items",
       "items": "First|Description|/first\nSecond|Description|/second",
-      "striped": false
+      "striped": false,
+      "wrap": false,
+      "grow": false
     }
   },
   {
