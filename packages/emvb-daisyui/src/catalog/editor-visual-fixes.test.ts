@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { serialize } from "../../../emvb/src/core/render/vnode.ts";
+import { nodeForRender } from "../runtime/index.ts";
 import { daisyUIProvider } from "../provider.ts";
 
 // Regression checks for defects seen in the real editor canvas. Each one asserts the class that
@@ -43,6 +44,23 @@ describe("editor canvas fixes", () => {
 
   test("radial progress: sized so its value label fits inside the ring", () => {
     expect(render("radial-progress")).toMatch(/class="radial-progress [^"]*size-24!"/);
+  });
+
+  test("modal: open in the editor canvas, closed on the public page", () => {
+    const node = daisyUIProvider.createNode("modal", "vf000003");
+    expect(nodeForRender(node, { mode: "editor" }).props.open).toBe(true);
+    expect(nodeForRender(node, { mode: "public" }).props.open).not.toBe(true);
+  });
+
+  test("container: each preset is a column, a split, a sidebar or a row of cards", () => {
+    const node = daisyUIProvider.createNode("container", "vf000004");
+    node.props.layout = "split";
+    expect(render("container")).toMatch(/<div class="container mx-auto my-4"/);
+    expect(serialize(daisyUIProvider.render(node) as never)).toContain(
+      "grid grid-cols-1 md:grid-cols-2 gap-6 items-center",
+    );
+    node.props.layout = "sidebar";
+    expect(serialize(daisyUIProvider.render(node) as never)).toContain("md:grid-cols-[16rem_1fr]");
   });
 
   test("steps: a line can set its own colour, the others keep the shared tone", () => {

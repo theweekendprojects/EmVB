@@ -583,6 +583,14 @@
     }
   },
   {
+    "id": "container",
+    "label": "Container",
+    "category": "Layout",
+    "defaults": {
+      "layout": "centered"
+    }
+  },
+  {
     "id": "loading",
     "label": "Loading",
     "category": "Feedback",

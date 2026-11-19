@@ -94,7 +94,7 @@ describe("WP8 data display", () => {
 });
 
 describe("WP9 layout and marketing", () => {
-  test("adds nine components", () =>
+  test("adds the layout and marketing components, including the container", () =>
     expect(LAYOUT_MARKETING_DAISY_COMPONENTS.map((x) => x.id)).toEqual([
       "hero",
       "stack",
@@ -105,6 +105,7 @@ describe("WP9 layout and marketing", () => {
       "browser-mockup",
       "phone-mockup",
       "code-mockup",
+      "container",
     ]));
   test("hero and mask sanitize URLs", () => {
     expect(

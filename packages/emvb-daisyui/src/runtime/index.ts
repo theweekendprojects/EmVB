@@ -22,6 +22,9 @@ export function nodeForRender(
   const props = { ...node.props };
   if (node.component === "modal" || node.component === "dropdown")
     for (const key of transientKeys(node)) delete props[key];
+  // Editors need to see a modal's content while building, so the canvas shows it open. The public
+  // page keeps it closed unless the author sets defaultOpen.
+  if (node.component === "modal" && context.mode === "editor") props.open = true;
   const preview = context.mode === "editor" ? context.previewState?.[node.id] : undefined;
   if (preview && typeof preview === "object") Object.assign(props, preview);
   if (node.props.defaultOpen === true && context.mode === "public") props.open = true;

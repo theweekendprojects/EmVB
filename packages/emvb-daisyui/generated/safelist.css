@@ -121,6 +121,7 @@
 .collapse bg-base-100 border-base-300 border {}
 .collapse-arrow {}
 .collapse-plus {}
+.container {}
 .countdown font-mono {}
 .cursor-pointer {}
 .diff {}
@@ -179,7 +180,9 @@
 .footer-vertical {}
 .from-primary {}
 .gap-2 {}
+.gap-6 {}
 .grid {}
+.grid-cols-1 {}
 .grid-flow-row {}
 .h-16 {}
 .h-32 {}
@@ -269,6 +272,9 @@
 .max-w-2xl {}
 .max-w-md {}
 .max-w-xs {}
+.md:grid-cols-2 {}
+.md:grid-cols-3 {}
+.md:grid-cols-[16rem_1fr] {}
 .megamenu {}
 .megamenu-full {}
 .megamenu-lg {}
@@ -320,6 +326,7 @@
 .otp-xs {}
 .overflow-x-auto {}
 .p-4 {}
+.p-6 {}
 .place-items-center {}
 .progress {}
 .progress-accent {}

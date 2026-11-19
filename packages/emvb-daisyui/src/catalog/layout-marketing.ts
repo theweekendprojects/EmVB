@@ -512,6 +512,54 @@ export const COLUMNS: DaisyComponentDefinition = {
   },
 };
 
+// daisyUI has no container. These presets are the common page structures (single column, two
+// columns, sidebar and content, card row); they stack on phones and split from the medium breakpoint.
+export const CONTAINER: DaisyComponentDefinition = {
+  id: "container",
+  label: "Container",
+  category: "Layout",
+  tag: "div",
+  rootClass: "container",
+  container: true,
+  fields: [
+    {
+      key: "layout",
+      label: "Layout",
+      kind: "select",
+      default: "centered",
+      options: ["centered", "split", "sidebar", "cards"],
+      optionLabels: {
+        centered: "Centred column",
+        split: "Two columns",
+        sidebar: "Sidebar and content",
+        cards: "Three columns",
+      },
+      classMap: {
+        centered: "",
+        split: "grid grid-cols-1 md:grid-cols-2 gap-6 items-center",
+        sidebar: "grid grid-cols-1 md:grid-cols-[16rem_1fr] gap-6",
+        cards: "grid grid-cols-1 md:grid-cols-3 gap-6",
+      },
+    },
+  ],
+  build(_node, classes, children) {
+    // An empty container still needs a visible box, or the editor shows nothing to drop into.
+    return {
+      tag: "div",
+      attrs: { class: classes.join(" ") },
+      children: children.length
+        ? children
+        : [
+            {
+              tag: "div",
+              attrs: { class: "rounded-box bg-base-200 p-6 text-base-content/60" },
+              children: ["Add elements inside this container"],
+            },
+          ],
+    };
+  },
+};
+
 export const LAYOUT_MARKETING_DAISY_COMPONENTS = [
   HERO,
   STACK,
@@ -522,4 +570,5 @@ export const LAYOUT_MARKETING_DAISY_COMPONENTS = [
   BROWSER_MOCKUP,
   PHONE_MOCKUP,
   CODE_MOCKUP,
+  CONTAINER,
 ] as const;

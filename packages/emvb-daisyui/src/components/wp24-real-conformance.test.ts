@@ -12,7 +12,11 @@ describe("WP24 real catalog conformance contract", () => {
     expect(report.officialTotal).toBe(68);
     expect(report.implemented).toBe(68);
     expect(report.missing).toBe(0);
-    expect(new Set(DAISY_COMPONENT_CATALOG.map((item) => item.id)).size).toBe(68);
+    // One declared addition beyond the official 68: a container with layout presets. daisyUI has no
+    // container, so it is listed here on purpose; any other extra component fails this test.
+    const ids = DAISY_COMPONENT_CATALOG.map((item) => item.id);
+    expect(new Set(ids).size).toBe(69);
+    expect(ids.filter((id) => id === "container")).toHaveLength(1);
   });
   test("every component provides a real root selector", () => {
     for (const definition of DAISY_COMPONENT_CATALOG)
