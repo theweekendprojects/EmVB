@@ -98,6 +98,12 @@ describe("editor canvas fixes", () => {
     }
   });
 
+  test("countdown boxes wrap on a phone instead of overflowing the screen", () => {
+    const html = render("countdown");
+    expect(html).toContain("flex flex-wrap");
+    expect(html).not.toContain("auto-cols-max");
+  });
+
   test("loading spinner keeps its size: it is not shrunk to fit its empty content", () => {
     expect(render("loading")).not.toMatch(/class="[^"]*\bw-fit\b/);
   });

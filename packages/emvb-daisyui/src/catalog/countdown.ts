@@ -276,7 +276,8 @@ function dateCountdown(
         }
       : {
           tag: "div",
-          attrs: { class: `grid auto-cols-max grid-flow-col gap-4 text-center ${justify}` },
+          // A wrapping row: four boxes side by side overflowed a phone screen, so they wrap instead.
+          attrs: { class: `flex flex-wrap items-start gap-4 text-center ${justify}` },
           children: units.map(box),
         };
 
