@@ -44,3 +44,21 @@ describe("timeline boxes stay readable on a dark page", () => {
     expect(html).toContain("<p>Initial release</p>");
   });
 });
+
+describe("timeline direction", () => {
+  const render = (direction?: string) => {
+    const node = daisyUIProvider.createNode("timeline", "tl000003");
+    if (direction) node.props.direction = direction;
+    return serialize(daisyUIProvider.render(node) as never);
+  };
+  test("defaults to horizontal and falls back to vertical below the small breakpoint", () => {
+    expect(render()).toMatch(
+      /<ul class="timeline timeline-horizontal mx-auto max-sm:timeline-vertical"/,
+    );
+  });
+  test("an explicit vertical timeline stays vertical at every width", () => {
+    const html = render("vertical");
+    expect(html).toMatch(/<ul class="timeline timeline-vertical mx-auto"/);
+    expect(html).not.toContain("max-sm:");
+  });
+});

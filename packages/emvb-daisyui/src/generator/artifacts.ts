@@ -1,7 +1,16 @@
 import type { DaisyComponentDefinition } from "../types.ts";
 
+// Utilities the renderer adds itself (centring, mobile fallbacks). They are not in any catalog
+// classMap, so the safelist must name them or Tailwind never emits their rules.
+const RUNTIME_UTILITIES = [
+  "mx-auto",
+  "w-fit",
+  "max-sm:timeline-vertical",
+  "max-sm:megamenu-vertical",
+];
+
 export function generateSafelistCss(definitions: readonly DaisyComponentDefinition[]): string {
-  const classes = new Set<string>();
+  const classes = new Set<string>(RUNTIME_UTILITIES);
   for (const definition of definitions) {
     classes.add(definition.rootClass);
     for (const field of definition.fields)

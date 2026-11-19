@@ -400,7 +400,7 @@
     "defaults": {
       "label": "Project milestones",
       "items": "2024|Started|Initial release\n2025|Expanded|New components",
-      "direction": "vertical",
+      "direction": "horizontal",
       "snap": false,
       "compact": false,
       "boxed": true

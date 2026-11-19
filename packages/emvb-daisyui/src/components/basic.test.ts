@@ -26,7 +26,7 @@ describe("WP4 basic daisyUI components", () => {
       }),
     ).toEqual({
       tag: "button",
-      attrs: { class: "btn btn-success btn-outline btn-lg" },
+      attrs: { class: "btn btn-success btn-outline btn-lg w-fit mx-auto" },
       children: ["Save"],
     }));
   test("alert receives an accessible role", () =>
@@ -41,7 +41,7 @@ describe("WP4 basic daisyUI components", () => {
     ).toContain("card-body"));
   test("progress maps numeric attributes", () =>
     expect(render("progress", { value: 60, max: 100, tone: "primary" }).attrs).toEqual({
-      class: "progress progress-primary",
+      class: "progress progress-primary mx-auto",
       role: "progressbar",
       "aria-valuemin": "0",
       "aria-valuemax": "100",

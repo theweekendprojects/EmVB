@@ -134,7 +134,7 @@ export const TIMELINE: DaisyComponentDefinition = {
       key: "direction",
       label: "Direction",
       kind: "select",
-      default: "vertical",
+      default: "horizontal",
       options: ["vertical", "horizontal"],
       classMap: { vertical: "timeline-vertical", horizontal: "timeline-horizontal" },
     },
@@ -162,7 +162,15 @@ export const TIMELINE: DaisyComponentDefinition = {
   build(node, classes) {
     return {
       tag: "ul",
-      attrs: { class: classes.join(" "), "aria-label": String(node.props.label) },
+      // Horizontal is the default, but a phone cannot fit a row of milestones: fall back to the
+      // vertical list below the small breakpoint, the same way the megamenu does.
+      attrs: {
+        class:
+          node.props.direction === "vertical"
+            ? classes.join(" ")
+            : `${classes.join(" ")} max-sm:timeline-vertical`,
+        "aria-label": String(node.props.label),
+      },
       children: lines(node.props.items, 30).map((entry, index, all) => {
         const [date, title, description = ""] = entry.split("|");
         // daisyUI joins the items with a line on each side of the marker: every item but the last

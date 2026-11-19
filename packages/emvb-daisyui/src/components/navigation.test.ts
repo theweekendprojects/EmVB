@@ -176,7 +176,7 @@ describe("WP6 generated navigation components", () => {
     const restored = JSON.parse(JSON.stringify(original)) as DaisyComponentNode;
     expect(restored).toEqual(original);
     expect(JSON.stringify(restored)).not.toContain("navbar-start");
-    expect(daisyUIProvider.render(restored).attrs.class).toBe("navbar sticky top-0 z-50");
+    expect(daisyUIProvider.render(restored).attrs.class).toBe("navbar sticky top-0 z-50 mx-auto");
   });
 
   test("raw class injection through options is ignored", () => {
@@ -187,6 +187,6 @@ describe("WP6 generated navigation components", () => {
         direction: "fixed top-0",
         size: "[color:red]",
       }).attrs.class,
-    ).toBe("menu");
+    ).toBe("menu mx-auto");
   });
 });

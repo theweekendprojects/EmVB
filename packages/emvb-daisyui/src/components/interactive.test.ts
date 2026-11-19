@@ -135,13 +135,13 @@ describe("WP7 generated interactive components", () => {
     const restored = JSON.parse(JSON.stringify(original));
     expect(restored).toEqual(original);
     expect(JSON.stringify(restored)).not.toContain("tabs-lift");
-    expect(daisyUIProvider.render(restored).attrs.class).toBe("tabs tabs-lift");
+    expect(daisyUIProvider.render(restored).attrs.class).toBe("tabs tabs-lift mx-auto");
   });
 
   test("invalid class options cannot inject utilities", () => {
     expect(
       render("dropdown", { label: "Menu", items: "Home|/", open: false, align: "fixed top-0" })
         .attrs.class,
-    ).toBe("dropdown");
+    ).toBe("dropdown mx-auto");
   });
 });
