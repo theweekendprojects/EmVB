@@ -193,21 +193,25 @@ export const HOVER_GALLERY: DaisyComponentDefinition = {
     { key: "images", label: "Image URLs", kind: "textarea", default: "" },
     { key: "alt", label: "Alternative text", kind: "text", default: "Product gallery" },
   ],
-  build: (node, classes) => {
+  build: (node, classes, _children, options) => {
     const urls = lines(node.props.images, 10);
     if (urls.length === 0)
       return {
         tag: "figure",
         attrs: { class: classes.join(" ") },
-        // Visible slots with a label: a near-black square read as a hole on the dark theme.
-        children: [1, 2].map((n): DaisyVNode => ({
-          tag: "div",
-          attrs: {
-            class:
-              "bg-base-300 aspect-video w-full max-w-xs flex items-center justify-center rounded-box text-base-content/60",
-          },
-          children: [`Image ${n}`],
-        })),
+        // Labelled slots on the canvas only, so there is something to see while building. The public
+        // page shows no empty slots.
+        children:
+          options?.mode !== "editor"
+            ? []
+            : [1, 2].map((n): DaisyVNode => ({
+                tag: "div",
+                attrs: {
+                  class:
+                    "bg-base-300 aspect-video w-full max-w-xs flex items-center justify-center rounded-box text-base-content/60",
+                },
+                children: [`Image ${n}`],
+              })),
       };
     return {
       tag: "figure",

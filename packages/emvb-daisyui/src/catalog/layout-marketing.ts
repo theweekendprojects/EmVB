@@ -507,8 +507,23 @@ export const COLUMNS: DaisyComponentDefinition = {
       classMap: { "2": "md:grid-cols-2", "3": "md:grid-cols-3", "4": "md:grid-cols-4" },
     },
   ],
-  build(_node, classes, children) {
-    return { tag: "div", attrs: { class: classes.join(" ") }, children };
+  build(node, classes, children, options) {
+    // An empty grid has no height. On the canvas show one labelled cell per column so there is
+    // something to drop into; the public page stays empty.
+    const count = Number(node.props.columns ?? 3);
+    const placeholders =
+      options?.mode === "editor" && children.length === 0
+        ? Array.from({ length: count }, (_, index) => ({
+            tag: "div",
+            attrs: { class: "rounded-box bg-base-200 p-6 text-base-content/60" },
+            children: [`Column ${index + 1}`],
+          }))
+        : [];
+    return {
+      tag: "div",
+      attrs: { class: classes.join(" ") },
+      children: children.length ? children : placeholders,
+    };
   },
 };
 
@@ -577,7 +592,7 @@ export const CONTAINER: DaisyComponentDefinition = {
       },
     },
   ],
-  build(node, classes, children) {
+  build(node, classes, children, options) {
     const ratio = String(node.props.ratio ?? "1:1");
     const columns =
       node.props.layout === "sidebar"
@@ -585,19 +600,22 @@ export const CONTAINER: DaisyComponentDefinition = {
         : node.props.layout === "split"
           ? SPLIT_COLUMNS[ratio]
           : undefined;
-    // An empty container still needs a visible box, or the editor shows nothing to drop into.
-    return {
-      tag: "div",
-      attrs: { class: [...classes, columns ?? ""].filter(Boolean).join(" ") },
-      children: children.length
-        ? children
-        : [
+    // An empty container shows a labelled box only on the canvas, so there is something to drop
+    // into; the public page renders nothing for it.
+    const placeholder =
+      options?.mode === "editor" && children.length === 0
+        ? [
             {
               tag: "div",
               attrs: { class: "rounded-box bg-base-200 p-6 text-base-content/60" },
               children: ["Add elements inside this container"],
             },
-          ],
+          ]
+        : [];
+    return {
+      tag: "div",
+      attrs: { class: [...classes, columns ?? ""].filter(Boolean).join(" ") },
+      children: children.length ? children : placeholder,
     };
   },
 };

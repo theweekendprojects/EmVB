@@ -56,7 +56,12 @@ export interface DaisyComponentDefinition {
   role?: string;
   /** Props computed each time a node is created, on top of the fields' static defaults. */
   initial?: () => DaisyProps;
-  build?: (node: DaisyComponentNode, classes: string[], children: DaisyVNode[]) => DaisyVNode;
+  build?: (
+    node: DaisyComponentNode,
+    classes: string[],
+    children: DaisyVNode[],
+    options?: DaisyRenderOptions,
+  ) => DaisyVNode;
 }
 
 export interface GeneratedDaisyComponent extends ProviderComponent<DaisyComponentNode> {
@@ -87,6 +92,7 @@ export interface GeneratedDaisyComponent extends ProviderComponent<DaisyComponen
     node: DaisyComponentNode,
     attrs?: Record<string, string>,
     children?: DaisyVNode[],
+    options?: DaisyRenderOptions,
   ) => DaisyVNode;
 }
 
@@ -103,3 +109,6 @@ export interface ComponentProvider extends NeutralComponentProvider<DaisyCompone
   ): DaisyVNode;
   cssEntryPoints: readonly string[];
 }
+
+/** Render options: only the editor canvas differs from the public page. */
+export type DaisyRenderOptions = { mode?: "editor" | "public" };

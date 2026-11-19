@@ -168,7 +168,7 @@ export function createDaisyUIProvider(
       if (isCompoundPart(prepared.component)) return renderCompoundNode(prepared, children);
       const generated = components.get(prepared.component);
       if (!generated) throw new Error(`Unknown daisyUI component: ${node.component}`);
-      return generated.build(prepared, attrs, children);
+      return generated.build(prepared, attrs, children, { mode: context.mode });
     },
   };
 }

@@ -76,6 +76,32 @@ describe("editor canvas fixes", () => {
     expect(serialize(daisyUIProvider.render(node) as never)).toContain("md:grid-cols-3");
   });
 
+  test("modal on the canvas is laid out in the page; on the public page it keeps the overlay", () => {
+    const node = daisyUIProvider.createNode("modal", "vf000006");
+    node.props.open = true;
+    const canvas = serialize(daisyUIProvider.render(node, {}, [], { mode: "editor" }) as never);
+    expect(canvas).toContain("relative");
+    expect(canvas).toContain("inset-auto!");
+    // The public page keeps the overlay and stays closed: transient open state is not published.
+    const page = serialize(daisyUIProvider.render(node, {}, [], { mode: "public" }) as never);
+    expect(page).not.toContain("inset-auto!");
+    expect(page).not.toContain("modal-open");
+  });
+
+  test("empty columns and container show placeholders only on the canvas", () => {
+    for (const component of ["columns", "container"]) {
+      const node = daisyUIProvider.createNode(component, "vf000007");
+      const canvas = serialize(daisyUIProvider.render(node, {}, [], { mode: "editor" }) as never);
+      expect(canvas, component).toMatch(/Column 1|Add elements inside this container/);
+      const page = serialize(daisyUIProvider.render(node, {}, [], { mode: "public" }) as never);
+      expect(page, component).not.toMatch(/Column 1|Add elements inside this container/);
+    }
+  });
+
+  test("loading spinner keeps its size: it is not shrunk to fit its empty content", () => {
+    expect(render("loading")).not.toMatch(/class="[^"]*\bw-fit\b/);
+  });
+
   test("steps: a line can set its own colour, the others keep the shared tone", () => {
     const node = daisyUIProvider.createNode("steps", "vf000002");
     node.props.items = "Plan|info\nPay\nShip";

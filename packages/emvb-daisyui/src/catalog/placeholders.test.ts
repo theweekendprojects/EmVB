@@ -26,11 +26,16 @@ describe("default images are placeholders, not missing files", () => {
     expect(out).not.toContain("bg-neutral");
   });
 
-  test("hover gallery with no pictures shows labelled slots, not file requests", () => {
-    const out = render("hover-gallery", { images: "" });
-    expect(out).not.toContain(".jpg");
-    expect(out).toContain("bg-base-300");
-    expect(out).not.toContain("bg-neutral");
+  test("hover gallery with no pictures shows labelled slots on the canvas only", () => {
+    const node = provider.createNode("hover-gallery", "img00002");
+    const canvas = JSON.stringify(provider.render(node, {}, [], { mode: "editor" }));
+    expect(canvas).toContain("bg-base-300");
+    expect(canvas).not.toContain("bg-neutral");
+    expect(canvas).not.toContain(".jpg");
+    // The public page renders the empty gallery without any slots.
+    expect(JSON.stringify(provider.render(node, {}, [], { mode: "public" }))).not.toContain(
+      "bg-base-300",
+    );
   });
 
   test("a set picture still renders its own address", () => {

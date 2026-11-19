@@ -5,6 +5,9 @@ const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
 const sizeMap = (prefix: string) =>
   Object.fromEntries(sizes.map((size) => [size, `${prefix}-${size}`]));
 
+// Canvas-only: lay the open modal out in the page instead of pinning it over the page.
+const EDITOR_MODAL_CLASSES = ["relative", "inset-auto!", "w-auto!", "h-auto!", "max-w-full"];
+
 const lines = (value: unknown) =>
   String(value ?? "")
     .split(/\r?\n/)
@@ -252,14 +255,20 @@ export const MODAL: DaisyComponentDefinition = {
       },
     },
   ],
-  build(node, classes, children) {
+  build(node, classes, children, options) {
     const titleId = `${node.id}-title`;
     return {
       tag: "dialog",
       attrs: {
         // daisyUI slides a drawer (start or end) in only with modal-open; the open attribute alone
         // leaves it off the page.
-        class: (node.props.open ? [...classes, "modal-open"] : classes).join(" "),
+        class: [
+          ...classes,
+          ...(node.props.open ? ["modal-open"] : []),
+          // On the canvas an open modal is laid out in the page, not pinned over it, so the blocks
+          // around it stay visible and clickable. The public page keeps daisyUI's overlay.
+          ...(options?.mode === "editor" ? EDITOR_MODAL_CLASSES : []),
+        ].join(" "),
         "aria-labelledby": titleId,
         ...(node.props.open ? { open: "open" } : {}),
       },

@@ -12,7 +12,6 @@ const INLINE_ROOTS = new Set([
   "radio",
   "swap",
   "rating",
-  "loading",
   "radial-progress",
   "indicator",
 ]);

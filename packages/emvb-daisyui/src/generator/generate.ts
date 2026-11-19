@@ -82,9 +82,9 @@ export function generateComponent(definition: DaisyComponentDefinition): Generat
       props: { ...fieldDefaults(definition), ...definition.initial?.() },
       ...(definition.container ? { children: [] } : {}),
     }),
-    build(node, attrs = {}, children: DaisyVNode[] = []) {
+    build(node, attrs = {}, children: DaisyVNode[] = [], options) {
       const classes = componentClasses(definition, node.props);
-      if (definition.build) return definition.build(node, classes, children);
+      if (definition.build) return definition.build(node, classes, children, options);
       return {
         tag: definition.tag,
         attrs: {
