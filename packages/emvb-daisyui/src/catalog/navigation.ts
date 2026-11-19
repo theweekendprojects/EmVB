@@ -237,7 +237,7 @@ export const PAGINATION: DaisyComponentDefinition = {
   },
 };
 
-const STEP_TONES = [
+const STEP_TONES = new Set([
   "neutral",
   "primary",
   "secondary",
@@ -246,7 +246,7 @@ const STEP_TONES = [
   "success",
   "warning",
   "error",
-];
+]);
 
 export const STEPS: DaisyComponentDefinition = {
   id: "steps",
@@ -289,7 +289,7 @@ export const STEPS: DaisyComponentDefinition = {
       children: items.map((entry, index) => {
         // "Label|colour" sets one step's colour; otherwise completed steps take the shared tone.
         const [label = "", own = ""] = entry.split("|");
-        const colour = STEP_TONES.includes(own.trim()) ? own.trim() : index < current ? tone : "";
+        const colour = STEP_TONES.has(own.trim()) ? own.trim() : index < current ? tone : "";
         return {
           tag: "li",
           attrs: {
