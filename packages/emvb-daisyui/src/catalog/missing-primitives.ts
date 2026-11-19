@@ -115,7 +115,8 @@ export const RADIAL_PROGRESS: DaisyComponentDefinition = {
     return {
       tag: "div",
       attrs: {
-        class: [...classes, valueClass(value)].join(" "),
+        // size-24: at daisyUI's default size the value label does not fit inside the ring.
+        class: [...classes, valueClass(value), "size-24"].join(" "),
         role: "progressbar",
         "aria-valuemin": "0",
         "aria-valuemax": "100",

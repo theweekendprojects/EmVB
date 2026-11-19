@@ -1,6 +1,7 @@
 import { must } from "../test-support.ts";
 import { describe, expect, test } from "bun:test";
 import { daisyUIProvider } from "../provider.ts";
+import { serialize } from "../../../emvb/src/core/render/vnode.ts";
 import { VERIFIED_PRIMITIVE_IDS } from "../verified/primitives.ts";
 
 const implemented = new Set(["text", "textarea", "number", "select", "boolean", "href", "media"]);
@@ -33,7 +34,9 @@ describe("WP16 verified component edit descriptors", () => {
       const node = daisyUIProvider.createNode(id, `edit-${id}`);
       for (const field of generated.descriptor.fields)
         expect(node.props[field.key], `${id}.${field.key}`).toBeDefined();
-      expect(daisyUIProvider.render(node).attrs.class).toContain(generated.definition.rootClass);
+      expect(serialize(daisyUIProvider.render(node) as never)).toContain(
+        generated.definition.rootClass,
+      );
     }
   });
 });

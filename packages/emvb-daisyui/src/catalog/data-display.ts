@@ -256,7 +256,12 @@ export const AVATAR: DaisyComponentDefinition = {
           {
             tag: "div",
             // Primary, not neutral: a neutral disc is near-black and reads as a hole on the dark theme.
-            attrs: { class: ["bg-primary text-primary-content", ...image].join(" ") },
+            // grid + place-items-center puts the initials in the middle of the disc, not its corner.
+            attrs: {
+              class: ["grid place-items-center bg-primary text-primary-content", ...image].join(
+                " ",
+              ),
+            },
             children: [{ tag: "span", attrs: {}, children: [initialsOf(node.props.alt)] }],
           },
         ],

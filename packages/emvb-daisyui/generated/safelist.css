@@ -119,6 +119,7 @@
 .collapse-arrow {}
 .collapse-plus {}
 .countdown font-mono {}
+.cursor-pointer {}
 .diff {}
 .divider {}
 .divider-accent {}
@@ -173,6 +174,8 @@
 .footer-center {}
 .footer-vertical {}
 .from-primary {}
+.gap-2 {}
+.grid {}
 .grid-flow-row {}
 .h-16 {}
 .h-32 {}
@@ -311,6 +314,7 @@
 .otp-xs {}
 .overflow-x-auto {}
 .p-4 {}
+.place-items-center {}
 .progress {}
 .progress-accent {}
 .progress-error {}
@@ -376,6 +380,7 @@
 .select-warning {}
 .select-xl {}
 .select-xs {}
+.size-24 {}
 .skeleton {}
 .skeleton-text {}
 .sm:footer-horizontal {}

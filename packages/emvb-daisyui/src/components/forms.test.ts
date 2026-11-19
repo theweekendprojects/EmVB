@@ -143,7 +143,10 @@ describe("WP5 generated form components", () => {
     ];
     for (const [component, props] of cases) {
       const rendered = render(component, props);
-      expect(walk(rendered).some((item) => item.attrs["aria-label"])).toBe(true);
+      // A control is named by an aria-label or by a label element that wraps it.
+      expect(walk(rendered).some((item) => item.attrs["aria-label"] || item.tag === "label")).toBe(
+        true,
+      );
     }
   });
 

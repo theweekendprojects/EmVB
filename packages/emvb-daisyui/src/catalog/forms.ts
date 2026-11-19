@@ -18,6 +18,9 @@ const toneMap = (prefix: string) =>
   Object.fromEntries(tones.map((tone) => [tone, `${prefix}-${tone}`]));
 const variantMap = (prefix: string) => ({ default: "", ghost: `${prefix}-ghost` });
 
+// Placement classes that belong on a labelled control's wrapper, not on the control itself.
+const PLACEMENT_CLASSES = new Set(["mx-auto", "my-4", "w-fit"]);
+
 function formControl(
   tag: string,
   rootClass: string,
@@ -185,18 +188,28 @@ function checkDefinition(
       },
     ],
     build(node, classes) {
+      // The visible text sits beside the control, so a visitor knows what it does. The wrapper
+      // takes the placement classes (centred, spaced); the control keeps its own.
+      const wrapper = classes.filter((c) => PLACEMENT_CLASSES.has(c));
+      const control = classes.filter((c) => !PLACEMENT_CLASSES.has(c));
       return {
-        tag: "input",
-        attrs: {
-          type: id === "toggle" ? "checkbox" : id,
-          class: classes.join(" "),
-          name: String(node.props.name),
-          value: String(node.props.value),
-          "aria-label": String(node.props.label),
-          ...(node.props.checked ? { checked: "checked" } : {}),
-          ...(node.props.disabled ? { disabled: "disabled" } : {}),
-        },
-        children: [],
+        tag: "label",
+        attrs: { class: [...wrapper, "flex items-center gap-2 cursor-pointer"].join(" ") },
+        children: [
+          {
+            tag: "input",
+            attrs: {
+              type: id === "toggle" ? "checkbox" : id,
+              class: control.join(" "),
+              name: String(node.props.name),
+              value: String(node.props.value),
+              ...(node.props.checked ? { checked: "checked" } : {}),
+              ...(node.props.disabled ? { disabled: "disabled" } : {}),
+            },
+            children: [],
+          },
+          { tag: "span", attrs: {}, children: [String(node.props.label)] },
+        ],
       };
     },
   };

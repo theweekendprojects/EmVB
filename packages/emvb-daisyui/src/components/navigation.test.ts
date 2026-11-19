@@ -176,7 +176,9 @@ describe("WP6 generated navigation components", () => {
     const restored = JSON.parse(JSON.stringify(original)) as DaisyComponentNode;
     expect(restored).toEqual(original);
     expect(JSON.stringify(restored)).not.toContain("navbar-start");
-    expect(daisyUIProvider.render(restored).attrs.class).toBe("navbar sticky top-0 z-50 mx-auto my-4");
+    expect(daisyUIProvider.render(restored).attrs.class).toBe(
+      "navbar sticky top-0 z-50 mx-auto my-4",
+    );
   });
 
   test("raw class injection through options is ignored", () => {

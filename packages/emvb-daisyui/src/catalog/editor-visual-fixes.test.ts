@@ -34,4 +34,20 @@ describe("editor canvas fixes", () => {
   test("skeleton: the default fill is tinted, not the page colour", () => {
     expect(render("skeleton")).toContain("bg-base-content/15");
   });
+
+  test("avatar: initials are centred in the placeholder disc", () => {
+    expect(render("avatar", { src: "", alt: "Ada Lovelace" })).toContain(
+      'class="grid place-items-center bg-primary',
+    );
+  });
+
+  test("radial progress: sized so its value label fits inside the ring", () => {
+    expect(render("radial-progress")).toMatch(/class="radial-progress [^"]*size-24"/);
+  });
+
+  test("checkbox: the control has visible text beside it", () => {
+    const html = render("checkbox", { label: "Accept terms" });
+    expect(html).toMatch(/^<label class="[^"]*flex items-center gap-2/);
+    expect(html).toContain("<span>Accept terms</span>");
+  });
 });
