@@ -23,7 +23,7 @@ const RUNTIME_UTILITIES = [
   "opacity-60",
   "grid",
   "place-items-center",
-  "size-24",
+  "size-24!",
   "flex",
   "items-center",
   "gap-2",

@@ -42,7 +42,7 @@ describe("editor canvas fixes", () => {
   });
 
   test("radial progress: sized so its value label fits inside the ring", () => {
-    expect(render("radial-progress")).toMatch(/class="radial-progress [^"]*size-24"/);
+    expect(render("radial-progress")).toMatch(/class="radial-progress [^"]*size-24!"/);
   });
 
   test("checkbox: the control has visible text beside it", () => {
