@@ -75,6 +75,16 @@ export const AURA: DaisyComponentDefinition = {
       classMap: classMap("aura", sizes),
     },
   ],
+  build(_node, classes, children) {
+    // With nothing inside, the glow has no height; a placeholder box gives it one.
+    return {
+      tag: "div",
+      attrs: { class: classes.join(" ") },
+      children: children.length
+        ? children
+        : [{ tag: "div", attrs: { class: "min-h-24 w-full" }, children: [] }],
+    };
+  },
 };
 export const CALENDAR: DaisyComponentDefinition = {
   id: "calendar",
@@ -153,7 +163,10 @@ export const HOVER_3D: DaisyComponentDefinition = {
     tag: "div",
     attrs: { class: classes.join(" "), "aria-label": String(node.props.label) },
     children: [
-      ...children,
+      // With no content, a placeholder figure gives the card its size.
+      ...(children.length
+        ? children
+        : [{ tag: "figure", attrs: { class: "w-64 h-48 rounded-2xl bg-base-200" }, children: [] }]),
       ...Array.from({ length: 8 }, (): DaisyVNode => ({
         tag: "div",
         attrs: { "aria-hidden": "true" },
@@ -209,14 +222,7 @@ export const MEGAMENU: DaisyComponentDefinition = {
       kind: "textarea",
       default: "Products|Overview,Features,Pricing\nCompany|About,Careers,Contact",
     },
-    {
-      key: "direction",
-      label: "Direction",
-      kind: "select",
-      default: "horizontal",
-      options: ["horizontal", "vertical"],
-      classMap: { horizontal: "", vertical: "megamenu-vertical" },
-    },
+
     {
       key: "size",
       label: "Size",

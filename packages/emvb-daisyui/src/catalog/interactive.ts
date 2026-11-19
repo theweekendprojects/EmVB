@@ -237,7 +237,9 @@ export const MODAL: DaisyComponentDefinition = {
     return {
       tag: "dialog",
       attrs: {
-        class: classes.join(" "),
+        // daisyUI slides a drawer (start or end) in only with modal-open; the open attribute alone
+        // leaves it off the page.
+        class: (node.props.open ? [...classes, "modal-open"] : classes).join(" "),
         "aria-labelledby": titleId,
         ...(node.props.open ? { open: "open" } : {}),
       },

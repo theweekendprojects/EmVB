@@ -189,16 +189,25 @@ export const JOIN: DaisyComponentDefinition = {
     },
   ],
   build(node, classes, children) {
+    // An empty group shows three buttons, so it has a visible size in the editor and on the page.
+    const items: DaisyVNode[] = children.length
+      ? children
+      : ["Button", "Button", "Button"].map((label) => ({
+          tag: "button",
+          attrs: { type: "button", class: "btn" },
+          children: [label],
+        }));
     return {
       tag: "div",
       attrs: { class: classes.join(" "), role: "group", "aria-label": String(node.props.label) },
-      children: children.map((child) => ({
-        ...child,
-        attrs: {
-          ...child.attrs,
-          class: [child.attrs.class, "join-item"].filter(Boolean).join(" "),
-        },
-      })),
+      children: items.map((child) =>
+        Object.assign({}, child, {
+          attrs: {
+            ...child.attrs,
+            class: [child.attrs.class, "join-item"].filter(Boolean).join(" "),
+          },
+        }),
+      ),
     };
   },
 };
@@ -267,7 +276,10 @@ export const INDICATOR: DaisyComponentDefinition = {
           attrs: { class: ["indicator-item badge", ...badgeClasses].join(" ") },
           children: [String(node.props.badge)],
         },
-        ...children,
+        // With nothing inside, a box stands in for the content the badge sits on.
+        ...(children.length
+          ? children
+          : [{ tag: "div", attrs: { class: "w-32 h-20 rounded-box bg-base-200" }, children: [] }]),
       ],
     };
   },
@@ -340,7 +352,11 @@ export const MASK: DaisyComponentDefinition = {
       kind: "select",
       default: "md",
       options: ["sm", "md", "lg"],
-      classMap: { sm: "w-24", md: "w-48", lg: "w-72" },
+      classMap: {
+        sm: "w-24 aspect-square",
+        md: "w-48 aspect-square",
+        lg: "w-72 aspect-square",
+      },
     },
   ],
   build(node, classes) {

@@ -593,6 +593,7 @@
     "category": "Feedback",
     "defaults": {
       "text": false,
+      "size": "md",
       "label": "Loading content"
     }
   },
@@ -754,7 +755,6 @@
     "defaults": {
       "label": "Main navigation",
       "items": "Products|Overview,Features,Pricing\nCompany|About,Careers,Contact",
-      "direction": "horizontal",
       "size": "md",
       "width": "normal"
     }

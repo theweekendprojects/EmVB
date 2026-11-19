@@ -67,6 +67,15 @@ export const SKELETON: DaisyComponentDefinition = {
       classMap: { true: "skeleton-text", false: "" },
     },
     {
+      // A skeleton has no size of its own; without one it is zero high.
+      key: "size",
+      label: "Height",
+      kind: "select",
+      default: "md",
+      options: ["sm", "md", "lg"],
+      classMap: { sm: "h-8 w-full", md: "h-16 w-full", lg: "h-32 w-full" },
+    },
+    {
       key: "label",
       label: "Accessible label",
       kind: "text",
@@ -91,7 +100,8 @@ export const RADIAL_PROGRESS: DaisyComponentDefinition = {
       kind: "select",
       default: "primary",
       options: tones,
-      classMap: map("text", tones),
+      // Neutral is the theme's own text colour, which is designed to contrast its base surface.
+      classMap: { ...map("text", tones), neutral: "text-base-content" },
     },
   ],
   build: (node, classes) => {
@@ -204,7 +214,8 @@ export const LINK: DaisyComponentDefinition = {
       kind: "select",
       default: "primary",
       options: tones,
-      classMap: map("link", tones),
+      // Neutral is the theme's own text colour, which is designed to contrast its base surface.
+      classMap: { ...map("link", tones), neutral: "text-base-content" },
     },
     {
       key: "hover",

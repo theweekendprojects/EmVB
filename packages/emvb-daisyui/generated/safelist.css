@@ -10,6 +10,7 @@
 .alert-vertical {}
 .alert-warning {}
 .animate-ping {}
+.aspect-square {}
 .aura {}
 .aura-dual {}
 .aura-glow {}
@@ -167,6 +168,9 @@
 .footer-center {}
 .footer-vertical {}
 .grid-flow-row {}
+.h-16 {}
+.h-32 {}
+.h-8 {}
 .hero {}
 .hover-3d {}
 .hover-gallery {}
@@ -209,7 +213,6 @@
 .link-error {}
 .link-hover {}
 .link-info {}
-.link-neutral {}
 .link-primary {}
 .link-secondary {}
 .link-success {}
@@ -250,7 +253,6 @@
 .megamenu-lg {}
 .megamenu-md {}
 .megamenu-sm {}
-.megamenu-vertical {}
 .megamenu-wide {}
 .megamenu-xl {}
 .megamenu-xs {}
@@ -405,11 +407,11 @@
 .text-7xl {}
 .text-accent {}
 .text-accent-content {}
+.text-base-content {}
 .text-center {}
 .text-error {}
 .text-info {}
 .text-left {}
-.text-neutral {}
 .text-neutral-content {}
 .text-primary {}
 .text-primary-content {}

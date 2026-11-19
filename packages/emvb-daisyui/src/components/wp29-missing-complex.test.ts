@@ -41,12 +41,15 @@ describe("WP29 missing complex components", () => {
     expect(element(vnode.children[0]).attrs.role).toBe("button");
     expect(vnode.children).toHaveLength(7);
   });
-  test("hover 3D emits exactly eight official hover zones", () => {
+  test("hover 3D emits exactly eight official hover zones, after any content", () => {
     const vnode = daisyUIProvider.render(daisyUIProvider.createNode("hover-3d", "hover"));
-    expect(vnode.children).toHaveLength(8);
-    expect(vnode.children.every((child) => element(child).attrs["aria-hidden"] === "true")).toBe(
-      true,
-    );
+    // An empty card shows a placeholder figure first; the zones are always the last eight.
+    const zones = vnode.children.slice(-8);
+    expect(zones).toHaveLength(8);
+    expect(zones.every((child) => element(child).attrs["aria-hidden"] === "true")).toBe(true);
+    expect(
+      vnode.children.filter((child) => element(child).attrs["aria-hidden"] === "true"),
+    ).toHaveLength(8);
   });
   test("hover gallery sanitizes and caps images at ten", () => {
     const node = daisyUIProvider.createNode("hover-gallery", "gallery");

@@ -132,6 +132,19 @@ export const BADGE: DaisyComponentDefinition = {
       classMap: sizeMap("badge"),
     },
   ],
+  build(node, classes) {
+    // The neutral colour is a dark fill: as a fill it is right, as the text of an outline, dash or
+    // soft badge it disappears on a dark page. Those badges take the theme's text colour instead.
+    const hollow = node.props.tone === "neutral" && node.props.variant !== "solid";
+    const kept = hollow
+      ? classes.map((c) => (c === "badge-neutral" ? "text-base-content" : c))
+      : classes;
+    return {
+      tag: "span",
+      attrs: { class: kept.join(" ") },
+      children: [String(node.props.label)],
+    };
+  },
 };
 
 export const ALERT: DaisyComponentDefinition = {
