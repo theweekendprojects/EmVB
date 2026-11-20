@@ -64,7 +64,12 @@ export type ExtensionField = Pick<
 export type ExtensionRenderContext = {
   /** Resolved values from this extension's sources, keyed by source name then field. */
   sources: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  /** "editor" on the canvas, "public" on a published page (extensionApi 1.x, additive). */
+  mode: ExtensionRenderMode;
 };
+
+/** Where the element is drawn: the editor canvas or a published page. */
+export type ExtensionRenderMode = "public" | "editor";
 
 /**
  * Markup output (extensionApi 1.x, additive). A tree of tags from core's serializer allowlist.

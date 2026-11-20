@@ -50478,6 +50478,20 @@
       ],
       "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
       "expect": "\\(fail\\).*stylesheet and runtime specifiers"
+    },
+    {
+      "id": "W-927/render-mode",
+      "requirement": "W-927",
+      "description": "every element is told it is on a published page, even on the canvas",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "sources: syncSourceValues(parsed.pkg), mode };",
+          "replace": "sources: syncSourceValues(parsed.pkg), mode: \"public\" as const };"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*told whether it draws"
     }
   ]
 }

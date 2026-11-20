@@ -92,7 +92,7 @@ export function renderExtensionNode(
       ? (node.props as Record<string, unknown>)
       : {};
   const checked = validateExtensionProps(found.manifest.schema, storedProps);
-  const ctx: ExtensionRenderContext = { sources: syncSourceValues(parsed.pkg) };
+  const ctx: ExtensionRenderContext = { sources: syncSourceValues(parsed.pkg), mode };
 
   let raw: unknown;
   try {

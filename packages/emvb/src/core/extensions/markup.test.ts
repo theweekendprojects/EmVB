@@ -125,6 +125,36 @@ describe("markup output (extensionApi 1.x)", () => {
   });
 });
 
+describe("render mode (extensionApi 1.x)", () => {
+  test("an element is told whether it draws on the canvas or on a published page", () => {
+    clearExtensions();
+    rememberExtensions([
+      defineExtension({
+        id: "emvb-ext-mode",
+        elements: [
+          {
+            name: "mode",
+            label: "Mode",
+            schema: { type: "object", properties: {} },
+            fields: [],
+            render: (_props, ctx) => ({
+              markup: { tag: "p", attrs: {}, children: [`mode is ${ctx.mode}`] },
+            }),
+          },
+        ],
+      }),
+    ]);
+    const onPage = renderPage(pageWith("ext:emvb-ext-mode/mode"), emptyDesign(), {
+      mode: "public",
+    }).html;
+    const onCanvas = renderPage(pageWith("ext:emvb-ext-mode/mode"), emptyDesign(), {
+      mode: "editor",
+    }).html;
+    expect(onPage).toContain("mode is public");
+    expect(onCanvas).toContain("mode is editor");
+  });
+});
+
 describe("markup checks that do not depend on the serializer", () => {
   test("safeMarkup refuses a tag outside the allowlist", () => {
     const out = safeMarkup(
