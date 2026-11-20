@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { serialize } from "../../../emvb/src/core/render/vnode.ts";
 import { nodeForRender } from "../runtime/index.ts";
 import { daisyUIProvider } from "../provider.ts";
+import { addCompoundItem } from "../compound/editor.ts";
 
 // Regression checks for defects seen in the real editor canvas. Each one asserts the class that
 // removes the defect, so dropping the class fails the test.
@@ -132,5 +133,17 @@ describe("editor canvas fixes", () => {
     const html = render("checkbox", { label: "Accept terms" });
     expect(html).toMatch(/^<label class="[^"]*flex items-center gap-2/);
     expect(html).toContain("<span>Accept terms</span>");
+  });
+});
+
+describe("compound items are named in Layers", () => {
+  // Without editorLabel the Layers panel falls back to "Provider component", because compound
+  // parts such as carousel-item are not registered components.
+  test("a slide added in the editor and a slide from the collection both carry the Slide name", () => {
+    const carousel = daisyUIProvider.createNode("carousel", "cr000001");
+    const withSlide = addCompoundItem(carousel, "sl000001");
+    expect(withSlide.children?.[0]?.editorLabel).toBe("Slide");
+    const collection = daisyUIProvider.collections?.find((c) => c.parentComponent === "carousel");
+    expect(collection?.createItem("sl000002", 0).editorLabel).toBe("Slide");
   });
 });

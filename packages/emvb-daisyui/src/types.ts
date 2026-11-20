@@ -22,6 +22,8 @@ export interface DaisyComponentNode extends ProviderComponentNode {
   component: string;
   props: DaisyProps;
   providerMeta?: Record<string, DaisyFieldValue>;
+  /** Name shown in the editor's Layers panel. Compound parts (slides, tabs, rows) get one. */
+  editorLabel?: string;
   children?: DaisyComponentNode[];
 }
 

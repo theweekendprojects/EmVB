@@ -7,6 +7,7 @@ import type {
   DaisyVNode,
 } from "../types.ts";
 import { isCompoundPart, renderCompoundNode } from "../compound/index.ts";
+import { COMPOUND_PART_LABELS } from "../compound/editor.ts";
 import { nodeForRender } from "../runtime/index.ts";
 import { themeAttributes } from "../themes/index.ts";
 import { upgradeLegacyDaisyNode } from "../legacy.ts";
@@ -67,6 +68,7 @@ export function createDaisyUIProvider(
           type: "provider",
           provider: "daisyui",
           component: "accordion-item",
+          editorLabel: COMPOUND_PART_LABELS["accordion-item"],
           props: { label: `Question ${index + 1}`, defaultOpen: false },
           children: [],
         }),
@@ -81,6 +83,7 @@ export function createDaisyUIProvider(
           type: "provider",
           provider: "daisyui",
           component: "carousel-item",
+          editorLabel: COMPOUND_PART_LABELS["carousel-item"],
           props: { label: `Slide ${index + 1}` },
           children: [],
         }),

@@ -24,6 +24,14 @@ export const COMPOUND_CONFIG: Readonly<Record<CompoundRootId, CompoundConfig>> =
   table: { part: "table-row", label: "Row", richContent: true, fields: [] },
   carousel: { part: "carousel-item", label: "Slide", richContent: true, fields: ["label"] },
 };
+/** Layers-panel names for compound parts, so each item reads as its part, not "Provider component". */
+export const COMPOUND_PART_LABELS: Readonly<Record<string, string>> = {
+  "menu-item": "Menu item",
+  "tab-item": "Tab",
+  "accordion-item": "Accordion item",
+  "table-row": "Row",
+  "carousel-item": "Slide",
+};
 export const compoundConfig = (component: string): CompoundConfig | undefined =>
   COMPOUND_CONFIG[component as CompoundRootId];
 export const compoundPartFor = (component: string): string | undefined =>
@@ -57,6 +65,7 @@ export function addCompoundItem(
         type: "provider",
         provider: "daisyui",
         component,
+        editorLabel: COMPOUND_PART_LABELS[component],
         props: { ...defaultsFor(component), ...props },
         children: [],
       },
