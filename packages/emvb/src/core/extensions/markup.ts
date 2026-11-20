@@ -13,8 +13,11 @@ import type { ExtensionMarkup } from "./types.ts";
 
 const MAX_DEPTH = 12;
 const MAX_NODES = 200;
-/** A class token: lowercase letters, digits, hyphen and underscore, starting with a letter. */
-const CLASS_TOKEN = /^[a-z][a-z0-9_-]{0,63}$/;
+/**
+ * A class token in Tailwind syntax: letters, digits and the characters variants and arbitrary values
+ * use (`sm:w-fit`, `!mt-0`, `[&>*]:my-0`). Spaces, quotes and markup characters are refused.
+ */
+const CLASS_TOKEN = /^[A-Za-z0-9_:!\-[\]&>*./%#]{1,96}$/;
 /** Images and posters load over http(s) only, so a data: URL cannot hide script or a second address. */
 const MEDIA_SCHEMES: ReadonlySet<string> = new Set(["http:", "https:"]);
 
