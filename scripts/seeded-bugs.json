@@ -50333,6 +50333,151 @@
         "CI": "1"
       },
       "expect": "✘.*\\[node\\]"
+    },
+    {
+      "id": "W-927/markup-class-allowlist",
+      "requirement": "W-927",
+      "description": "markup keeps classes that the package did not declare",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "const kept = value.split(/\\s+/).filter((token) => classes.has(token));",
+          "replace": "const kept = value.split(/\\s+/);"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*keeps only the classes the package declared"
+    },
+    {
+      "id": "W-927/markup-href-scheme",
+      "requirement": "W-927",
+      "description": "a javascript: href reaches the page",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (name === \"href\" || name === \"action\" || name === \"formaction\") return sanitizeHref(value);",
+          "replace": "if (name === \"href\" || name === \"action\" || name === \"formaction\") return value;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*drops javascript: URLs"
+    },
+    {
+      "id": "W-927/markup-image-scheme",
+      "requirement": "W-927",
+      "description": "a javascript: image source reaches the page",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (name === \"src\" || name === \"poster\") return sanitizeUrl(value, MEDIA_SCHEMES);",
+          "replace": "if (name === \"src\" || name === \"poster\") return value;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*image source with a javascript: URL"
+    },
+    {
+      "id": "W-927/markup-tag-allowlist",
+      "requirement": "W-927",
+      "description": "a tag outside the allowlist passes the markup check",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (!isAllowedTag(node.tag)) return undefined;",
+          "replace": "// tag check removed"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*refuses a tag outside the allowlist"
+    },
+    {
+      "id": "W-927/markup-class-token",
+      "requirement": "W-927",
+      "description": "invalid class tokens are kept",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": ".filter((name) => CLASS_TOKEN.test(name))",
+          "replace": ".filter(() => true)"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*classes are kept only as valid class tokens"
+    },
+    {
+      "id": "W-927/markup-inline-style",
+      "requirement": "W-927",
+      "description": "inline style reaches the serializer",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (typeof value !== \"string\" || /^on/i.test(name) || !isAllowedAttr(name)) continue;",
+          "replace": "if (typeof value !== \"string\" || /^on/i.test(name) || (!isAllowedAttr(name) && name !== \"style\")) continue;"
+        },
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (name === \"style\") return undefined;",
+          "replace": "if (name === \"style\") return value;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*drops inline style"
+    },
+    {
+      "id": "W-927/assets-dedupe",
+      "requirement": "W-927",
+      "description": "a shared stylesheet is listed twice on one page",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/extension-assets.ts",
+          "search": "for (const href of ext?.styles ?? []) if (!styles.includes(href)) styles.push(href);",
+          "replace": "for (const href of ext?.styles ?? []) styles.push(href);"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*list it once"
+    },
+    {
+      "id": "W-927/assets-only-used-packages",
+      "requirement": "W-927",
+      "description": "an unused package stylesheet loads on a page",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/extension-assets.ts",
+          "search": "for (const pkg of packages) {",
+          "replace": "for (const pkg of [...packages, \"emvb-ext-kit\"]) {"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*lists only the packages"
+    },
+    {
+      "id": "W-927/normalize-keeps-classes",
+      "requirement": "W-927",
+      "description": "the declared class allowlist is dropped at registration",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/normalize.ts",
+          "search": "...(ext.classes ? { classes: [...classAllowlist(ext.classes)] } : {}),",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*classes are kept only as valid class tokens"
+    },
+    {
+      "id": "W-927/normalize-specifier-pattern",
+      "requirement": "W-927",
+      "description": "a path-escaping stylesheet specifier is kept",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/normalize.ts",
+          "search": "if (typeof value === \"string\" && ASSET_SPECIFIER.test(value) && !value.includes(\"..\")) {",
+          "replace": "if (typeof value === \"string\") {"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
+      "expect": "\\(fail\\).*stylesheet and runtime specifiers"
     }
   ]
 }

@@ -90,3 +90,21 @@ Same freeze rules as the schema contract (D-065):
 
 The sample package `emvb-ext-hello` is illustrative; its element and source
 names are not part of the frozen surface.
+
+## Markup output, classes and assets (1.x additive)
+
+These additions keep `extensionApi: 1`. Existing packages do not change.
+
+- **Markup.** `render()` may return `{ markup: VNode }` instead of layout nodes. The tree uses
+  tags from core's serializer allowlist. A tag outside that list refuses the element, and it
+  shows the placeholder.
+- **Dropped values.** Markup keeps no inline `style` attribute, no `on*` event handler, and no
+  `href`, `action` or `formaction` value that is not an http(s), mailto, tel or relative URL. An
+  image `src` or `poster` must be http(s) or relative. A `srcset` keeps only candidates that pass
+  the same check.
+- **Classes.** The package declares `classes: string[]`. A class token outside that list is
+  dropped. Tokens must match `^[a-z][a-z0-9_-]{0,63}$`.
+- **Stylesheets and runtimes.** The package declares `styles` and `runtime` as specifiers
+  (`@scope/pkg/file.css`, `/assets/file.js`). A page lists them only when it renders one of the
+  package's elements. Each list is de-duplicated.
+  `RenderedPage.extensionStyles` and `RenderedPage.extensionRuntimes` carry them to the layout.

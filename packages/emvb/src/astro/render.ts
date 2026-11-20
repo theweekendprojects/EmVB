@@ -11,6 +11,10 @@ import {
 } from "../core/index.ts";
 import type { WidgetRuntime } from "../core/elements/widgets.ts";
 import { PLUGIN_ID } from "../constants.ts";
+import {
+  extensionAssetEntries,
+  type ExtensionAssets,
+} from "../core/extensions/extension-assets.ts";
 
 export type RenderedPage = {
   html: string;
@@ -27,6 +31,10 @@ export type RenderedPage = {
   dir?: "ltr" | "rtl" | "auto";
   /** W-971: the element types whose base rules `css` holds, for `sharedPartCss`. */
   baseTypes?: string[];
+  /** Stylesheets of extension packages whose elements this page renders (extensionApi 1.x). */
+  extensionStyles?: string[];
+  /** Runtimes of extension packages whose elements this page renders (extensionApi 1.x). */
+  extensionRuntimes?: string[];
 };
 
 /** The design document through the in-process public route (no HTTP round trip, D-013). */
@@ -89,9 +97,12 @@ export function renderStored(
     needsFormsRuntime: false,
     needsTabsRuntime: false,
     needsMenuRuntime: false,
+    extensionStyles: [],
+    extensionRuntimes: [],
     ...(design.direction ? { dir: design.direction } : {}),
   };
   let result: ReturnType<typeof renderPage>;
+  let extensionAssets: ExtensionAssets = { styles: [], runtimes: [] };
   try {
     const { layout, problem } = inspectLayout(raw);
     if (!layout) {
@@ -110,6 +121,7 @@ export function renderStored(
       ...(partIds ? { partIds } : {}),
       ...(lang ? { lang } : {}),
     });
+    extensionAssets = extensionAssetEntries(layout.root);
   } catch (error) {
     // S-02: a layout that can't render leaves the page empty instead of failing the request.
     // oxlint-disable-next-line no-console
@@ -135,5 +147,7 @@ export function renderStored(
     ...(runtimes.length > 0 ? { runtimes } : {}),
     ...(design.direction ? { dir: design.direction } : {}),
     baseTypes,
+    extensionStyles: extensionAssets.styles,
+    extensionRuntimes: extensionAssets.runtimes,
   };
 }

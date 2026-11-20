@@ -8,6 +8,7 @@ import type { VNode } from "../render/vnode.ts";
 import { liveElement, liveExtension } from "./registry.ts";
 import { validateExtensionProps } from "./schema.ts";
 import { safeExtensionOutput } from "./safe-nodes.ts";
+import { classAllowlist, isExtensionMarkup, safeMarkup } from "./markup.ts";
 import { extensionPlaceholderVNode } from "./placeholder.ts";
 import type { ExtensionRenderContext } from "./types.ts";
 import { parseExtensionType } from "./namespace.ts";
@@ -100,13 +101,7 @@ export function renderExtensionNode(
     return extensionPlaceholderVNode(type, id, mode);
   }
 
-  const safe = safeExtensionOutput(raw);
-  if (safe.length === 0) {
-    return extensionPlaceholderVNode(type, id, mode);
-  }
-
-  const children = visitChildren(safe);
-  return {
+  const wrap = (children: (VNode | string)[]): VNode => ({
     tag: "div",
     attrs: {
       class: "emvb-ext",
@@ -114,5 +109,17 @@ export function renderExtensionNode(
       ...(id && mode === "editor" ? { "data-emvb-id": id } : {}),
     },
     children,
-  };
+  });
+
+  if (isExtensionMarkup(raw)) {
+    const markup = safeMarkup(raw.markup, classAllowlist(liveExtension(parsed.pkg)?.classes));
+    return markup ? wrap([markup]) : extensionPlaceholderVNode(type, id, mode);
+  }
+
+  const safe = safeExtensionOutput(raw);
+  if (safe.length === 0) {
+    return extensionPlaceholderVNode(type, id, mode);
+  }
+
+  return wrap(visitChildren(safe));
 }

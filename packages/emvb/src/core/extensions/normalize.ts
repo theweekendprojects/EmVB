@@ -12,6 +12,24 @@ import type {
   ExtensionSource,
 } from "./types.ts";
 import { EXTENSION_API_VERSION } from "./types.ts";
+import { classAllowlist } from "./markup.ts";
+
+/** At most this many stylesheet or runtime specifiers per package. */
+const MAX_ASSETS = 16;
+/** A package specifier (`@scope/pkg/file.css`) or a site path (`/assets/x.css`). */
+const ASSET_SPECIFIER = /^[@A-Za-z0-9._~/:-]{1,200}$/;
+
+/** Unique, well-formed specifiers in the order given. Anything else is dropped. */
+function specifierList(values: readonly unknown[]): string[] {
+  const kept = new Set<string>();
+  for (const value of values) {
+    if (typeof value === "string" && ASSET_SPECIFIER.test(value) && !value.includes("..")) {
+      kept.add(value);
+    }
+    if (kept.size >= MAX_ASSETS) break;
+  }
+  return [...kept];
+}
 
 export type NormalizedExtension = {
   live: EmVBExtension;
@@ -125,6 +143,10 @@ export function normalizeExtension(input: unknown): NormalizedExtension | undefi
     elements: liveElements,
     panels: livePanels,
     sources: liveSources,
+    // Additive 1.x fields. Each one is copied through its own check, so a bad value is dropped.
+    ...(ext.classes ? { classes: [...classAllowlist(ext.classes)] } : {}),
+    ...(ext.styles ? { styles: specifierList(ext.styles) } : {}),
+    ...(ext.runtime ? { runtime: specifierList(ext.runtime) } : {}),
   };
 
   return {
