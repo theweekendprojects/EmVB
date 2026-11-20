@@ -97,6 +97,13 @@ export type ExtensionElement = {
    * marker in markup output; without a marker they are appended after the output.
    */
   container?: boolean;
+  /** Element names this container accepts as children, in the same package. Implies `container`. */
+  accepts?: readonly string[];
+  /**
+   * A list part (extensionApi 1.x, additive). Its markup is not wrapped, so it sits directly inside
+   * its parent's markup. It may only go inside a parent that lists it in `accepts`.
+   */
+  part?: boolean;
   schema: ExtensionPropSchema;
   fields: readonly ExtensionField[];
   defaults?: () => Record<string, unknown>;
@@ -160,6 +167,10 @@ export type ExtensionElementManifest = {
   group: "layout" | "content" | "form" | "dynamic";
   /** Present and true when the element holds children (extensionApi 1.x, additive). */
   container?: boolean;
+  /** Stored types of the child elements this container accepts (extensionApi 1.x, additive). */
+  accepts?: readonly string[];
+  /** Present and true for a list part (extensionApi 1.x, additive). */
+  part?: boolean;
   schema: ExtensionPropSchema;
   fields: readonly ExtensionField[];
   defaults: Record<string, unknown>;
