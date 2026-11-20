@@ -2011,7 +2011,8 @@ export const isParentNode = (
   node.type === "price-list" ||
   node.type === "share-buttons" ||
   node.type === "hotspots" ||
-  isContainerExtensionType(node.type);
+  // A stored extension container with no children array (saved before it held children) is a leaf.
+  (isContainerExtensionType(node.type) && Array.isArray((node as { children?: unknown }).children));
 
 export const isFormFieldType = (type: string): boolean =>
   (FORM_FIELD_TYPES as readonly string[]).includes(type);

@@ -50486,8 +50486,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/extensions/render-ext.ts",
-          "search": "sources: syncSourceValues(parsed.pkg), mode };",
-          "replace": "sources: syncSourceValues(parsed.pkg), mode: \"public\" as const };"
+          "search": "    mode,\n    childCount: stored.length,",
+          "replace": "    mode: \"public\" as const,\n    childCount: stored.length,"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
@@ -50514,8 +50514,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/extensions/render-ext.ts",
-          "search": "const kids = isContainerExtensionType(type)",
-          "replace": "const kids = true || isContainerExtensionType(type)"
+          "search": "const stored = isContainerExtensionType(type)",
+          "replace": "const stored = true || isContainerExtensionType(type)"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/core/extensions/container.test.ts"],
@@ -50534,6 +50534,48 @@
       ],
       "command": ["bun", "test", "packages/emvb/src/core/extensions/container.test.ts"],
       "expect": "\\(fail\\).*only elements flagged container"
+    },
+    {
+      "id": "W-927/container-no-children-crash",
+      "requirement": "W-927",
+      "description": "a stored container without a children array counts as a parent and crashes the tree walk",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "Array.isArray((node as { children?: unknown }).children));",
+          "replace": "true);"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/container.test.ts"],
+      "expect": "\\(fail\\).*saved without a children array"
+    },
+    {
+      "id": "W-927/container-child-count",
+      "requirement": "W-927",
+      "description": "an element is told a constant child count, so an empty container never gets its placeholder right",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "    childCount: stored.length,",
+          "replace": "    childCount: 1,"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/container.test.ts"],
+      "expect": "\\(fail\\).*told how many children"
+    },
+    {
+      "id": "W-927/insert-container-no-children",
+      "requirement": "W-927",
+      "description": "a new container from the Add panel has no children array, so it can never take a drop",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/dnd/new-element.ts",
+          "search": "      ...(isContainerExtensionType(type) ? { children: [] } : {}),",
+          "replace": "      ...({}),"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/admin/editor/dnd/new-element.test.ts"],
+      "expect": "\\(fail\\).*empty children array"
     }
   ]
 }
