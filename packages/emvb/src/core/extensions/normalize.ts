@@ -36,7 +36,8 @@ export type NormalizedExtension = {
   manifest: ExtensionManifest;
 };
 
-const MAX_ELEMENTS = 32;
+// The daisyUI extension alone has 70 elements, so the cap leaves room for a full set plus more.
+const MAX_ELEMENTS = 128;
 const MAX_PANELS = 8;
 const MAX_SOURCES = 8;
 

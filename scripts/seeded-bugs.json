@@ -50576,6 +50576,20 @@
       ],
       "command": ["bun", "test", "packages/emvb/src/admin/editor/dnd/new-element.test.ts"],
       "expect": "\\(fail\\).*empty children array"
+    },
+    {
+      "id": "W-927/element-cap",
+      "requirement": "W-927",
+      "description": "a package larger than 32 elements silently loses the rest, so most of daisyUI never reaches the editor",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/normalize.ts",
+          "search": "const MAX_ELEMENTS = 128;",
+          "replace": "const MAX_ELEMENTS = 32;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/container.test.ts"],
+      "expect": "\\(fail\\).*registers all of them"
     }
   ]
 }
