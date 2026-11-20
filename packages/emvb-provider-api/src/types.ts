@@ -45,6 +45,8 @@ export interface ProviderComponentDescriptor {
   category?: string;
   /** True when the component holds child elements: EmVB renders them inside it and lets the editor place them there. */
   container?: boolean;
+  /** False hides the component's tile from the editor's Add panel. Existing nodes still render. */
+  addPanel?: boolean;
   support?: "verified" | "experimental";
   icon?: string;
   keywords?: readonly string[];

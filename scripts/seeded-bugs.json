@@ -50578,6 +50578,24 @@
       "expect": "\\(fail\\).*empty children array"
     },
     {
+      "id": "W-927/add-panel-hide",
+      "requirement": "W-927",
+      "description": "a component marked addPanel false still gets an Add panel tile, so editors see duplicates",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
+          "search": "return [...components].filter((generated) => generated.descriptor.addPanel !== false);",
+          "replace": "return [...components];"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/admin/editor/panels/add-panel-components.test.ts"
+      ],
+      "expect": "\\(fail\\).*gets no tile"
+    },
+    {
       "id": "W-927/element-cap",
       "requirement": "W-927",
       "description": "a package larger than 32 elements silently loses the rest, so most of daisyUI never reaches the editor",

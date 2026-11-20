@@ -15,6 +15,16 @@ import { BUTTON, FIELD } from "../../ui.ts";
 import { isCancelEscape } from "../ime.ts";
 import { matchesSearch } from "../../search.ts";
 import { dragStash } from "../dnd/drag-stash.ts";
+
+/**
+ * The components the Add panel offers. A component whose descriptor sets `addPanel: false` gets no
+ * tile, but its existing nodes still render on the canvas and on the page.
+ */
+export function addPanelComponents<T extends { descriptor: { addPanel?: boolean } }>(
+  components: Iterable<T>,
+): T[] {
+  return [...components].filter((generated) => generated.descriptor.addPanel !== false);
+}
 import type { SavedSectionActions } from "../useSavedSections.ts";
 import { matchingSections, SavedSectionsGroup } from "./SavedSectionsGroup.tsx";
 
@@ -50,7 +60,7 @@ export function AddPanel({
   };
   const providerDescriptors = componentProviders()
     .flatMap((provider) =>
-      [...provider.components.values()].map((generated) => ({
+      addPanelComponents(provider.components.values()).map((generated) => ({
         type: `provider:${provider.id}:${generated.descriptor.component}`,
         name:
           generated.descriptor.support === "experimental"
