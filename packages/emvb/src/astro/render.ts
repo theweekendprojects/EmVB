@@ -12,6 +12,10 @@ import {
 import type { WidgetRuntime } from "../core/elements/widgets.ts";
 import { PLUGIN_ID } from "../constants.ts";
 import { componentProviders, providerAssetEntries } from "@perkyzz/emvb-provider-api";
+import {
+  extensionAssetEntries,
+  type ExtensionAssets,
+} from "../core/extensions/extension-assets.ts";
 
 export type RenderedPage = {
   html: string;
@@ -22,6 +26,10 @@ export type RenderedPage = {
   needsProviderStyles: boolean;
   providerStyles: string[];
   providerRuntimes: string[];
+  /** Stylesheets of extension packages whose elements this page renders (extensionApi 1.x). */
+  extensionStyles: string[];
+  /** Runtimes of extension packages whose elements this page renders (extensionApi 1.x). */
+  extensionRuntimes: string[];
   needsDaisyRuntime: boolean;
   /**
    * W-1025: the opt-in widget scripts this page needs (a dismissible Alert…). `EmVBPage` loads
@@ -97,11 +105,14 @@ export function renderStored(
     needsProviderStyles: false,
     providerStyles: [],
     providerRuntimes: [],
+    extensionStyles: [],
+    extensionRuntimes: [],
     needsDaisyRuntime: false,
     ...(design.direction ? { dir: design.direction } : {}),
   };
   let result: ReturnType<typeof renderPage>;
   let providerAssets: ReturnType<typeof providerAssetEntries> = { styles: [], runtimes: [] };
+  let extensionAssets: ExtensionAssets = { styles: [], runtimes: [] };
   try {
     const { layout, problem } = inspectLayout(raw);
     if (!layout) {
@@ -121,6 +132,7 @@ export function renderStored(
       ...(lang ? { lang } : {}),
     });
     providerAssets = providerAssetEntries([layout.root] as never, componentProviders());
+    extensionAssets = extensionAssetEntries(layout.root);
   } catch (error) {
     // S-02: a layout that can't render leaves the page empty instead of failing the request.
     // oxlint-disable-next-line no-console
@@ -147,6 +159,8 @@ export function renderStored(
     needsProviderStyles,
     providerStyles,
     providerRuntimes,
+    extensionStyles: extensionAssets.styles,
+    extensionRuntimes: extensionAssets.runtimes,
     needsDaisyRuntime,
     needsFormsRuntime,
     needsTabsRuntime,

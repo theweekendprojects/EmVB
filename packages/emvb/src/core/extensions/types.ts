@@ -9,6 +9,7 @@
 
 import type { FieldDescriptor } from "../schema/descriptors.ts";
 import type { LayoutNode } from "../schema/layout.ts";
+import type { VNode } from "../render/vnode.ts";
 
 /** Shipped API version. Same freeze rules as D-065 (see docs/EXTENSIONS.md). */
 export const EXTENSION_API_VERSION = 1 as const;
@@ -66,8 +67,15 @@ export type ExtensionRenderContext = {
 };
 
 /**
+ * Markup output (extensionApi 1.x, additive). A tree of tags from core's serializer allowlist.
+ * It is checked by `safeMarkup`: unknown tags refuse the element, unlisted classes and unsafe
+ * URLs, style values or event handlers are dropped.
+ */
+export type ExtensionMarkup = { markup: VNode };
+
+/**
  * A custom element. `name` becomes the stored type `ext:<extension.id>/<name>`.
- * `render` returns EmVB layout nodes (built-in types only), never HTML strings.
+ * `render` returns EmVB layout nodes (built-in types only) or, additively, an `ExtensionMarkup`.
  */
 export type ExtensionElement = {
   name: string;
@@ -80,7 +88,7 @@ export type ExtensionElement = {
   render: (
     props: Record<string, unknown>,
     ctx: ExtensionRenderContext,
-  ) => LayoutNode | readonly LayoutNode[];
+  ) => LayoutNode | readonly LayoutNode[] | ExtensionMarkup;
 };
 
 /**
@@ -118,6 +126,12 @@ export type EmVBExtension = {
   elements?: readonly ExtensionElement[];
   panels?: readonly ExtensionPanel[];
   sources?: readonly ExtensionSource[];
+  /** Class names markup output may use (exact tokens). Any other class is dropped. */
+  classes?: readonly string[];
+  /** Stylesheet specifiers. Listed for a page only when it renders one of this package's elements. */
+  styles?: readonly string[];
+  /** Browser runtime specifiers, listed the same way as `styles`. */
+  runtime?: readonly string[];
 };
 
 /**

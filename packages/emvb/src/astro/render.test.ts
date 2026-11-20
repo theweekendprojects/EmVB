@@ -46,6 +46,8 @@ describe("rendering a stored layout (R-031, R-033)", () => {
       needsProviderStyles: false,
       providerStyles: [],
       providerRuntimes: [],
+      extensionStyles: [],
+      extensionRuntimes: [],
       needsDaisyRuntime: false,
       baseTypes: expected.baseTypes,
     });
@@ -107,6 +109,8 @@ describe("rendering a stored layout (R-031, R-033)", () => {
       needsProviderStyles: false,
       providerStyles: [],
       providerRuntimes: [],
+      extensionStyles: [],
+      extensionRuntimes: [],
       needsDaisyRuntime: false,
     };
     const logged = spyOn(console, "error").mockImplementation(() => undefined);
