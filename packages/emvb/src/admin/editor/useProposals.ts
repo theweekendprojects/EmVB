@@ -5,7 +5,7 @@ import {
   type AgentRequest,
   type PendingProposal,
 } from "../proposals-api.ts";
-import type { Fetcher } from "../api.ts";
+import { ApiError, type Fetcher } from "../api.ts";
 
 /** How often the open editor asks for new proposals (D-063: EmDash's MCP has no push). */
 const POLL_MS = 5_000;
@@ -39,18 +39,26 @@ export function useProposals(
   const [requests, setRequests] = React.useState<AgentRequest[]>([]);
   const [agentSeenAt, setAgentSeenAt] = React.useState<string | null>(null);
   const refresh = React.useCallback(() => setTick((t) => t + 1), []);
+  // A 403 means this user lacks content:edit_any on the page. That won't change while the page is
+  // open, so stop polling for it instead of asking every tick. Reset when the page changes.
+  const deniedFor = React.useRef<string | null>(null);
+  const pageKey = `${collection}/${id}`;
   React.useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
+    const denied = (error: unknown) => error instanceof ApiError && error.status === 403;
     const load = () => {
       if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      if (deniedFor.current === pageKey) return;
       listRequests(fetcher, collection, id).then(
         (next) => {
           if (cancelled) return;
           setRequests((prev) => (sameRequests(prev, next.items) ? prev : next.items));
           setAgentSeenAt(next.agentSeenAt);
         },
-        () => undefined,
+        (error: unknown) => {
+          if (denied(error)) deniedFor.current = pageKey;
+        },
       );
       listProposals(fetcher, collection, id).then(
         (next) => {
@@ -59,7 +67,8 @@ export function useProposals(
           setReady(true);
           setFailed(false);
         },
-        () => {
+        (error: unknown) => {
+          if (denied(error)) deniedFor.current = pageKey;
           if (!cancelled) setFailed(true);
         },
       );
@@ -70,7 +79,7 @@ export function useProposals(
       cancelled = true;
       clearInterval(timer);
     };
-  }, [fetcher, collection, id, tick, enabled]);
+  }, [fetcher, collection, id, pageKey, tick, enabled]);
   return { items, ready, failed, refresh, requests, agentSeenAt };
 }
 
