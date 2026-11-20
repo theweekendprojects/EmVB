@@ -66,6 +66,11 @@ export type ExtensionRenderContext = {
   sources: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** "editor" on the canvas, "public" on a published page (extensionApi 1.x, additive). */
   mode: ExtensionRenderMode;
+  /**
+   * Stored child nodes under this element (extensionApi 1.x, additive). Zero for a leaf or an
+   * empty container, so a container can keep its empty-state placeholder.
+   */
+  childCount?: number;
 };
 
 /** Where the element is drawn: the editor canvas or a published page. */

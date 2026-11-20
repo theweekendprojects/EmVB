@@ -10,6 +10,7 @@ import { renderPage } from "../render/index.ts";
 import { defineExtension } from "./define.ts";
 import { clearExtensions, rememberExtensions } from "./registry.ts";
 import { fillSlot, SLOT_TAG } from "./markup.ts";
+import type { ExtensionRenderContext } from "./types.ts";
 
 const CARD = "ext:emvb-ext-box/card";
 const LEAF = "ext:emvb-ext-box/tag";
@@ -51,8 +52,19 @@ const box = (slots: number) =>
         fields: [],
         render: () => ({ id: "tag00001", type: "heading", props: { text: "Tag", level: 3 } }),
       },
+      {
+        name: "probe",
+        label: "Probe",
+        container: true,
+        schema: { type: "object", properties: {} },
+        fields: [],
+        render: (_props: Record<string, unknown>, ctx: ExtensionRenderContext) => ({
+          markup: { tag: "p", attrs: {}, children: [`count ${ctx.childCount ?? "none"}`] },
+        }),
+      },
     ],
   });
+const PROBE = "ext:emvb-ext-box/probe";
 
 const heading = (id: string, text: string): LayoutNode => ({
   id,
@@ -123,6 +135,33 @@ describe("container extension elements (W-927, extensionApi 1.x)", () => {
       mode: "public",
     });
     expect(result.html.split("Once").length - 1).toBe(1);
+  });
+
+  test("the element is told how many children it holds", () => {
+    rememberExtensions([box(1)]);
+    const two = renderPage(
+      pageWith(PROBE, [heading("h0000006", "A"), heading("h0000007", "B")]),
+      emptyDesign(),
+      { mode: "public" },
+    );
+    expect(two.html).toContain("count 2");
+    const none = renderPage(pageWith(PROBE, []), emptyDesign(), { mode: "public" });
+    expect(none.html).toContain("count 0");
+  });
+
+  test("a stored container saved without a children array renders as a leaf", () => {
+    rememberExtensions([box(1)]);
+    const saved = {
+      schemaVersion: LAYOUT_SCHEMA_VERSION,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [{ id: "ext00001", type: CARD, props: {} }],
+      },
+    } as unknown as Layout;
+    expect(isParentNode({ id: "ext00001", type: CARD, props: {} } as LayoutNode)).toBe(false);
+    expect(() => renderPage(saved, emptyDesign(), { mode: "public" })).not.toThrow();
   });
 
   test("fillSlot reports children that found no marker", () => {

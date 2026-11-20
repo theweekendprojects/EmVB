@@ -91,7 +91,15 @@ export function renderExtensionNode(
       ? (node.props as Record<string, unknown>)
       : {};
   const checked = validateExtensionProps(found.manifest.schema, storedProps);
-  const ctx: ExtensionRenderContext = { sources: syncSourceValues(parsed.pkg), mode };
+  // Children are rendered only for container elements. Leaves ignore any stored children.
+  const stored = isContainerExtensionType(type)
+    ? ((node as { children?: LayoutNode[] }).children ?? [])
+    : [];
+  const ctx: ExtensionRenderContext = {
+    sources: syncSourceValues(parsed.pkg),
+    mode,
+    childCount: stored.length,
+  };
 
   let raw: unknown;
   try {
@@ -110,10 +118,7 @@ export function renderExtensionNode(
     children,
   });
 
-  // Children are rendered only for container elements. Leaves ignore any stored children.
-  const kids = isContainerExtensionType(type)
-    ? visitChildren((node as { children?: LayoutNode[] }).children ?? [])
-    : [];
+  const kids = visitChildren(stored);
 
   if (isExtensionMarkup(raw)) {
     const filled = fillSlot(raw.markup, kids);
