@@ -164,6 +164,26 @@ describe("container extension elements (W-927, extensionApi 1.x)", () => {
     expect(() => renderPage(saved, emptyDesign(), { mode: "public" })).not.toThrow();
   });
 
+  test("a package with 40 elements registers all of them, not just the first 32", () => {
+    const many = defineExtension({
+      id: "emvb-ext-many",
+      label: "Many",
+      elements: Array.from({ length: 40 }, (_, i) => ({
+        name: `el${i}`,
+        label: `El ${i}`,
+        schema: { type: "object" as const, properties: {} },
+        fields: [],
+        render: () => ({
+          id: `m${String(i).padStart(7, "0")}`,
+          type: "heading",
+          props: { text: "x", level: 3 },
+        }),
+      })),
+    });
+    const [manifest] = rememberExtensions([many]);
+    expect(manifest?.elements).toHaveLength(40);
+  });
+
   test("fillSlot reports children that found no marker", () => {
     const child = { tag: "p", attrs: {}, children: ["x"] };
     const root = { tag: "div", attrs: {}, children: [{ tag: "span", attrs: {}, children: [] }] };
