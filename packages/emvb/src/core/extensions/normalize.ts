@@ -69,6 +69,7 @@ function normalizeElement(
     name: element.name,
     label: element.label.trim().slice(0, 80) || element.name,
     group: element.group ?? "content",
+    ...(element.container === true ? { container: true } : {}),
     schema: element.schema,
     fields,
     defaults,

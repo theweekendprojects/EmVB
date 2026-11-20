@@ -1,10 +1,12 @@
 import type { ExtensionManifest } from "../../core/index.ts";
+import { setContainerExtensionTypes } from "../../core/extensions/containers.ts";
 
 /** Admin-side cache of manifests from editor/config (no render functions). */
 let cache: readonly ExtensionManifest[] = [];
 
 export function setAdminExtensionManifests(manifests: readonly ExtensionManifest[]): void {
   cache = manifests;
+  setContainerExtensionTypes(manifests);
 }
 
 export function adminExtensionDefaults(type: string): Record<string, unknown> | undefined {

@@ -108,3 +108,8 @@ These additions keep `extensionApi: 1`. Existing packages do not change.
   (`@scope/pkg/file.css`, `/assets/file.js`). A page lists them only when it renders one of the
   package's elements. Each list is de-duplicated.
   `RenderedPage.extensionStyles` and `RenderedPage.extensionRuntimes` carry them to the layout.
+- **Containers.** An element with `container: true` may hold child nodes in the editor, as the
+  Layers panel and drop targets allow. Its markup marks where the children go with an
+  `emvb-slot` element (the first marker gets all the children, later markers are removed).
+  Children with no marker are appended after the markup. A leaf element ignores stored children.
+  Core removes every `emvb-slot` marker before the serializer check, so it never reaches the page.

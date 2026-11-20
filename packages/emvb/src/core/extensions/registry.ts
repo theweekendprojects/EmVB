@@ -7,6 +7,7 @@
  * and the renderer look them up by id.
  */
 
+import { setContainerExtensionTypes } from "./containers.ts";
 import { normalizeExtension } from "./normalize.ts";
 import type { EmVBExtension, ExtensionManifest } from "./types.ts";
 
@@ -37,6 +38,7 @@ export function rememberExtensions(input: unknown): ExtensionManifest[] {
     s.manifests.push(normalized.manifest);
     manifests.push(normalized.manifest);
   }
+  setContainerExtensionTypes(s.manifests);
   return manifests;
 }
 
@@ -75,6 +77,7 @@ export function clearExtensions(): void {
   const s = store();
   s.byId.clear();
   s.manifests = [];
+  setContainerExtensionTypes([]);
 }
 
 /** Rebuild manifests from options.extensions after createPlugin (ids only or full manifests). */

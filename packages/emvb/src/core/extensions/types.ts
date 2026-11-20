@@ -87,6 +87,11 @@ export type ExtensionElement = {
   label: string;
   /** Optional Add-panel group; defaults to "content". */
   group?: "layout" | "content" | "form" | "dynamic";
+  /**
+   * Holds child nodes (extensionApi 1.x, additive). Children fill the element's `emvb-slot`
+   * marker in markup output; without a marker they are appended after the output.
+   */
+  container?: boolean;
   schema: ExtensionPropSchema;
   fields: readonly ExtensionField[];
   defaults?: () => Record<string, unknown>;
@@ -148,6 +153,8 @@ export type ExtensionElementManifest = {
   name: string;
   label: string;
   group: "layout" | "content" | "form" | "dynamic";
+  /** Present and true when the element holds children (extensionApi 1.x, additive). */
+  container?: boolean;
   schema: ExtensionPropSchema;
   fields: readonly ExtensionField[];
   defaults: Record<string, unknown>;

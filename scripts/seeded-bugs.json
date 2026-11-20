@@ -50492,6 +50492,48 @@
       ],
       "command": ["bun", "test", "packages/emvb/src/core/extensions/markup.test.ts"],
       "expect": "\\(fail\\).*told whether it draws"
+    },
+    {
+      "id": "W-927/container-slot-dropped",
+      "requirement": "W-927",
+      "description": "a container's children never reach its slot marker",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "    return [...children];",
+          "replace": "    return [];"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/container.test.ts"],
+      "expect": "\\(fail\\).*children fill the slot"
+    },
+    {
+      "id": "W-927/leaf-renders-children",
+      "requirement": "W-927",
+      "description": "a leaf element renders stored children it was never meant to hold",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "const kids = isContainerExtensionType(type)",
+          "replace": "const kids = true || isContainerExtensionType(type)"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/container.test.ts"],
+      "expect": "\\(fail\\).*leaf element does not render"
+    },
+    {
+      "id": "W-927/container-flag-dropped",
+      "requirement": "W-927",
+      "description": "normalization drops the container flag, so no element becomes a parent",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/normalize.ts",
+          "search": "    ...(element.container === true ? { container: true } : {}),",
+          "replace": "    ...({}),"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/container.test.ts"],
+      "expect": "\\(fail\\).*only elements flagged container"
     }
   ]
 }
