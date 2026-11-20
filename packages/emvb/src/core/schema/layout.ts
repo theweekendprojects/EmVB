@@ -1,5 +1,6 @@
 import { componentProvider } from "@perkyzz/emvb-provider-api";
 import { boundedArray } from "../bounded-array.ts";
+import { isContainerExtensionType } from "../extensions/containers.ts";
 import { z } from "zod";
 import { LIST_MARKERS } from "../css-keywords.ts";
 import { MAX_TEXT_LENGTH } from "../limits.ts";
@@ -2065,7 +2066,8 @@ export const isParentNode = (
   node.type === "price-list" ||
   node.type === "share-buttons" ||
   node.type === "hotspots" ||
-  (node.type === "provider" && providerAcceptsChildren(node));
+  (node.type === "provider" && providerAcceptsChildren(node)) ||
+  isContainerExtensionType(node.type);
 
 export const isFormFieldType = (type: string): boolean =>
   (FORM_FIELD_TYPES as readonly string[]).includes(type);

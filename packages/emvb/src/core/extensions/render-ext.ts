@@ -8,12 +8,11 @@ import type { VNode } from "../render/vnode.ts";
 import { liveElement, liveExtension } from "./registry.ts";
 import { validateExtensionProps } from "./schema.ts";
 import { safeExtensionOutput } from "./safe-nodes.ts";
-import { classAllowlist, isExtensionMarkup, safeMarkup } from "./markup.ts";
+import { classAllowlist, fillSlot, isExtensionMarkup, safeMarkup } from "./markup.ts";
+import { isContainerExtensionType } from "./containers.ts";
 import { extensionPlaceholderVNode } from "./placeholder.ts";
-import type { ExtensionRenderContext } from "./types.ts";
+import type { ExtensionRenderContext, ExtensionRenderMode } from "./types.ts";
 import { parseExtensionType } from "./namespace.ts";
-
-export type ExtensionRenderMode = "public" | "editor";
 
 function isThenable(value: unknown): value is Promise<unknown> {
   return !!value && typeof (value as { then?: unknown }).then === "function";
@@ -111,9 +110,15 @@ export function renderExtensionNode(
     children,
   });
 
+  // Children are rendered only for container elements. Leaves ignore any stored children.
+  const kids = isContainerExtensionType(type)
+    ? visitChildren((node as { children?: LayoutNode[] }).children ?? [])
+    : [];
+
   if (isExtensionMarkup(raw)) {
-    const markup = safeMarkup(raw.markup, classAllowlist(liveExtension(parsed.pkg)?.classes));
-    return markup ? wrap([markup]) : extensionPlaceholderVNode(type, id, mode);
+    const filled = fillSlot(raw.markup, kids);
+    const markup = safeMarkup(filled.root, classAllowlist(liveExtension(parsed.pkg)?.classes));
+    return markup ? wrap([markup, ...filled.unused]) : extensionPlaceholderVNode(type, id, mode);
   }
 
   const safe = safeExtensionOutput(raw);
@@ -121,5 +126,5 @@ export function renderExtensionNode(
     return extensionPlaceholderVNode(type, id, mode);
   }
 
-  return wrap(visitChildren(safe));
+  return wrap([...visitChildren(safe), ...kids]);
 }

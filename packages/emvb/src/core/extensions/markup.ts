@@ -89,6 +89,39 @@ function walk(
   return { tag: node.tag, attrs, children };
 }
 
+/** Marker tag an extension puts where its children go. Core replaces it before the check. */
+export const SLOT_TAG = "emvb-slot";
+
+/**
+ * Put the rendered children at the first slot marker and remove any later markers. Children that
+ * found no marker come back as `unused`, so the caller can append them. Runs before `safeMarkup`,
+ * so the marker never reaches the serializer.
+ */
+export function fillSlot(
+  root: VNode,
+  children: readonly VNode[],
+): { root: VNode; unused: VNode[] } {
+  let placed = false;
+  const place = (): VNode[] => {
+    if (placed) return [];
+    placed = true;
+    return [...children];
+  };
+  if (root.tag === SLOT_TAG)
+    return { root: { tag: "div", attrs: {}, children: place() }, unused: [] };
+  const fill = (node: VNode): VNode => ({
+    tag: node.tag,
+    attrs: node.attrs ?? {},
+    children: (node.children ?? []).flatMap((child): (VNode | string)[] => {
+      if (typeof child === "string") return [child];
+      if (child.tag === SLOT_TAG) return place();
+      return [fill(child)];
+    }),
+  });
+  const filled = fill(root);
+  return { root: filled, unused: placed ? [] : [...children] };
+}
+
 /**
  * Return a checked copy of an extension's markup, or `undefined` when the element must show its
  * placeholder. `classes` is the package's allowlist (see `classAllowlist`).
