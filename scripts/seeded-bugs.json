@@ -50528,8 +50528,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/extensions/normalize.ts",
-          "search": "    ...(element.container === true ? { container: true } : {}),",
-          "replace": "    ...({}),"
+          "search": "        ? { container: true }",
+          "replace": "        ? {}"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/core/extensions/container.test.ts"],
@@ -50576,6 +50576,66 @@
       ],
       "command": ["bun", "test", "packages/emvb/src/admin/editor/dnd/new-element.test.ts"],
       "expect": "\\(fail\\).*empty children array"
+    },
+    {
+      "id": "W-927/part-wrapped",
+      "requirement": "W-927",
+      "description": "a list part is wrapped in an extra div, which breaks its parent's list markup",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "if (isPartExtensionType(type)) {",
+          "replace": "if (false && isPartExtensionType(type)) {"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/parts.test.ts"],
+      "expect": "\\(fail\\).*renders without the element wrapper"
+    },
+    {
+      "id": "W-927/part-outside-parent",
+      "requirement": "W-927",
+      "description": "a list part can be dropped into a container that does not list it",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/arrange.ts",
+          "search": "if (isPartExtensionType(child.type) && !accepted) return REASONS.partOutsideParent;",
+          "replace": "if (false) return REASONS.partOutsideParent;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/parts.test.ts"],
+      "expect": "\\(fail\\).*does not list it"
+    },
+    {
+      "id": "W-927/accepts-ignored",
+      "requirement": "W-927",
+      "description": "a list accepts children it does not list",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/arrange.ts",
+          "search": "if (accepted && !accepted.has(child.type)) return REASONS.extensionNotAccepted;",
+          "replace": "if (false) return REASONS.extensionNotAccepted;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/parts.test.ts"],
+      "expect": "\\(fail\\).*refuses anything it does not accept"
+    },
+    {
+      "id": "W-927/add-panel-hide",
+      "requirement": "W-927",
+      "description": "a component marked addPanel false still gets an Add panel tile, so editors see duplicates",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
+          "search": "return [...components].filter((generated) => generated.descriptor.addPanel !== false);",
+          "replace": "return [...components];"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/admin/editor/panels/add-panel-components.test.ts"
+      ],
+      "expect": "\\(fail\\).*gets no tile"
     },
     {
       "id": "W-927/element-cap",

@@ -61,6 +61,10 @@ function normalizeElement(
         f.label.length <= 80,
     )
     .slice(0, 32);
+  // Child element names become stored types. A name that does not form a valid type is dropped.
+  const accepts = (Array.isArray(element.accepts) ? element.accepts : [])
+    .map((name) => (typeof name === "string" ? extensionType(pkg, name) : undefined))
+    .filter((t): t is string => t !== undefined);
   const defaults = {
     ...schemaDefaults(element.schema),
     ...(typeof element.defaults === "function" ? element.defaults() : {}),
@@ -70,7 +74,12 @@ function normalizeElement(
     name: element.name,
     label: element.label.trim().slice(0, 80) || element.name,
     group: element.group ?? "content",
-    ...(element.container === true ? { container: true } : {}),
+    ...(accepts.length > 0
+      ? { container: true, accepts }
+      : element.container === true
+        ? { container: true }
+        : {}),
+    ...(element.part === true ? { part: true } : {}),
     schema: element.schema,
     fields,
     defaults,

@@ -9,7 +9,7 @@ import { liveElement, liveExtension } from "./registry.ts";
 import { validateExtensionProps } from "./schema.ts";
 import { safeExtensionOutput } from "./safe-nodes.ts";
 import { classAllowlist, fillSlot, isExtensionMarkup, safeMarkup } from "./markup.ts";
-import { isContainerExtensionType } from "./containers.ts";
+import { isContainerExtensionType, isPartExtensionType } from "./containers.ts";
 import { extensionPlaceholderVNode } from "./placeholder.ts";
 import type { ExtensionRenderContext, ExtensionRenderMode } from "./types.ts";
 import { parseExtensionType } from "./namespace.ts";
@@ -123,7 +123,20 @@ export function renderExtensionNode(
   if (isExtensionMarkup(raw)) {
     const filled = fillSlot(raw.markup, kids);
     const markup = safeMarkup(filled.root, classAllowlist(liveExtension(parsed.pkg)?.classes));
-    return markup ? wrap([markup, ...filled.unused]) : extensionPlaceholderVNode(type, id, mode);
+    if (!markup) return extensionPlaceholderVNode(type, id, mode);
+    if (isPartExtensionType(type)) {
+      // A list part sits directly in its parent's markup, so it gets no wrapper of its own.
+      return {
+        tag: markup.tag,
+        attrs: {
+          ...markup.attrs,
+          "data-emvb-ext": type,
+          ...(id && mode === "editor" ? { "data-emvb-id": id } : {}),
+        },
+        children: [...markup.children, ...filled.unused],
+      };
+    }
+    return wrap([markup, ...filled.unused]);
   }
 
   const safe = safeExtensionOutput(raw);
