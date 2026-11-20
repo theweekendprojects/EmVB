@@ -103,7 +103,7 @@ These additions keep `extensionApi: 1`. Existing packages do not change.
   image `src` or `poster` must be http(s) or relative. A `srcset` keeps only candidates that pass
   the same check.
 - **Classes.** The package declares `classes: string[]`. A class token outside that list is
-  dropped. Tokens must match `^[a-z][a-z0-9_-]{0,63}$`.
+  dropped. Tokens use Tailwind syntax (letters, digits, `:`, `!`, `-`, `_`, `[`, `]`, `&`, `>`, `*`, `.`, `/`, `%`, `#`), at most 96 characters, with no spaces or quotes.
 - **Stylesheets and runtimes.** The package declares `styles` and `runtime` as specifiers
   (`@scope/pkg/file.css`, `/assets/file.js`). A page lists them only when it renders one of the
   package's elements. Each list is de-duplicated.

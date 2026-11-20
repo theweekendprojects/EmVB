@@ -148,10 +148,15 @@ describe("registration of additive fields (extensionApi 1.x)", () => {
     rememberExtensions([
       defineExtension({
         id: "emvb-ext-tokens",
-        classes: ["btn", "BAD class", "x".repeat(70), "card-body"],
+        classes: ["btn", "BAD class", "x".repeat(120), "card-body", "sm:w-fit", "[&>*]:my-0!"],
       }),
     ]);
-    expect(liveExtension("emvb-ext-tokens")?.classes).toEqual(["btn", "card-body"]);
+    expect(liveExtension("emvb-ext-tokens")?.classes).toEqual([
+      "btn",
+      "card-body",
+      "sm:w-fit",
+      "[&>*]:my-0!",
+    ]);
   });
 
   test("stylesheet and runtime specifiers keep only well-formed entries", () => {
