@@ -50584,7 +50584,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/LayersPanel.tsx",
-          "search": "ELEMENT_NAMES[node.type] ?? adminExtensionLabel(node.type) ?? node.type",
+          "search": "ELEMENT_NAMES[node.type] ?? extensionName ?? node.type",
           "replace": "ELEMENT_NAMES[node.type] ?? node.type"
         }
       ],

@@ -18,7 +18,6 @@ import { clipText } from "../../../core/limits.ts";
 import { indexLayout } from "../../../core/tree-ops.ts";
 import { EXISTING_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { ELEMENT_NAMES, elementIcon } from "../element-chrome.ts";
-import { adminExtensionLabel } from "../extension-manifests.ts";
 import { editorCommands } from "../editor-commands.ts";
 import { dragStash } from "../dnd/drag-stash.ts";
 import { StateDot } from "./settings/StateSwitcher.tsx";
@@ -200,10 +199,13 @@ export function layerPreview(node: LayoutNode): string | undefined {
 export function LayersPanel({
   layout,
   selectedId,
+  extensionNames,
   ...actions
 }: {
   layout: Layout | null;
   selectedId: string | null;
+  /** Element type to label for extension elements; passed in so a change re-renders the rows. */
+  extensionNames?: Readonly<Record<string, string>>;
 } & LayerActions) {
   const [collapsed, setCollapsed] = React.useState<Set<string>>(() => new Set());
   const [menuId, setMenuId] = React.useState<string | null>(null);
@@ -316,6 +318,7 @@ export function LayersPanel({
             actions={rowActions}
             hasClipboard={!!actions.clipboard}
             clip={menuId === node.id ? actions.clipboard : undefined}
+            extensionName={extensionNames?.[node.type]}
           />
         ))}
       </ul>
@@ -345,6 +348,7 @@ const LayerRow = React.memo(function LayerRow({
   actions,
   hasClipboard,
   clip,
+  extensionName,
 }: {
   node: LayoutNode;
   depth: number;
@@ -359,12 +363,14 @@ const LayerRow = React.memo(function LayerRow({
   hasClipboard: boolean;
   /** The clipboard, passed only to the row whose menu is open so the other rows stay memoized. */
   clip: ClipboardActions | undefined;
+  /** The label of an extension element, when the editor knows it. */
+  extensionName: string | undefined;
 }) {
   const onToggle = () => toggleRow(node.id);
   const onMenu = (open: boolean) => menuRow(node.id, open);
   const Icon = elementIcon(node.type);
   const preview = layerPreview(node);
-  const typeName = ELEMENT_NAMES[node.type] ?? adminExtensionLabel(node.type) ?? node.type;
+  const typeName = ELEMENT_NAMES[node.type] ?? extensionName ?? node.type;
   // A label names the row in place of the type (W-157); the type stays in the tooltip.
   const name = node.editorLabel ?? typeName;
   // Names and previews truncate, so the tooltip carries them in full (DESIGN.md, W-168).
