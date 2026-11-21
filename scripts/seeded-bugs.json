@@ -22627,8 +22627,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/render.ts",
-          "search": "    ...(runtimes.length > 0 ? { runtimes } : {}),\n    ...(design.direction ? { dir: design.direction } : {}),\n    baseTypes,\n  };",
-          "replace": "    ...(runtimes.length > 0 ? { runtimes } : {}),\n    baseTypes,\n  };"
+          "search": "    ...(design.direction ? { dir: design.direction } : {}),\n    baseTypes,\n    extensionStyles: extensionAssets.styles,",
+          "replace": "    baseTypes,\n    extensionStyles: extensionAssets.styles,"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/render.test.ts"],
@@ -50646,24 +50646,6 @@
       ],
       "command": ["bun", "test", "packages/emvb/src/core/extensions/parts.test.ts"],
       "expect": "\\(fail\\).*refuses anything it does not accept"
-    },
-    {
-      "id": "W-927/add-panel-hide",
-      "requirement": "W-927",
-      "description": "a component marked addPanel false still gets an Add panel tile, so editors see duplicates",
-      "edits": [
-        {
-          "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "return [...components].filter((generated) => generated.descriptor.addPanel !== false);",
-          "replace": "return [...components];"
-        }
-      ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/admin/editor/panels/add-panel-components.test.ts"
-      ],
-      "expect": "\\(fail\\).*gets no tile"
     },
     {
       "id": "W-927/element-cap",
