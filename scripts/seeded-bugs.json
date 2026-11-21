@@ -50578,6 +50578,34 @@
       "expect": "\\(fail\\).*empty children array"
     },
     {
+      "id": "W-927/layers-extension-label",
+      "requirement": "W-927",
+      "description": "a Layers row for an extension element shows its raw stored type instead of its label",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/LayersPanel.tsx",
+          "search": "ELEMENT_NAMES[node.type] ?? adminExtensionLabel(node.type) ?? node.type",
+          "replace": "ELEMENT_NAMES[node.type] ?? node.type"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"],
+      "expect": "\\(fail\\).*shows its label, not its stored type"
+    },
+    {
+      "id": "W-927/extension-heading",
+      "requirement": "W-927",
+      "description": "the Add panel heading for extension tiles is a generic word instead of the extension's name",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/extension-manifests.ts",
+          "search": "return names.length === 1 && only !== undefined ? only : \"Extensions\";",
+          "replace": "return \"Extensions\";"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"],
+      "expect": "\\(fail\\).*heading is the extension"
+    },
+    {
       "id": "W-927/part-wrapped",
       "requirement": "W-927",
       "description": "a list part is wrapped in an extra div, which breaks its parent's list markup",

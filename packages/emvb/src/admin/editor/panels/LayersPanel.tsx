@@ -18,6 +18,7 @@ import { clipText } from "../../../core/limits.ts";
 import { indexLayout } from "../../../core/tree-ops.ts";
 import { EXISTING_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { ELEMENT_NAMES, elementIcon } from "../element-chrome.ts";
+import { adminExtensionLabel } from "../extension-manifests.ts";
 import { editorCommands } from "../editor-commands.ts";
 import { dragStash } from "../dnd/drag-stash.ts";
 import { StateDot } from "./settings/StateSwitcher.tsx";
@@ -363,7 +364,7 @@ const LayerRow = React.memo(function LayerRow({
   const onMenu = (open: boolean) => menuRow(node.id, open);
   const Icon = elementIcon(node.type);
   const preview = layerPreview(node);
-  const typeName = ELEMENT_NAMES[node.type] ?? node.type;
+  const typeName = ELEMENT_NAMES[node.type] ?? adminExtensionLabel(node.type) ?? node.type;
   // A label names the row in place of the type (W-157); the type stays in the tooltip.
   const name = node.editorLabel ?? typeName;
   // Names and previews truncate, so the tooltip carries them in full (DESIGN.md, W-168).
