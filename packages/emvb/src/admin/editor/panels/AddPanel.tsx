@@ -9,6 +9,7 @@ import {
   type ElementType,
 } from "../../../core/index.ts";
 import { useExtensionElements } from "../extensions-context.tsx";
+import { adminExtensionGroupTitle } from "../extension-manifests.ts";
 import { PuzzlePieceIcon } from "@phosphor-icons/react";
 import { NEW_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { BUTTON, FIELD } from "../../ui.ts";
@@ -232,7 +233,7 @@ export function AddPanel({
       )}
       {extensionElements.length > 0 && (
         <div className="emvb-add-group" data-emvb-extensions="">
-          <h3 className="emvb-add-group-title">Extensions</h3>
+          <h3 className="emvb-add-group-title">{adminExtensionGroupTitle()}</h3>
           <div className="emvb-add-tiles" aria-label="Extensions">
             {extensionElements.map((tile) => (
               <button
