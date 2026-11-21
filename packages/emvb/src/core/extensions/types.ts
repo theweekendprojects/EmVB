@@ -9,6 +9,7 @@
 
 import type { FieldDescriptor } from "../schema/descriptors.ts";
 import type { LayoutNode } from "../schema/layout.ts";
+import type { VNode } from "../render/vnode.ts";
 
 /** Shipped API version. Same freeze rules as D-065 (see docs/EXTENSIONS.md). */
 export const EXTENSION_API_VERSION = 1 as const;
@@ -65,6 +66,12 @@ export type ExtensionField = Pick<
  * render output only; it is never stored in a layout.
  */
 export type ExtensionOutputNode = LayoutNode & { extClasses?: readonly string[] };
+/**
+ * Markup output (extensionApi 1.x, additive). A tree of tags from core's serializer allowlist,
+ * checked by `safeMarkup`: an unknown tag refuses the element; unlisted classes, event handlers,
+ * inline styles and unsafe URLs are dropped.
+ */
+export type ExtensionMarkup = { markup: VNode };
 
 /**
  * W-1086: the static class allowlist an extension declares. Every name starts with `prefix`
@@ -97,7 +104,7 @@ export type ExtensionElement = {
   render: (
     props: Record<string, unknown>,
     ctx: ExtensionRenderContext,
-  ) => ExtensionOutputNode | readonly ExtensionOutputNode[];
+  ) => ExtensionOutputNode | readonly ExtensionOutputNode[] | ExtensionMarkup;
 };
 
 /**
