@@ -9,13 +9,11 @@ export function setAdminExtensionManifests(manifests: readonly ExtensionManifest
   setContainerExtensionTypes(manifests);
 }
 
-/** The name a Layers row shows for an extension element: its label, not its stored type. */
-export function adminExtensionLabel(type: string): string | undefined {
-  for (const ext of cache) {
-    const el = ext.elements.find((e) => e.type === type);
-    if (el) return el.label;
-  }
-  return undefined;
+/** Element type to label, for the Layers panel. Built from the manifests the editor holds. */
+export function extensionLabelsOf(manifests: readonly ExtensionManifest[]): Record<string, string> {
+  const labels: Record<string, string> = {};
+  for (const ext of manifests) for (const el of ext.elements) labels[el.type] = el.label;
+  return labels;
 }
 
 /** The Add panel heading for extension tiles: the extension's own name, or "Extensions" when unclear. */

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import type { ExtensionManifest, Layout } from "../../../core/index.ts";
 import {
   adminExtensionGroupTitle,
-  adminExtensionLabel,
+  extensionLabelsOf,
   setAdminExtensionManifests,
 } from "../extension-manifests.ts";
 import { LayersPanel } from "./LayersPanel.tsx";
@@ -44,11 +44,11 @@ afterEach(async () => {
 
 describe("extension elements are named by their label (W-927)", () => {
   test("a Layers row for an extension element shows its label, not its stored type", async () => {
-    setAdminExtensionManifests([manifest]);
     await mountTree(
       <LayersPanel
         layout={layout}
         selectedId={null}
+        extensionNames={extensionLabelsOf([manifest])}
         onSelect={() => {}}
         onDuplicate={() => {}}
         onMoveUp={() => {}}
@@ -61,14 +61,18 @@ describe("extension elements are named by their label (W-927)", () => {
     expect(row?.textContent).not.toContain("ext:daisyui");
   });
 
+  test("the labels map each stored type to its element label", () => {
+    expect(extensionLabelsOf([manifest])).toEqual({ "ext:daisyui/daisy-card": "Card" });
+    expect(extensionLabelsOf([])).toEqual({});
+  });
+
   test("the Add panel heading is the extension's name", () => {
     setAdminExtensionManifests([manifest]);
     expect(adminExtensionGroupTitle()).toBe("daisyUI");
   });
 
-  test("an unknown extension type has no label, and two extensions fall back to a generic heading", () => {
+  test("two extensions fall back to a generic heading", () => {
     setAdminExtensionManifests([manifest, { ...manifest, id: "other", label: "Other" }]);
-    expect(adminExtensionLabel("ext:nobody/none")).toBeUndefined();
     expect(adminExtensionGroupTitle()).toBe("Extensions");
   });
 });
