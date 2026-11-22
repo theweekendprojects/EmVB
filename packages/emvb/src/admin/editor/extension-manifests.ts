@@ -7,6 +7,20 @@ export function setAdminExtensionManifests(manifests: readonly ExtensionManifest
   cache = manifests;
 }
 
+/** Element type to label, for the Layers panel. Built from the manifests the editor holds. */
+export function extensionLabelsOf(manifests: readonly ExtensionManifest[]): Record<string, string> {
+  const labels: Record<string, string> = {};
+  for (const ext of manifests) for (const el of ext.elements) labels[el.type] = el.label;
+  return labels;
+}
+
+/** The Add panel heading for extension tiles: the extension's own name, or "Extensions" when unclear. */
+export function adminExtensionGroupTitle(): string {
+  const names = cache.map((ext) => ext.label).filter((name) => name.length > 0);
+  const [only] = names;
+  return names.length === 1 && only !== undefined ? only : "Extensions";
+}
+
 export function adminExtensionDefaults(type: string): Record<string, unknown> | undefined {
   for (const ext of cache) {
     const el = ext.elements.find((e) => e.type === type);

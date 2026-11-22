@@ -202,10 +202,13 @@ export function LayersPanel({
   selectedId,
   onDropNew,
   onMoveTo,
+  extensionNames,
   ...actions
 }: {
   layout: Layout | null;
   selectedId: string | null;
+  /** Element type to label for extension elements; passed in so a change re-renders the rows. */
+  extensionNames?: Readonly<Record<string, string>>;
 } & LayerActions &
   LayersDropCallbacks) {
   const [collapsed, setCollapsed] = React.useState<Set<string>>(() => new Set());
@@ -342,6 +345,7 @@ export function LayersPanel({
             hasClipboard={!!actions.clipboard}
             clip={menuId === node.id ? actions.clipboard : undefined}
             dropMark={shown?.mark?.id === node.id ? shown.mark.kind : undefined}
+            extensionName={extensionNames?.[node.type]}
           />
         ))}
       </ul>
@@ -391,6 +395,7 @@ const LayerRow = React.memo(function LayerRow({
   hasClipboard,
   clip,
   dropMark,
+  extensionName,
 }: {
   node: LayoutNode;
   depth: number;
@@ -407,12 +412,14 @@ const LayerRow = React.memo(function LayerRow({
   clip: ClipboardActions | undefined;
   /** W-1080: outlined as the drop's container, or as a refused drop. */
   dropMark?: "inside" | "invalid";
+  /** The label of an extension element, when the editor knows it. */
+  extensionName: string | undefined;
 }) {
   const onToggle = () => toggleRow(node.id);
   const onMenu = (open: boolean) => menuRow(node.id, open);
   const Icon = elementIcon(node.type);
   const preview = layerPreview(node);
-  const typeName = ELEMENT_NAMES[node.type] ?? node.type;
+  const typeName = ELEMENT_NAMES[node.type] ?? extensionName ?? node.type;
   // A label names the row in place of the type (W-157); the type stays in the tooltip.
   const name = node.editorLabel ?? typeName;
   // Names and previews truncate, so the tooltip carries them in full (DESIGN.md, W-168).
