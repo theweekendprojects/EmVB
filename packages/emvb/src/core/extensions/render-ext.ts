@@ -12,7 +12,8 @@ import { extensionPlaceholderVNode } from "./placeholder.ts";
 import type { ExtensionMarkup, ExtensionRenderContext, ExtensionRenderMode } from "./types.ts";
 import { parseExtensionType } from "./namespace.ts";
 import { cleanBoundText } from "../data/bindings.ts";
-import { isExtensionMarkup, safeMarkup } from "./markup.ts";
+import { fillSlot, isExtensionMarkup, safeMarkup } from "./markup.ts";
+import { isContainerExtensionType } from "./containers.ts";
 
 export type { ExtensionRenderMode } from "./types.ts";
 
@@ -162,12 +163,18 @@ export function liveExtensionRender(
   scope?: string,
   /** The mode the output is drawn in; elements can read it from their context. */
   mode: ExtensionRenderMode = "public",
+  /** Stored child nodes under this element (zero for a leaf). */
+  childCount = 0,
 ): LiveExtensionRender | undefined {
   const parsed = parseExtensionType(node.type);
   const found = parsed ? liveElement(node.type) : undefined;
   if (!parsed || !found) return undefined;
   const checked = validateExtensionProps(found.manifest.schema, propsOf(node));
-  const ctx: ExtensionRenderContext = { sources: syncSourceValues(parsed.pkg), mode };
+  const ctx: ExtensionRenderContext = {
+    sources: syncSourceValues(parsed.pkg),
+    mode,
+    childCount,
+  };
   let raw: unknown;
   try {
     raw = found.element.render(checked.props, ctx);
@@ -196,7 +203,8 @@ export function liveExtensionOutput(node: {
 
 /**
  * Build the VNode for a stored extension element. Always returns a node (placeholder
- * on failure) so siblings keep rendering.
+ * on failure) so siblings keep rendering. A container's stored children are rendered by core and
+ * placed at its slot (markup) or after its output (nodes); a leaf ignores them.
  */
 export function renderExtensionNode(
   node: LayoutNode,
@@ -213,17 +221,20 @@ export function renderExtensionNode(
   if (!parsed) {
     return extensionPlaceholderVNode(type, id, mode);
   }
+  const stored: LayoutNode[] = isContainerExtensionType(type)
+    ? ((node as { children?: LayoutNode[] }).children ?? [])
+    : [];
 
-  const live = liveExtensionRender(node, markupScope(id), mode);
+  const live = liveExtensionRender(node, markupScope(id), mode, stored.length);
   let markup: VNode | undefined = live?.kind === "markup" ? live.markup : undefined;
   let safe: LayoutNode[] | undefined = live?.kind === "nodes" ? live.nodes : undefined;
   if (!markup && !safe && !liveElement(type) && outputs?.has(extensionOutputKey(node))) {
     // The server's output is checked again here, with the allowlist the admin was sent.
-    const stored = outputs.get(extensionOutputKey(node));
-    if (isExtensionMarkup(stored)) {
-      markup = checkedMarkup(stored, parsed.pkg);
+    const serverOutput = outputs.get(extensionOutputKey(node));
+    if (isExtensionMarkup(serverOutput)) {
+      markup = checkedMarkup(serverOutput, parsed.pkg);
     } else {
-      safe = safeExtensionOutput(stored, Math.random, extensionClassAllowlist(parsed.pkg));
+      safe = safeExtensionOutput(serverOutput, Math.random, extensionClassAllowlist(parsed.pkg));
     }
   }
 
@@ -239,11 +250,13 @@ export function renderExtensionNode(
 
   if (markup) {
     rendered?.(parsed.pkg);
-    return wrap([markup]);
+    // The children are core output, already safe: they are placed after the check, never filtered.
+    const filled = fillSlot(markup, visitChildren(stored));
+    return wrap([filled.root, ...filled.unused]);
   }
   if (!safe || safe.length === 0) {
     return extensionPlaceholderVNode(type, id, mode);
   }
   rendered?.(parsed.pkg);
-  return wrap(visitChildren(safe));
+  return wrap([...visitChildren(safe), ...visitChildren(stored)]);
 }

@@ -9,6 +9,7 @@
 
 import { cleanExtensionAssets, normalizeClasses } from "./classes.ts";
 import { normalizeExtension } from "./normalize.ts";
+import { setContainerExtensionTypes } from "./containers.ts";
 import type { EmVBExtension, ExtensionAssets, ExtensionManifest } from "./types.ts";
 
 const KEY = Symbol.for("emvb.extensions.v1");
@@ -49,6 +50,11 @@ function rememberManifest(manifest: ExtensionManifest): void {
 }
 
 /** Register live extensions from `emvb({ extensions })`. Returns serializable manifests. */
+/** The container and part types follow whatever manifests are registered now. */
+function syncContainers(): void {
+  setContainerExtensionTypes(store().manifests);
+}
+
 export function rememberExtensions(input: unknown): ExtensionManifest[] {
   const list = Array.isArray(input) ? input : [];
   const manifests: ExtensionManifest[] = [];
@@ -61,6 +67,7 @@ export function rememberExtensions(input: unknown): ExtensionManifest[] {
     rememberManifest(normalized.manifest);
     manifests.push(normalized.manifest);
   }
+  syncContainers();
   return manifests;
 }
 
@@ -135,6 +142,7 @@ export function rememberExtensionManifests(input: readonly unknown[]): void {
     rememberManifest({ ...rest, ...(classes ? { classes } : {}) });
     rememberExtensionAssets(m.id, assets);
   }
+  syncContainers();
 }
 
 /** Manifests currently remembered (for editor/config), with their build-time assets. */
@@ -177,6 +185,7 @@ export function clearExtensions(): void {
   s.manifests = [];
   s.assets?.clear();
   s.allow?.clear();
+  syncContainers();
 }
 
 /** Rebuild manifests from options.extensions after createPlugin (ids only or full manifests). */

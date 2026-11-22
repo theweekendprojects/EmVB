@@ -10,6 +10,7 @@ import {
   type Layout,
   type LayoutNode,
 } from "../../../core/index.ts";
+import { isContainerExtensionType } from "../../../core/extensions/containers.ts";
 import type { ThemePartType } from "../../../core/theme/part-types.ts";
 import { indexLayout } from "../../../core/tree-ops.ts";
 import { isSharedPart } from "../panels/settings/heading-warning.ts";
@@ -190,6 +191,8 @@ export function newElement(
       id: newNodeId(random),
       type,
       props: extensionDefaults ? { ...extensionDefaults } : {},
+      // A container must hold a children array before it can accept a drop.
+      ...(isContainerExtensionType(type) ? { children: [] } : {}),
     };
   }
   if (!(type in ELEMENTS)) return null;

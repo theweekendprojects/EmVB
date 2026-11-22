@@ -92,6 +92,8 @@ export type ExtensionRenderContext = {
   sources: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** So an element can show its editing state (a modal open, a carousel stacked) in the editor only. */
   mode: ExtensionRenderMode;
+  /** Stored child nodes under this element. Zero for a leaf or an empty container. */
+  childCount?: number;
 };
 
 /**
@@ -105,6 +107,18 @@ export type ExtensionElement = {
   group?: "layout" | "content" | "form" | "dynamic";
   schema: ExtensionPropSchema;
   fields: readonly ExtensionField[];
+  /**
+   * Holds child nodes (extensionApi 1.x, additive). Children fill the element's `emvb-slot` marker
+   * in markup output; without a marker they are appended after the output.
+   */
+  container?: boolean;
+  /** Element names this container accepts as children, in the same package. Implies `container`. */
+  accepts?: readonly string[];
+  /**
+   * A list part (extensionApi 1.x, additive). Its markup is not wrapped, so it sits directly inside
+   * its parent's markup. It may only go inside a parent that lists it in `accepts`.
+   */
+  part?: boolean;
   defaults?: () => Record<string, unknown>;
   render: (
     props: Record<string, unknown>,
@@ -186,6 +200,12 @@ export type ExtensionElementManifest = {
   group: "layout" | "content" | "form" | "dynamic";
   schema: ExtensionPropSchema;
   fields: readonly ExtensionField[];
+  /** Present and true when the element holds children (extensionApi 1.x, additive). */
+  container?: boolean;
+  /** Stored types of the child elements this container accepts (extensionApi 1.x, additive). */
+  accepts?: readonly string[];
+  /** Present and true for a list part (extensionApi 1.x, additive). */
+  part?: boolean;
   defaults: Record<string, unknown>;
 };
 

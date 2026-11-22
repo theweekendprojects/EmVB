@@ -22,6 +22,11 @@ const MAX_DEPTH = 12;
 const MAX_NODES = 200;
 /** Images and posters load over http(s) only, so a data: URL cannot hide script or a second address. */
 const MEDIA_SCHEMES: ReadonlySet<string> = new Set(["http:", "https:"]);
+/**
+ * The marker where a container's children go. Walked as an empty leaf, then replaced by
+ * `fillSlot` after the check, so it never reaches the serializer.
+ */
+export const SLOT_TAG = "emvb-slot";
 /** A plain element id: starts with a letter, then letters, digits, `-` or `_`. */
 const ID_RULE = /^[A-Za-z][\w-]{0,63}$/;
 /** Attributes whose value is one id. */
@@ -116,6 +121,7 @@ function walk(
 ): VNode | undefined {
   if (depth > MAX_DEPTH || budget.left <= 0) return undefined;
   if (!node || typeof node !== "object" || typeof node.tag !== "string") return undefined;
+  if (node.tag === SLOT_TAG) return { tag: SLOT_TAG, attrs: {}, children: [] };
   if (!isAllowedTag(node.tag)) return undefined;
   budget.left -= 1;
   const attrs: Record<string, string> = {};
@@ -156,4 +162,34 @@ export function safeMarkup(
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Put the children (already rendered by core, so they are not re-checked) at the markup's slot
+ * markers: the first marker gets them, later markers are removed. Children with no marker come back
+ * as `unused`, for the caller to append. Call this on checked markup only.
+ */
+export function fillSlot(
+  root: VNode,
+  children: readonly VNode[],
+): { root: VNode; unused: VNode[] } {
+  let placed = false;
+  const place = (): VNode[] => {
+    if (placed) return [];
+    placed = true;
+    return [...children];
+  };
+  if (root.tag === SLOT_TAG)
+    return { root: { tag: "div", attrs: {}, children: place() }, unused: [] };
+  const fill = (node: VNode): VNode => ({
+    tag: node.tag,
+    attrs: node.attrs,
+    children: node.children.flatMap((child): (VNode | string)[] => {
+      if (typeof child === "string") return [child];
+      if (child.tag === SLOT_TAG) return place();
+      return [fill(child)];
+    }),
+  });
+  const filled = fill(root);
+  return { root: filled, unused: placed ? [] : [...children] };
 }
