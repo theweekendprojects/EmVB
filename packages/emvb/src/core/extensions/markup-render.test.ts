@@ -184,6 +184,35 @@ describe("markup output (extensionApi 1.x)", () => {
     expect(html).not.toContain("onerror");
   });
 
+  describe("render mode (ctx.mode)", () => {
+    test("an element reads the mode it is drawn in", () => {
+      rememberExtensions([
+        defineExtension({
+          id: "emvb-ext-card",
+          elements: [
+            {
+              name: "box",
+              label: "Box",
+              schema: { type: "object", properties: {} },
+              fields: [],
+              render: (_props, ctx) => ({
+                markup: {
+                  tag: "p",
+                  attrs: {},
+                  children: [ctx.mode === "editor" ? "Editing" : "Public"],
+                },
+              }),
+            },
+          ],
+        }),
+      ]);
+      expect(publicHtml()).toContain("Public");
+      expect(publicHtml()).not.toContain("Editing");
+      const editor = renderPage(page(), emptyDesign(), { mode: "editor" }).html;
+      expect(editor).toContain("Editing");
+    });
+  });
+
   describe("ids", () => {
     const twoInstances = (): Layout => ({
       schemaVersion: LAYOUT_SCHEMA_VERSION,

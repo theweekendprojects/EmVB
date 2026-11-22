@@ -237,7 +237,8 @@ export async function exportSite(
   let extensionOutputs: Map<string, unknown> | undefined;
   if (extensionNodes.length > 0) {
     await loadExtensionManifests(fetcher);
-    extensionOutputs = await fetchExtensionOutputs(fetcher, extensionNodes);
+    // The export is the public site, so its extension output is the public render.
+    extensionOutputs = await fetchExtensionOutputs(fetcher, extensionNodes, undefined, "public");
   }
   let site = buildSiteExport({
     ...data,

@@ -43,6 +43,8 @@ const boundedProps = z
   });
 
 const RenderInput = z.object({
+  /** The canvas asks "editor", the export and the public page "public". */
+  mode: z.enum(["public", "editor"]).default("editor"),
   nodes: z
     .array(
       z.object({
@@ -66,7 +68,7 @@ export const extensionRenderRoute: PluginRoute<z.infer<typeof RenderInput>> = {
     outputs: ctx.input.nodes.map((node) => {
       const key = extensionOutputKey(node);
       if (!isExtensionType(node.type)) return { key, nodes: null };
-      const live = liveExtensionRender(node);
+      const live = liveExtensionRender(node, undefined, ctx.input.mode);
       // Markup is already checked here (markup.ts); the admin checks it again before drawing it.
       if (live?.kind === "markup") return { key, markup: live.markup };
       if (live?.kind === "nodes") return { key, nodes: withExtensionClasses(live.nodes) };
