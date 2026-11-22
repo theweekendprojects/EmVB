@@ -9,9 +9,10 @@ import { extensionClassAllowlist, liveElement, liveExtension } from "./registry.
 import { validateExtensionProps } from "./schema.ts";
 import { safeExtensionOutput } from "./safe-nodes.ts";
 import { extensionPlaceholderVNode } from "./placeholder.ts";
-import type { ExtensionRenderContext } from "./types.ts";
+import type { ExtensionMarkup, ExtensionRenderContext } from "./types.ts";
 import { parseExtensionType } from "./namespace.ts";
 import { cleanBoundText } from "../data/bindings.ts";
+import { isExtensionMarkup, safeMarkup } from "./markup.ts";
 
 export type ExtensionRenderMode = "public" | "editor";
 
@@ -127,14 +128,28 @@ export function extensionOutputKey(node: { type: string; props?: unknown }): str
 /** Raw render output per `extensionOutputKey`, rendered by the server for the admin. */
 export type ExtensionOutputs = ReadonlyMap<string, unknown>;
 
+/** A checked live output: either layout nodes (the classic path) or a checked markup tree. */
+export type LiveExtensionRender =
+  | { kind: "nodes"; nodes: LayoutNode[] }
+  | { kind: "markup"; markup: VNode };
+
+/**
+ * The package's markup check: a markup tree that passes, or `undefined` (placeholder). The class
+ * allowlist is the package's registered one; a package without one passes no classes.
+ */
+function checkedMarkup(raw: ExtensionMarkup, pkg: string): VNode | undefined {
+  return safeMarkup(raw.markup, extensionClassAllowlist(pkg) ?? new Set());
+}
+
 /**
  * Run the live render() of a stored extension element and check its output. Undefined when the
- * extension is missing here, render throws, or nothing legal is left.
+ * extension is missing here, render throws, or nothing legal is left. Markup output (`{ markup }`)
+ * is checked by `markup.ts`; the other outputs are layout nodes.
  */
-export function liveExtensionOutput(node: {
+export function liveExtensionRender(node: {
   type: string;
   props?: unknown;
-}): LayoutNode[] | undefined {
+}): LiveExtensionRender | undefined {
   const parsed = parseExtensionType(node.type);
   const found = parsed ? liveElement(node.type) : undefined;
   if (!parsed || !found) return undefined;
@@ -146,8 +161,24 @@ export function liveExtensionOutput(node: {
   } catch {
     return undefined;
   }
+  if (isExtensionMarkup(raw)) {
+    const markup = checkedMarkup(raw, parsed.pkg);
+    return markup ? { kind: "markup", markup } : undefined;
+  }
   const safe = safeExtensionOutput(raw, Math.random, extensionClassAllowlist(parsed.pkg));
-  return safe.length > 0 ? safe : undefined;
+  return safe.length > 0 ? { kind: "nodes", nodes: safe } : undefined;
+}
+
+/**
+ * Layout nodes for a stored extension element, or undefined. Markup output is not nodes, so it
+ * is undefined here; callers that accept markup use `liveExtensionRender`.
+ */
+export function liveExtensionOutput(node: {
+  type: string;
+  props?: unknown;
+}): LayoutNode[] | undefined {
+  const live = liveExtensionRender(node);
+  return live?.kind === "nodes" ? live.nodes : undefined;
 }
 
 /**
@@ -170,22 +201,20 @@ export function renderExtensionNode(
     return extensionPlaceholderVNode(type, id, mode);
   }
 
-  let safe = liveExtensionOutput(node);
-  if (!safe && !liveElement(type) && outputs?.has(extensionOutputKey(node))) {
+  const live = liveExtensionRender(node);
+  let markup: VNode | undefined = live?.kind === "markup" ? live.markup : undefined;
+  let safe: LayoutNode[] | undefined = live?.kind === "nodes" ? live.nodes : undefined;
+  if (!markup && !safe && !liveElement(type) && outputs?.has(extensionOutputKey(node))) {
     // The server's output is checked again here, with the allowlist the admin was sent.
-    safe = safeExtensionOutput(
-      outputs.get(extensionOutputKey(node)),
-      Math.random,
-      extensionClassAllowlist(parsed.pkg),
-    );
+    const stored = outputs.get(extensionOutputKey(node));
+    if (isExtensionMarkup(stored)) {
+      markup = checkedMarkup(stored, parsed.pkg);
+    } else {
+      safe = safeExtensionOutput(stored, Math.random, extensionClassAllowlist(parsed.pkg));
+    }
   }
-  if (!safe || safe.length === 0) {
-    return extensionPlaceholderVNode(type, id, mode);
-  }
-  rendered?.(parsed.pkg);
 
-  const children = visitChildren(safe);
-  return {
+  const wrap = (children: VNode[]): VNode => ({
     tag: "div",
     attrs: {
       class: "emvb-ext",
@@ -193,5 +222,15 @@ export function renderExtensionNode(
       ...(id && mode === "editor" ? { "data-emvb-id": id } : {}),
     },
     children,
-  };
+  });
+
+  if (markup) {
+    rendered?.(parsed.pkg);
+    return wrap([markup]);
+  }
+  if (!safe || safe.length === 0) {
+    return extensionPlaceholderVNode(type, id, mode);
+  }
+  rendered?.(parsed.pkg);
+  return wrap(visitChildren(safe));
 }

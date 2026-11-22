@@ -43,7 +43,9 @@ function safeAttr(name: string, value: string, classes: ReadonlySet<string>): st
   // `style` is dropped: core's serializer does not allow it, so markup cannot set inline CSS.
   if (name === "style") return undefined;
   if (name === "srcset") return safeSrcset(value);
-  if (name === "href" || name === "action" || name === "formaction") return sanitizeHref(value);
+  if (name === "href" || name === "xlink:href" || name === "action" || name === "formaction") {
+    return sanitizeHref(value);
+  }
   if (name === "src" || name === "poster") return sanitizeUrl(value, MEDIA_SCHEMES);
   return value;
 }
@@ -66,6 +68,8 @@ function walk(
     const kept = safeAttr(name, value, classes);
     if (kept !== undefined) attrs[name] = kept;
   }
+  // A non-array `children` is malformed: refuse the element rather than guess.
+  if (node.children !== undefined && !Array.isArray(node.children)) return undefined;
   const children: (VNode | string)[] = [];
   for (const child of node.children ?? []) {
     if (typeof child === "string") {
@@ -84,5 +88,10 @@ function walk(
  * placeholder. `classes` is the package's allowlist from the registry.
  */
 export function safeMarkup(root: VNode, classes: ReadonlySet<string>): VNode | undefined {
-  return walk(root, 0, { left: MAX_NODES }, classes);
+  // A throwing getter or proxy in extension output must not escape: it is a placeholder.
+  try {
+    return walk(root, 0, { left: MAX_NODES }, classes);
+  } catch {
+    return undefined;
+  }
 }

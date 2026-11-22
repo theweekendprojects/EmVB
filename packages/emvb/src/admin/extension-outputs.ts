@@ -63,15 +63,18 @@ export async function fetchExtensionOutputs(
   for (let start = 0; start < nodes.length; start += BATCH) {
     try {
       // oxlint-disable-next-line no-await-in-loop -- batches, one request at a time
-      const body = await requestJson<{ outputs?: { key?: unknown; nodes?: unknown }[] }>(
-        fetcher,
-        `/_emdash/api/plugins/${PLUGIN_ID}/editor/extensions/render`,
-        { method: "POST", body: { nodes: nodes.slice(start, start + BATCH) } },
-      );
+      const body = await requestJson<{
+        outputs?: { key?: unknown; nodes?: unknown; markup?: unknown }[];
+      }>(fetcher, `/_emdash/api/plugins/${PLUGIN_ID}/editor/extensions/render`, {
+        method: "POST",
+        body: { nodes: nodes.slice(start, start + BATCH) },
+      });
       for (const item of body?.outputs ?? []) {
         if (typeof item.key !== "string") continue;
         answered?.add(item.key);
         if (Array.isArray(item.nodes)) outputs.set(item.key, item.nodes);
+        else if (item.markup && typeof item.markup === "object")
+          outputs.set(item.key, { markup: item.markup });
       }
     } catch {
       // Leave this batch out.
