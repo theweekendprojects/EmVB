@@ -137,8 +137,18 @@ export type LiveExtensionRender =
  * The package's markup check: a markup tree that passes, or `undefined` (placeholder). The class
  * allowlist is the package's registered one; a package without one passes no classes.
  */
-function checkedMarkup(raw: ExtensionMarkup, pkg: string): VNode | undefined {
-  return safeMarkup(raw.markup, extensionClassAllowlist(pkg) ?? new Set());
+function checkedMarkup(raw: ExtensionMarkup, pkg: string, scope?: string): VNode | undefined {
+  return safeMarkup(raw.markup, extensionClassAllowlist(pkg) ?? new Set(), scope);
+}
+
+/**
+ * The id scope of one layout node: its ids and their references are prefixed with it, so two
+ * instances of one element never share an id on a page. Only the node id's letters and digits.
+ */
+export function markupScope(nodeId: string | undefined): string | undefined {
+  if (typeof nodeId !== "string") return undefined;
+  const clean = nodeId.replace(/[^A-Za-z0-9]/g, "");
+  return clean.length > 0 ? `ext-${clean}` : undefined;
 }
 
 /**
@@ -146,10 +156,11 @@ function checkedMarkup(raw: ExtensionMarkup, pkg: string): VNode | undefined {
  * extension is missing here, render throws, or nothing legal is left. Markup output (`{ markup }`)
  * is checked by `markup.ts`; the other outputs are layout nodes.
  */
-export function liveExtensionRender(node: {
-  type: string;
-  props?: unknown;
-}): LiveExtensionRender | undefined {
+export function liveExtensionRender(
+  node: { type: string; props?: unknown },
+  /** The scope of the node's ids (see `markupScope`); omitted, the ids are checked but not scoped. */
+  scope?: string,
+): LiveExtensionRender | undefined {
   const parsed = parseExtensionType(node.type);
   const found = parsed ? liveElement(node.type) : undefined;
   if (!parsed || !found) return undefined;
@@ -162,7 +173,7 @@ export function liveExtensionRender(node: {
     return undefined;
   }
   if (isExtensionMarkup(raw)) {
-    const markup = checkedMarkup(raw, parsed.pkg);
+    const markup = checkedMarkup(raw, parsed.pkg, scope);
     return markup ? { kind: "markup", markup } : undefined;
   }
   const safe = safeExtensionOutput(raw, Math.random, extensionClassAllowlist(parsed.pkg));
@@ -201,7 +212,7 @@ export function renderExtensionNode(
     return extensionPlaceholderVNode(type, id, mode);
   }
 
-  const live = liveExtensionRender(node);
+  const live = liveExtensionRender(node, markupScope(id));
   let markup: VNode | undefined = live?.kind === "markup" ? live.markup : undefined;
   let safe: LayoutNode[] | undefined = live?.kind === "nodes" ? live.nodes : undefined;
   if (!markup && !safe && !liveElement(type) && outputs?.has(extensionOutputKey(node))) {
