@@ -185,7 +185,7 @@ describe("markup output (extensionApi 1.x)", () => {
   });
 
   describe("ids", () => {
-    const twoInstances = (markup: unknown): Layout => ({
+    const twoInstances = (): Layout => ({
       schemaVersion: LAYOUT_SCHEMA_VERSION,
       root: {
         id: "root0001",
@@ -199,7 +199,7 @@ describe("markup output (extensionApi 1.x)", () => {
     });
     const withMarkup = (markup: unknown) => {
       register(() => ({ markup: markup as never }));
-      return twoInstances(markup);
+      return twoInstances();
     };
 
     test("two instances of one element never share an id", () => {
