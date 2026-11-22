@@ -6,7 +6,7 @@
  * Drop on values: an unlisted class, an event handler, an unsafe URL or any inline style is
  * removed, and the rest of the element still renders.
  */
-import { isAllowedAttr, isAllowedTag, type VNode } from "../render/vnode.ts";
+import { isAllowedAttr, isAllowedTag, VALUE_RULES, type VNode } from "../render/vnode.ts";
 import { sanitizeHref } from "../sanitize/href.ts";
 import { sanitizeUrl } from "../sanitize/url.ts";
 import type { ExtensionMarkup } from "./types.ts";
@@ -36,6 +36,9 @@ function safeSrcset(value: string): string | undefined {
 
 /** The value to keep for one attribute, or `undefined` to drop it. */
 function safeAttr(name: string, value: string, classes: ReadonlySet<string>): string | undefined {
+  // A value rule (popover, popovertarget) drops the attribute, never the element.
+  const rule = VALUE_RULES[name];
+  if (rule && !rule.test(value)) return undefined;
   if (name === "class") {
     const kept = value.split(/\s+/).filter((token) => classes.has(token));
     return kept.length > 0 ? kept.join(" ") : undefined;

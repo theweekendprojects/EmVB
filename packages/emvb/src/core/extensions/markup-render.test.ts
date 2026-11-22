@@ -144,6 +144,46 @@ describe("markup output (extensionApi 1.x)", () => {
     expect(html).toContain(EXTENSION_PLACEHOLDER_TEXT);
   });
 
+  test("dialog and table markup, the native elements daisyUI needs, render", () => {
+    register(() => ({
+      markup: {
+        tag: "dialog",
+        attrs: { open: "" },
+        children: [
+          {
+            tag: "table",
+            attrs: {},
+            children: [
+              {
+                tag: "tr",
+                attrs: {},
+                children: [{ tag: "th", attrs: { scope: "col" }, children: ["Name"] }],
+              },
+            ],
+          },
+        ],
+      },
+    }));
+    const html = publicHtml();
+    expect(html).toContain("<dialog");
+    expect(html).toContain('<th scope="col">Name</th>');
+    expect(html).not.toContain(EXTENSION_PLACEHOLDER_TEXT);
+  });
+
+  test("a popovertarget value that could carry markup is dropped, the element stays", () => {
+    register(() => ({
+      markup: {
+        tag: "button",
+        attrs: { popovertarget: '"><img src=x onerror=alert(1)>' },
+        children: ["Open"],
+      },
+    }));
+    const html = publicHtml();
+    expect(html).toContain("Open");
+    expect(html).not.toContain("popovertarget");
+    expect(html).not.toContain("onerror");
+  });
+
   test("the editor fallback re-checks stored markup and refuses an unsafe tag", () => {
     // The package is not registered here (the admin has no render code); the server's output is.
     const layout = page();
