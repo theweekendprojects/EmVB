@@ -331,6 +331,12 @@ function EditorApp({
   );
   // W-911: field mode previews the unsaved layout with the public renderer, in a sandboxed frame.
   const [fieldPreview, setFieldPreview] = React.useState(false);
+  // The field preview renders in public mode, so it asks for public outputs, only while open.
+  const publicExtensionOutputs = useExtensionOutputs(
+    fieldPreview ? state.page.layout : null,
+    fetcher,
+    "public",
+  );
   const renderFieldPreview = (previewDevice: Device): string | null => {
     if (!state.page.layout) return null;
     const result = renderPage(state.page.layout, state.design, {
@@ -345,7 +351,7 @@ function EditorApp({
         collections,
       },
       previewDevice,
-      extensionOutputs,
+      extensionOutputs: publicExtensionOutputs,
       // W-1088 (#37): visitors get nothing for an extension that can't render; this preview
       // keeps the note so the editor knows something is missing.
       extensionPlaceholders: true,

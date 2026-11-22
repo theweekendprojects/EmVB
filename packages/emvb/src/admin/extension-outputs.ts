@@ -58,6 +58,7 @@ export async function fetchExtensionOutputs(
   fetcher: Fetcher,
   nodes: readonly ExtNode[],
   answered?: Set<string>,
+  mode: "public" | "editor" = "editor",
 ): Promise<Map<string, unknown>> {
   const outputs = new Map<string, unknown>();
   for (let start = 0; start < nodes.length; start += BATCH) {
@@ -67,7 +68,7 @@ export async function fetchExtensionOutputs(
         outputs?: { key?: unknown; nodes?: unknown; markup?: unknown }[];
       }>(fetcher, `/_emdash/api/plugins/${PLUGIN_ID}/editor/extensions/render`, {
         method: "POST",
-        body: { nodes: nodes.slice(start, start + BATCH) },
+        body: { nodes: nodes.slice(start, start + BATCH), mode },
       });
       for (const item of body?.outputs ?? []) {
         if (typeof item.key !== "string") continue;
@@ -122,6 +123,8 @@ const MAX_RETRIES = 3;
 export function useExtensionOutputs(
   layout: unknown,
   fetcher: Fetcher,
+  /** The render mode the outputs are for: the canvas asks "editor", the field preview "public". */
+  mode: "public" | "editor" = "editor",
 ): ReadonlyMap<string, unknown> {
   const nodes = layout ? extensionNodesIn([layout]) : [];
   const key = nodes.map(extensionOutputKey).join("\u0000");
@@ -154,7 +157,7 @@ export function useExtensionOutputs(
       if (wanted.length === 0) return;
       for (const node of wanted) seen.add(extensionOutputKey(node));
       const answered = new Set<string>();
-      void fetchExtensionOutputs(fetcher, wanted, answered).then((found) => {
+      void fetchExtensionOutputs(fetcher, wanted, answered, mode).then((found) => {
         // A failed batch: its elements are asked again later and on the next change.
         let failed = false;
         for (const node of wanted) {

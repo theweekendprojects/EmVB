@@ -84,9 +84,14 @@ export type ExtensionClasses = {
 };
 
 /** Context passed to an element render function (read-only source values). */
+/** Where the output is drawn: the public page (or export) or the editor canvas. */
+export type ExtensionRenderMode = "public" | "editor";
+
 export type ExtensionRenderContext = {
   /** Resolved values from this extension's sources, keyed by source name then field. */
   sources: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  /** So an element can show its editing state (a modal open, a carousel stacked) in the editor only. */
+  mode: ExtensionRenderMode;
 };
 
 /**

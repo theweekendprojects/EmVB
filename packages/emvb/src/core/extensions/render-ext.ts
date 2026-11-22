@@ -9,12 +9,12 @@ import { extensionClassAllowlist, liveElement, liveExtension } from "./registry.
 import { validateExtensionProps } from "./schema.ts";
 import { safeExtensionOutput } from "./safe-nodes.ts";
 import { extensionPlaceholderVNode } from "./placeholder.ts";
-import type { ExtensionMarkup, ExtensionRenderContext } from "./types.ts";
+import type { ExtensionMarkup, ExtensionRenderContext, ExtensionRenderMode } from "./types.ts";
 import { parseExtensionType } from "./namespace.ts";
 import { cleanBoundText } from "../data/bindings.ts";
 import { isExtensionMarkup, safeMarkup } from "./markup.ts";
 
-export type ExtensionRenderMode = "public" | "editor";
+export type { ExtensionRenderMode } from "./types.ts";
 
 function isThenable(value: unknown): value is Promise<unknown> {
   return !!value && typeof (value as { then?: unknown }).then === "function";
@@ -160,12 +160,14 @@ export function liveExtensionRender(
   node: { type: string; props?: unknown },
   /** The scope of the node's ids (see `markupScope`); omitted, the ids are checked but not scoped. */
   scope?: string,
+  /** The mode the output is drawn in; elements can read it from their context. */
+  mode: ExtensionRenderMode = "public",
 ): LiveExtensionRender | undefined {
   const parsed = parseExtensionType(node.type);
   const found = parsed ? liveElement(node.type) : undefined;
   if (!parsed || !found) return undefined;
   const checked = validateExtensionProps(found.manifest.schema, propsOf(node));
-  const ctx: ExtensionRenderContext = { sources: syncSourceValues(parsed.pkg) };
+  const ctx: ExtensionRenderContext = { sources: syncSourceValues(parsed.pkg), mode };
   let raw: unknown;
   try {
     raw = found.element.render(checked.props, ctx);
@@ -212,7 +214,7 @@ export function renderExtensionNode(
     return extensionPlaceholderVNode(type, id, mode);
   }
 
-  const live = liveExtensionRender(node, markupScope(id));
+  const live = liveExtensionRender(node, markupScope(id), mode);
   let markup: VNode | undefined = live?.kind === "markup" ? live.markup : undefined;
   let safe: LayoutNode[] | undefined = live?.kind === "nodes" ? live.nodes : undefined;
   if (!markup && !safe && !liveElement(type) && outputs?.has(extensionOutputKey(node))) {
