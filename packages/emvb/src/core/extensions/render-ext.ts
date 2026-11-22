@@ -12,7 +12,7 @@ import { extensionPlaceholderVNode } from "./placeholder.ts";
 import type { ExtensionMarkup, ExtensionRenderContext, ExtensionRenderMode } from "./types.ts";
 import { parseExtensionType } from "./namespace.ts";
 import { fillSlot, isExtensionMarkup, safeMarkup } from "./markup.ts";
-import { isContainerExtensionType } from "./containers.ts";
+import { isContainerExtensionType, isPartExtensionType } from "./containers.ts";
 
 export type { ExtensionRenderMode } from "./types.ts";
 
@@ -218,6 +218,18 @@ export function renderExtensionNode(
     rendered?.(parsed.pkg);
     // The children are core output, already safe: they are placed after the check, never filtered.
     const filled = fillSlot(markup, visitChildren(stored));
+    if (isPartExtensionType(type)) {
+      // A list part sits directly in its parent's markup: no wrapper of its own.
+      return {
+        tag: filled.root.tag,
+        attrs: {
+          ...filled.root.attrs,
+          "data-emvb-ext": type,
+          ...(id && mode === "editor" ? { "data-emvb-id": id } : {}),
+        },
+        children: [...filled.root.children, ...filled.unused],
+      };
+    }
     return wrap([filled.root, ...filled.unused]);
   }
   if (!safe || safe.length === 0) {

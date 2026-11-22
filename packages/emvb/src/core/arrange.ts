@@ -1,3 +1,4 @@
+import { extensionAccepts, isPartExtensionType } from "./extensions/containers.ts";
 import {
   MAX_CAROUSEL_SLIDES,
   MAX_DEPTH,
@@ -76,6 +77,8 @@ export const REASONS = {
   itemOutsideAccordion: "Accordion items can only go inside an Accordion.",
   onlyAccordionItems: "An accordion can only hold accordion items.",
   itemOutsideMenu: "Menu items can only go inside a Menu.",
+  extensionNotAccepted: "This element doesn't fit inside that one.",
+  partOutsideParent: "This item only fits inside the list it belongs to.",
   onlyMenuItems: "A menu can only hold menu items.",
   linkOutsideSocial: "Social links can only go inside Social icons.",
   onlySocialLinks: "Social icons can only hold social links.",
@@ -161,6 +164,10 @@ export function parentChildRefusal(
   child: LayoutNode,
   inForm: boolean,
 ): string | undefined {
+  // An extension container that lists its children only takes those; a list part needs such a parent.
+  const accepted = extensionAccepts(parent.type);
+  if (accepted && !accepted.has(child.type)) return REASONS.extensionNotAccepted;
+  if (isPartExtensionType(child.type) && !accepted) return REASONS.partOutsideParent;
   if (child.type === "loop-empty" && parent.type !== "loop") return REASONS.emptyOutsideLoop;
   if (child.type === "tab-panel" && parent.type !== "tabs") return REASONS.tabOutsideTabs;
   if (parent.type === "tabs" && child.type !== "tab-panel") return REASONS.onlyTabPanels;
