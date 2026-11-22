@@ -1,6 +1,7 @@
 import { boundedArray } from "../bounded-array.ts";
 import { z } from "zod";
 import { LIST_MARKERS } from "../css-keywords.ts";
+import { isContainerExtensionType } from "../extensions/containers.ts";
 import { MAX_TEXT_LENGTH } from "../limits.ts";
 import { ImageEdit } from "../image-edit/schema.ts";
 import {
@@ -2096,6 +2097,9 @@ export const isParentNode = (
   | PriceListNode
   | ShareButtonsNode
   | HotspotsNode =>
+  // An extension container holds children when its stored node has a children array.
+  (isContainerExtensionType(node.type) &&
+    Array.isArray((node as { children?: unknown }).children)) ||
   node.type === "container" ||
   node.type === "div-block" ||
   node.type === "layout-section" ||

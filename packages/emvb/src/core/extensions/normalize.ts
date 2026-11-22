@@ -19,7 +19,8 @@ export type NormalizedExtension = {
   manifest: ExtensionManifest;
 };
 
-const MAX_ELEMENTS = 32;
+// Raised from 32 (fork 961cd216): a package of many components needs room; still bounded.
+const MAX_ELEMENTS = 128;
 const MAX_PANELS = 8;
 const MAX_SOURCES = 8;
 
@@ -47,6 +48,12 @@ function normalizeElement(
     ...schemaDefaults(element.schema),
     ...(typeof element.defaults === "function" ? element.defaults() : {}),
   };
+  // `accepts` names elements of this package; each becomes its stored type. It implies a container.
+  const accepts = (Array.isArray(element.accepts) ? element.accepts : [])
+    .filter((name): name is string => typeof name === "string" && !extensionNameIssue(name))
+    .map((name) => extensionType(pkg, name))
+    .filter((t): t is string => typeof t === "string")
+    .slice(0, 32);
   return {
     type,
     name: element.name,
@@ -55,6 +62,9 @@ function normalizeElement(
     schema: element.schema,
     fields,
     defaults,
+    ...(element.container === true || accepts.length > 0 ? { container: true } : {}),
+    ...(accepts.length > 0 ? { accepts } : {}),
+    ...(element.part === true ? { part: true } : {}),
   };
 }
 
