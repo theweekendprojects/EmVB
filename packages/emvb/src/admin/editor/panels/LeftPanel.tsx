@@ -7,6 +7,8 @@ import { LayersPanel } from "./LayersPanel.tsx";
 import { CoDesignPanel } from "./CoDesignPanel.tsx";
 import type { CoDesign } from "../useCoDesign.ts";
 import { ExtensionPanels } from "../extensions/ExtensionPanels.tsx";
+import { useExtensions } from "../extensions-context.tsx";
+import { extensionLabelsOf } from "../extension-manifests.ts";
 import type { ClipboardActions } from "../useClipboardActions.ts";
 import type { SavedSectionActions } from "../useSavedSections.ts";
 import { transferKinds } from "../dnd/drop-target.ts";
@@ -65,6 +67,9 @@ export function LeftPanel({
   /** W-930: agent proposals to review; the Agent tab shows only with it. */
   coDesign?: CoDesign;
 } & LayersDropCallbacks) {
+  // The labels follow the manifests the editor loads, so the rows re-render when they arrive.
+  const manifests = useExtensions();
+  const extensionNames = React.useMemo(() => extensionLabelsOf(manifests), [manifests]);
   const [tab, setTab] = React.useState(() => {
     try {
       const last = sessionStorage.getItem(SESSION_KEY);
@@ -226,6 +231,7 @@ export function LeftPanel({
       {!showAgent && !showAdd && (
         <LayersPanel
           layout={layout}
+          extensionNames={extensionNames}
           selectedId={selectedId}
           onSelect={onSelect}
           onDuplicate={onDuplicate}
