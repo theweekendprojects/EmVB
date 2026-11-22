@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   extensionOutputKey,
   isExtensionType,
-  liveExtensionOutput,
+  liveExtensionRender,
   withExtensionClasses,
 } from "../core/extensions/index.ts";
 import { MAX_DEPTH, MAX_LAYOUT_BYTES } from "../core/limits.ts";
@@ -66,8 +66,11 @@ export const extensionRenderRoute: PluginRoute<z.infer<typeof RenderInput>> = {
     outputs: ctx.input.nodes.map((node) => {
       const key = extensionOutputKey(node);
       if (!isExtensionType(node.type)) return { key, nodes: null };
-      const nodes = liveExtensionOutput(node);
-      return { key, nodes: nodes ? withExtensionClasses(nodes) : null };
+      const live = liveExtensionRender(node);
+      // Markup is already checked here (markup.ts); the admin checks it again before drawing it.
+      if (live?.kind === "markup") return { key, markup: live.markup };
+      if (live?.kind === "nodes") return { key, nodes: withExtensionClasses(live.nodes) };
+      return { key, nodes: null };
     }),
   }),
 };
