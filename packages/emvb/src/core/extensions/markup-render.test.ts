@@ -184,6 +184,85 @@ describe("markup output (extensionApi 1.x)", () => {
     expect(html).not.toContain("onerror");
   });
 
+  describe("ids", () => {
+    const twoInstances = (markup: unknown): Layout => ({
+      schemaVersion: LAYOUT_SCHEMA_VERSION,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          { id: "ext00001", type: TYPE, props: {} },
+          { id: "ext00002", type: TYPE, props: {} },
+        ],
+      },
+    });
+    const withMarkup = (markup: unknown) => {
+      register(() => ({ markup: markup as never }));
+      return twoInstances(markup);
+    };
+
+    test("two instances of one element never share an id", () => {
+      const html = publicHtml(
+        withMarkup({
+          tag: "div",
+          attrs: { id: "item" },
+          children: [{ tag: "p", attrs: { id: "note" }, children: ["x"] }],
+        }),
+      );
+      expect(html).toContain('id="ext-ext00001-item"');
+      expect(html).toContain('id="ext-ext00002-item"');
+      expect(html).toContain('id="ext-ext00001-note"');
+      expect(html).toContain('id="ext-ext00002-note"');
+    });
+
+    test("references to a scoped id follow the same scope", () => {
+      const html = publicHtml(
+        withMarkup({
+          tag: "div",
+          attrs: {},
+          children: [
+            { tag: "h2", attrs: { id: "title" }, children: ["Title"] },
+            { tag: "section", attrs: { "aria-labelledby": "title" }, children: ["body"] },
+            { tag: "a", attrs: { href: "#title" }, children: ["jump"] },
+          ],
+        }),
+      );
+      expect(html).toContain('aria-labelledby="ext-ext00001-title"');
+      expect(html).toContain('href="#ext-ext00001-title"');
+    });
+
+    test("an id that clobbers a browser global or claims EmVB's names is dropped", () => {
+      const html = publicHtml(
+        withMarkup({
+          tag: "div",
+          attrs: {},
+          children: [
+            { tag: "p", attrs: { id: "location" }, children: ["a"] },
+            { tag: "p", attrs: { id: "emvb-root" }, children: ["b"] },
+          ],
+        }),
+      );
+      expect(html).not.toContain('id="ext-ext00001-location"');
+      expect(html).not.toContain('id="ext-ext00001-emvb-root"');
+      expect(html).not.toContain('id="emvb-root"');
+      expect(html).toContain("a");
+      expect(html).toContain("b");
+    });
+
+    test("a fragment that is not a plain id is dropped, the link stays", () => {
+      const html = publicHtml(
+        withMarkup({
+          tag: "a",
+          attrs: { href: "#bad fragment" },
+          children: ["link"],
+        }),
+      );
+      expect(html).toContain("link");
+      expect(html).not.toContain("bad fragment");
+    });
+  });
+
   test("the editor fallback re-checks stored markup and refuses an unsafe tag", () => {
     // The package is not registered here (the admin has no render code); the server's output is.
     const layout = page();
