@@ -56683,6 +56683,132 @@
       ],
       "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*list parts share a group only inside their container"
+    },
+    {
+      "id": "W-927/gap-ids-not-scoped",
+      "requirement": "W-927",
+      "description": "two instances of one element never share an id",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (name === \"id\") {\n    if (!usableId(value)) return undefined;\n    return scope === undefined ? value : `${scope}-${value}`;",
+          "replace": "if (name === \"id\") {\n    if (!usableId(value)) return undefined;\n    return value;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/markup-render.test.ts"
+      ],
+      "expect": "\\(fail\\).*two instances of one element never share an id"
+    },
+    {
+      "id": "W-927/gap-shadowing-id-kept",
+      "requirement": "W-927",
+      "description": "an id that clobbers a browser global or claims EmVB's names is dropped",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "return ID_RULE.test(value) && !isShadowingId(value) && !value.startsWith(\"emvb\");",
+          "replace": "return ID_RULE.test(value) && !value.startsWith(\"emvb\");"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/markup-render.test.ts"
+      ],
+      "expect": "\\(fail\\).*an id that clobbers a browser global or claims EmVB's names is dropped"
+    },
+    {
+      "id": "W-927/gap-route-mode-ignored",
+      "requirement": "W-927",
+      "description": "the element is told the mode the route was asked for",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/extension-routes.ts",
+          "search": "liveExtensionRender(node, markupScope(node.id), ctx.input.mode)",
+          "replace": "liveExtensionRender(node, markupScope(node.id), \"public\")"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/cases.test.ts"
+      ],
+      "expect": "\\(fail\\).*the element is told the mode the route was asked for"
+    },
+    {
+      "id": "W-927/gap-markup-depth-unbounded",
+      "requirement": "W-927",
+      "description": "a deeper tree than the limit shows the placeholder",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "const MAX_DEPTH = 12;",
+          "replace": "const MAX_DEPTH = 100000;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/cases.test.ts"
+      ],
+      "expect": "\\(fail\\).*a deeper tree than the limit shows the placeholder"
+    },
+    {
+      "id": "W-927/gap-markup-node-cap-unbounded",
+      "requirement": "W-927",
+      "description": "a tree over the node limit shows the placeholder",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "const MAX_NODES = 200;",
+          "replace": "const MAX_NODES = 100000;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/cases.test.ts"
+      ],
+      "expect": "\\(fail\\).*a tree over the node limit shows the placeholder"
+    },
+    {
+      "id": "W-927/gap-xlink-href-unchecked",
+      "requirement": "W-927",
+      "description": "an xlink:href with a script URL is dropped",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (name === \"href\" || name === \"xlink:href\") return safeHrefValue(value, scope);",
+          "replace": "if (name === \"href\") return safeHrefValue(value, scope);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/cases.test.ts"
+      ],
+      "expect": "\\(fail\\).*an xlink:href with a script URL is dropped"
+    },
+    {
+      "id": "W-927/gap-getter-escapes-check",
+      "requirement": "W-927",
+      "description": "a throwing getter inside markup shows the placeholder and leaves siblings",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "  try {\n    return walk(root, 0, { left: MAX_NODES }, classes, scope);\n  } catch {\n    return undefined;\n  }",
+          "replace": "  return walk(root, 0, { left: MAX_NODES }, classes, scope);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/markup-render.test.ts"
+      ],
+      "expect": "\\(fail\\).*a throwing getter inside markup shows the placeholder and leaves siblings"
     }
   ]
 }
