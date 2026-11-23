@@ -791,4 +791,217 @@ export const SECTION_TEMPLATES: readonly SectionTemplate[] = [
       ],
     },
   },
+  {
+    id: "products",
+    name: "Product cards",
+    description: "Three product cards, each with a short line and a link.",
+    node: {
+      id: "prod-band",
+      type: "layout-section",
+      props: { tag: "section", ...wide },
+      style: band,
+      children: [
+        {
+          id: "prod-body",
+          type: "flexbox",
+          props: {},
+          style: { ...column, gap: space("block") },
+          children: [
+            sectionHeader("prod", "Our products", "Pick the one that fits you."),
+            {
+              id: "prod-grid",
+              type: "grid",
+              props: { columns: 3, columnsTablet: 3, columnsMobile: 1 },
+              style: { gap: space("gap") },
+              children: ["One", "Two", "Three"].map((word, n) => ({
+                id: `prod-${n + 1}`,
+                type: "flexbox",
+                props: {},
+                classes: ["tpl-card"],
+                style: { ...column, ...card, gap: space("tight") },
+                children: [
+                  {
+                    id: `prod-${n + 1}-name`,
+                    type: "heading",
+                    props: { text: `Product ${word}`, level: 3 },
+                    style: { fontSize: font("subheading"), color: color("ink") },
+                  },
+                  {
+                    id: `prod-${n + 1}-text`,
+                    type: "text",
+                    props: { text: "A short line about what it does." },
+                    style: body,
+                  },
+                  {
+                    id: `prod-${n + 1}-link`,
+                    type: "link",
+                    props: { text: "Buy now", href: "#" },
+                    style: { fontWeight: 600, color: color("ink") },
+                  },
+                ],
+              })),
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    id: "articles",
+    name: "Blog grid",
+    description: "Three article preview cards, each with a title, a line and a link.",
+    node: {
+      id: "art-band",
+      type: "layout-section",
+      props: { tag: "section", ...wide },
+      style: band,
+      children: [
+        {
+          id: "art-body",
+          type: "flexbox",
+          props: {},
+          style: { ...column, gap: space("block") },
+          children: [
+            sectionHeader("art", "Latest articles", "News, guides and customer stories."),
+            {
+              id: "art-grid",
+              type: "grid",
+              props: { columns: 3, columnsTablet: 3, columnsMobile: 1 },
+              style: { gap: space("gap") },
+              children: ["Latest news", "How-to guide", "Customer story"].map((title, n) => ({
+                id: `art-${n + 1}`,
+                type: "flexbox",
+                props: {},
+                classes: ["tpl-card"],
+                style: { ...column, ...card, gap: space("tight") },
+                children: [
+                  {
+                    id: `art-${n + 1}-title`,
+                    type: "heading",
+                    props: { text: title, level: 3 },
+                    style: { fontSize: font("subheading"), color: color("ink") },
+                  },
+                  {
+                    id: `art-${n + 1}-text`,
+                    type: "text",
+                    props: { text: "A two-line summary of the article." },
+                    style: body,
+                  },
+                  {
+                    id: `art-${n + 1}-link`,
+                    type: "link",
+                    props: { text: "Read the article", href: "#" },
+                    style: { fontWeight: 600, color: color("ink") },
+                  },
+                ],
+              })),
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    id: "dashboard",
+    name: "Dashboard statistics",
+    description: "Three headline metrics, each with a label and a value.",
+    node: {
+      id: "dash-band",
+      type: "layout-section",
+      props: { tag: "section", ...wide },
+      style: band,
+      children: [
+        {
+          id: "dash-body",
+          type: "flexbox",
+          props: {},
+          style: { ...column, gap: space("block") },
+          children: [
+            sectionHeader("dash", "Overview", "The numbers that matter this week."),
+            {
+              id: "dash-grid",
+              type: "grid",
+              props: { columns: 3, columnsTablet: 3, columnsMobile: 1 },
+              style: { gap: space("gap") },
+              children: [
+                ["Revenue", "€124k"],
+                ["Orders", "1,284"],
+                ["Conversion", "4.8%"],
+              ].map(([label, value], n) => ({
+                id: `dash-${n + 1}`,
+                type: "flexbox",
+                props: {},
+                classes: ["tpl-card"],
+                style: { ...column, ...card, gap: space("tight") },
+                children: [
+                  {
+                    id: `dash-${n + 1}-label`,
+                    type: "text",
+                    props: { text: label },
+                    style: { fontSize: font("small"), color: color("muted") },
+                  },
+                  {
+                    id: `dash-${n + 1}-value`,
+                    type: "heading",
+                    props: { text: value, level: 3 },
+                    style: { fontSize: font("display"), color: color("ink") },
+                  },
+                ],
+              })),
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    id: "nav",
+    name: "Navigation bar",
+    description: "A brand name on the left and three links on the right.",
+    node: {
+      id: "nav-band",
+      type: "layout-section",
+      props: { tag: "header", ...wide },
+      style: {
+        paddingTop: space("tight"),
+        paddingBottom: space("tight"),
+        paddingLeft: px(24),
+        paddingRight: px(24),
+      },
+      children: [
+        {
+          id: "nav-row",
+          type: "flexbox",
+          props: {},
+          style: {
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: space("tight"),
+          },
+          children: [
+            {
+              id: "nav-brand",
+              type: "text",
+              props: { text: "Your brand" },
+              style: { fontSize: font("subheading"), fontWeight: 700, color: color("ink") },
+            },
+            {
+              id: "nav-links",
+              type: "flexbox",
+              props: {},
+              style: { flexDirection: "row", flexWrap: "wrap", gap: space("block") },
+              children: ["Home", "Products", "About"].map((text, n) => ({
+                id: `nav-link-${n + 1}`,
+                type: "link",
+                props: { text, href: "#" },
+                style: { color: color("ink") },
+              })),
+            },
+          ],
+        },
+      ],
+    },
+  },
 ];
