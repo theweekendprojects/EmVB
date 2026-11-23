@@ -55628,6 +55628,60 @@
         "packages/emvb/src/core/extensions/markup-render.test.ts"
       ],
       "expect": "\\(fail\\).*a throwing getter inside markup shows the placeholder and leaves siblings"
+    },
+    {
+      "id": "W-927/gap-idref-not-scoped",
+      "requirement": "W-927",
+      "description": "an aria-labelledby reference is not scoped with its element's ids",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "return scope === undefined ? ids.join(\" \") : ids.map((id) => `${scope}-${id}`).join(\" \");",
+          "replace": "return ids.join(\" \");"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/markup-render.test.ts"
+      ],
+      "expect": "\\(fail\\).*references to a scoped id follow the same scope"
+    },
+    {
+      "id": "W-927/gap-fragment-href-not-scoped",
+      "requirement": "W-927",
+      "description": "a #fragment link is not scoped to its element's ids, so it points at the wrong node",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "return scope === undefined ? value : `#${scope}-${fragment}`;",
+          "replace": "return value;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/markup-render.test.ts"
+      ],
+      "expect": "\\(fail\\).*references to a scoped id follow the same scope"
+    },
+    {
+      "id": "W-927/gap-builtin-package-allowed",
+      "requirement": "W-927",
+      "description": "an extension package named like a built-in element (heading) is accepted",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/namespace.ts",
+          "search": "if (KNOWN.has(pkg) || KNOWN.has(name)) return undefined;\n  const type",
+          "replace": "const type"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/extensions.test.ts"
+      ],
+      "expect": "\\(fail\\).*refuses path escape, extra colons, HTML and built-in collisions"
     }
   ]
 }
