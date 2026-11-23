@@ -205,3 +205,10 @@ describe("W-1068 starter templates", () => {
     expect(inPart ? h1s(inPart) : -1).toBe(0);
   });
 });
+
+describe("provider-era sections are back as templates", () => {
+  test("the provider-era sections are back as templates (products, articles, dashboard, nav)", () => {
+    const names = SECTION_TEMPLATES.map((t) => t.id);
+    for (const id of ["products", "articles", "dashboard", "nav"]) expect(names).toContain(id);
+  });
+});
