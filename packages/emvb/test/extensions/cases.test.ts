@@ -386,3 +386,80 @@ describe("instances of one element on the canvas and in the export (gap 5)", () 
     expect(canvas.match(/id="ext-aaaa0001-item"/g)?.length).toBe(1);
   });
 });
+
+describe("list parts share a group only inside their container (gap 2)", () => {
+  test("two tab containers on one page: tabs share a radio group within a container, not across", () => {
+    clearExtensions();
+    rememberExtensions([
+      defineExtension({
+        id: "emvb-ext-cases",
+        elements: [
+          {
+            name: "tab-list",
+            label: "Tab list",
+            container: true,
+            accepts: ["tab"],
+            schema: PROPS,
+            fields: [],
+            render: (() => ({
+              markup: {
+                tag: "div",
+                attrs: {},
+                children: [{ tag: SLOT_TAG, attrs: {}, children: [] }],
+              },
+            })) as never,
+          },
+          {
+            name: "tab",
+            label: "Tab",
+            part: true,
+            schema: PROPS,
+            fields: [],
+            render: ((props: { text?: string }) => ({
+              markup: {
+                tag: "input",
+                attrs: { type: "radio", name: "tabs", "aria-label": props.text ?? "Tab" },
+                children: [],
+              },
+            })) as never,
+          },
+        ],
+      }),
+    ]);
+    const tab = (id: string, text: string) => ({
+      id,
+      type: "ext:emvb-ext-cases/tab",
+      props: { text },
+    });
+    const layout: Layout = {
+      schemaVersion: LAYOUT_SCHEMA_VERSION,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          {
+            id: "tabsA0001",
+            type: "ext:emvb-ext-cases/tab-list",
+            props: {},
+            children: [tab("tabA0001", "One"), tab("tabA0002", "Two")],
+          } as never,
+          {
+            id: "tabsB0002",
+            type: "ext:emvb-ext-cases/tab-list",
+            props: {},
+            children: [tab("tabB0001", "Three"), tab("tabB0002", "Four")],
+          } as never,
+        ],
+      },
+    };
+    const html = renderPage(layout, emptyDesign(), { mode: "public" }).html;
+    const names = [...html.matchAll(/name="([^"]+)"/g)].map((m) => m[1]);
+    expect(names).toHaveLength(4);
+    expect(names[0]).toBe(names[1]);
+    expect(names[2]).toBe(names[3]);
+    expect(names[0]).not.toBe(names[2]);
+    expect(names[0]).toContain("ext-tabsA0001");
+    expect(names[2]).toContain("ext-tabsB0002");
+  });
+});
