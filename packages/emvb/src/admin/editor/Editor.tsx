@@ -48,7 +48,7 @@ import { editorCommands } from "./editor-commands.ts";
 import { ELEMENT_NAMES } from "./element-chrome.ts";
 import { LeftPanel } from "./panels/LeftPanel.tsx";
 import { useExtensionManifests } from "./useExtensions.ts";
-import { adminExtensionDefaults } from "./extension-manifests.ts";
+import { adminExtensionDefaults, adminExtensionLabel } from "./extension-manifests.ts";
 import { ExtensionsProvider } from "./extensions-context.tsx";
 import { SettingsPanel } from "./panels/SettingsPanel.tsx";
 import { SmallScreenNotice } from "./SmallScreenNotice.tsx";
@@ -399,7 +399,8 @@ function EditorApp({
     labelFor: (id) => {
       const node = layoutIndex?.byId.get(id);
       if (!node) return "Element";
-      const name = node.editorLabel ?? ELEMENT_NAMES[node.type] ?? node.type;
+      const name =
+        node.editorLabel ?? ELEMENT_NAMES[node.type] ?? adminExtensionLabel(node.type) ?? node.type;
       // W-970: a synced section or Loop item drawn from unpublished changes says so on the canvas.
       const props = node.props as { partId?: unknown; panelPartId?: unknown } | undefined;
       const partId = props?.partId ?? props?.panelPartId;
