@@ -55113,11 +55113,7 @@
           "replace": "const kept = value.split(/\\s+/);"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*only classes on the package allowlist survive"
     },
     {
@@ -55131,11 +55127,7 @@
           "replace": "if (name === \"src\" || name === \"poster\") return value;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*an img src that is not http"
     },
     {
@@ -55149,11 +55141,7 @@
           "replace": "// tag check removed"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*a tag outside the serializer allowlist shows the placeholder"
     },
     {
@@ -55172,11 +55160,7 @@
           "replace": "if (name === \"style\") return value;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*a style attribute is dropped"
     },
     {
@@ -55190,11 +55174,7 @@
           "replace": "  return value;\n}"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*an unsafe href is dropped and the link text is kept"
     },
     {
@@ -55208,11 +55188,7 @@
           "replace": "    sources: syncSourceValues(parsed.pkg),\n    mode: \"public\",\n"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*an element reads the mode it is drawn in"
     },
     {
@@ -55226,11 +55202,7 @@
           "replace": "    return [];"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/container-slots.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/container-slots.test.ts"],
       "expect": "\\(fail\\).*children fill the slot, in order"
     },
     {
@@ -55244,11 +55216,7 @@
           "replace": "    mode,\n    childCount: 0,\n  };"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/container-slots.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/container-slots.test.ts"],
       "expect": "\\(fail\\).*the element is told how many children it holds"
     },
     {
@@ -55262,11 +55230,7 @@
           "replace": "      ...({}),"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/container-slots.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/container-slots.test.ts"],
       "expect": "\\(fail\\).*a new container starts with an empty children array"
     },
     {
@@ -55280,11 +55244,7 @@
           "replace": "if (false && isPartExtensionType(type)) {"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/parts.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/parts.test.ts"],
       "expect": "\\(fail\\).*renders without the element wrapper"
     },
     {
@@ -55298,11 +55258,7 @@
           "replace": "if (false) return REASONS.partOutsideParent;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/parts.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/parts.test.ts"],
       "expect": "\\(fail\\).*does not list it"
     },
     {
@@ -55316,11 +55272,7 @@
           "replace": "if (false) return REASONS.extensionNotAccepted;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/parts.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/parts.test.ts"],
       "expect": "\\(fail\\).*refuses anything it does not accept"
     },
     {
@@ -55334,11 +55286,7 @@
           "replace": "const MAX_ELEMENTS = 32;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*a package may register up to 128 elements"
     },
     {
@@ -55352,11 +55300,7 @@
           "replace": "const typeName = ELEMENT_NAMES[node.type] ?? node.type;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"],
       "expect": "\\(fail\\).*shows its label, not its stored type"
     },
     {
@@ -55370,11 +55314,7 @@
           "replace": "return \"Extensions\";"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"],
       "expect": "\\(fail\\).*the Add panel heading is the extension"
     },
     {
@@ -55388,11 +55328,7 @@
           "replace": "    ...({}),"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/container-slots.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/container-slots.test.ts"],
       "expect": "\\(fail\\).*only a container element is a parent node"
     },
     {
@@ -55406,11 +55342,7 @@
           "replace": "    : ((node as { children?: LayoutNode[] }).children ?? []);\n\n  const live = liveExtensionRender(node, markupScope(id), mode, stored.length);"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/container-slots.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/container-slots.test.ts"],
       "expect": "\\(fail\\).*a leaf ignores stored children"
     },
     {
@@ -55424,11 +55356,7 @@
           "replace": "  isContainerExtensionType(node.type) ||"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/container-slots.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/container-slots.test.ts"],
       "expect": "\\(fail\\).*is not a parent node"
     },
     {
@@ -55442,11 +55370,7 @@
           "replace": "liveExtensionRender(node, undefined, ctx.input.mode)"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*two identical instances get their own scoped ids"
     },
     {
@@ -55460,11 +55384,7 @@
           "replace": "  const id = \"\";"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*two identical instances get their own scoped ids"
     },
     {
@@ -55478,11 +55398,7 @@
           "replace": "    if (el) return undefined;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"],
       "expect": "\\(fail\\).*canvas selection label"
     },
     {
@@ -55496,11 +55412,7 @@
           "replace": "  if (scope === undefined || true) return kids;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*list parts share a group only inside their container"
     },
     {
@@ -55514,11 +55426,7 @@
           "replace": "if (name === \"id\") {\n    if (!usableId(value)) return undefined;\n    return value;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*two instances of one element never share an id"
     },
     {
@@ -55532,11 +55440,7 @@
           "replace": "return ID_RULE.test(value) && !value.startsWith(\"emvb\");"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*an id that clobbers a browser global or claims EmVB's names is dropped"
     },
     {
@@ -55550,11 +55454,7 @@
           "replace": "liveExtensionRender(node, markupScope(node.id), \"public\")"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*the element is told the mode the route was asked for"
     },
     {
@@ -55568,11 +55468,7 @@
           "replace": "const MAX_DEPTH = 100000;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*a deeper tree than the limit shows the placeholder"
     },
     {
@@ -55586,11 +55482,7 @@
           "replace": "const MAX_NODES = 100000;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*a tree over the node limit shows the placeholder"
     },
     {
@@ -55604,11 +55496,7 @@
           "replace": "if (name === \"href\") return safeHrefValue(value, scope);"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*an xlink:href with a script URL is dropped"
     },
     {
@@ -55622,11 +55510,7 @@
           "replace": "  return walk(root, 0, { left: MAX_NODES }, classes, scope);"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*a throwing getter inside markup shows the placeholder and leaves siblings"
     },
     {
@@ -55640,11 +55524,7 @@
           "replace": "return ids.join(\" \");"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*references to a scoped id follow the same scope"
     },
     {
@@ -55658,11 +55538,7 @@
           "replace": "return value;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*references to a scoped id follow the same scope"
     },
     {
@@ -55676,11 +55552,7 @@
           "replace": "const type"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/extensions.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/extensions.test.ts"],
       "expect": "\\(fail\\).*refuses path escape, extra colons, HTML and built-in collisions"
     }
   ]
