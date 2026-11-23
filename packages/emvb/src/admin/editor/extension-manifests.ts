@@ -21,6 +21,14 @@ export function adminExtensionGroupTitle(): string {
   return names.length === 1 && only !== undefined ? only : "Extensions";
 }
 
+/** The label an extension element shows in the editor (its chip and Layers row), or undefined. */
+export function adminExtensionLabel(type: string): string | undefined {
+  for (const ext of cache) {
+    const el = ext.elements.find((e) => e.type === type);
+    if (el) return el.label;
+  }
+  return undefined;
+}
 export function adminExtensionDefaults(type: string): Record<string, unknown> | undefined {
   for (const ext of cache) {
     const el = ext.elements.find((e) => e.type === type);

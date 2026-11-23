@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import type { ExtensionManifest, Layout } from "../../../core/index.ts";
 import {
   adminExtensionGroupTitle,
+  adminExtensionLabel,
   extensionLabelsOf,
   setAdminExtensionManifests,
 } from "../extension-manifests.ts";
@@ -64,6 +65,12 @@ describe("extension elements are named by their label (W-927)", () => {
   test("the labels map each stored type to its element label", () => {
     expect(extensionLabelsOf([manifest])).toEqual({ "ext:daisyui/daisy-card": "Card" });
     expect(extensionLabelsOf([])).toEqual({});
+  });
+
+  test("the canvas selection label is the element label, not its stored type (gap 1)", () => {
+    setAdminExtensionManifests([manifest]);
+    expect(adminExtensionLabel("ext:daisyui/daisy-card")).toBe("Card");
+    expect(adminExtensionLabel("ext:daisyui/missing")).toBeUndefined();
   });
 
   test("the Add panel heading is the extension's name", () => {
