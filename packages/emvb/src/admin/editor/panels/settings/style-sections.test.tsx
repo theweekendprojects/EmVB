@@ -8,6 +8,7 @@ import {
 } from "../../../../core/index.ts";
 import type { Fetcher } from "../../../api.ts";
 import { cleanup, mount } from "../../../../../test/dom/mount.ts";
+import { settleSelect } from "../../../../../test/dom/select.ts";
 import { ElementPanel } from "../ElementPanel.tsx";
 import { StyleRow } from "./StyleRow.tsx";
 import { keysFor, sectionsFor, STYLE_UI, type StyleKey } from "./style-sections.ts";
@@ -49,6 +50,7 @@ async function choose(label: string, option: string) {
     match?.click();
     await new Promise((resolve) => setTimeout(resolve, 10));
   });
+  await settleSelect();
   return options.map((o) => o.textContent);
 }
 
