@@ -55596,6 +55596,20 @@
       ],
       "command": ["bun", "test", "packages/emvb/src/core/extensions/extensions.test.ts"],
       "expect": "\\(fail\\).*refuses path escape, extra colons, HTML and built-in collisions"
+    },
+    {
+      "id": "W-1086/class-arbitrary-dropped",
+      "requirement": "W-1086",
+      "description": "the class rule drops arbitrary CSS variables and important classes, so a radial ring and countdown digits lose their value",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/classes.ts",
+          "search": "const CLASS_NAME = /^[a-z][a-z0-9-]*(?:\\[--[a-z][a-z0-9-]*:[a-z0-9.-]{1,16}\\])?!?$/;",
+          "replace": "const CLASS_NAME = /^[a-z][a-z0-9-]*$/;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/classes-assets.test.ts"],
+      "expect": "\\(fail\\).*an arbitrary CSS variable and an important class are kept"
     }
   ]
 }
