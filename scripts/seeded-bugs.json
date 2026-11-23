@@ -56133,8 +56133,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/extension-routes.ts",
-          "search": "      const nodes = liveExtensionOutput(node);\n",
-          "replace": "      const nodes = liveExtension(node.type.slice(4).split(\"/\")[0] ?? \"\")?.module\n        ? liveExtensionOutput(node)\n        : undefined;\n"
+          "search": "      const live = liveExtensionRender(node, markupScope(node.id), ctx.input.mode);\n",
+          "replace": "      const live = liveExtension(node.type.slice(4).split(\"/\")[0] ?? \"\")?.module\n        ? liveExtensionRender(node, markupScope(node.id), ctx.input.mode)\n        : undefined;\n"
         },
         {
           "file": "packages/emvb/src/server/extension-routes.ts",
@@ -56893,6 +56893,20 @@
       ],
       "command": ["bun", "test", "packages/emvb/src/core/templates/templates.test.ts"],
       "expect": "\\(fail\\).*the provider-era sections are back as templates"
+    },
+    {
+      "id": "W-1088/visitor-sees-placeholder",
+      "requirement": "W-1088",
+      "description": "a refused markup element shows its placeholder to visitors instead of nothing",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "if (mode === \"public\" && !opts.extensionPlaceholders && isExtensionPlaceholder(ext)) {",
+          "replace": "if (false && mode === \"public\" && !opts.extensionPlaceholders && isExtensionPlaceholder(ext)) {"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
+      "expect": "\\(fail\\).*visitors get nothing for a refused element"
     }
   ]
 }
