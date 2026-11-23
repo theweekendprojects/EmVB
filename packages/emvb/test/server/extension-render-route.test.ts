@@ -120,7 +120,9 @@ describe("the editor canvas shows a site extension's output (W-1088, #35)", () =
     const answer = JSON.parse(
       JSON.stringify(
         await routes["editor/extensions/render"]?.handler({
-          input: { nodes: [{ type: node.type, props: node.props }] },
+          // The admin sends the node id too: the output key includes it (gap 5), so the answer's
+          // key matches the layout node the admin renders.
+          input: { nodes: [{ id: node.id, type: node.type, props: node.props }] },
         } as never),
       ),
     ) as { outputs: { key: string; nodes: unknown }[] };
