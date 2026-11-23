@@ -7,8 +7,12 @@ import type { ExtensionAssets, ExtensionClasses } from "./types.ts";
 
 /** A prefix: lowercase words joined by hyphens, ending in `-` (`d-`, `acme-ui-`). */
 const PREFIX = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*-$/;
-/** A class name: a lowercase letter, then lowercase letters, digits and hyphens. */
-const CLASS_NAME = /^[a-z][a-z0-9-]*$/;
+/**
+ * A class name: a lowercase letter, then lowercase letters, digits and hyphens. It may end in one
+ * arbitrary CSS variable, `[--name:value]` (a per-instance value such as a radial's `--value`), and
+ * in `!` (important). Nothing else: no spaces, quotes, markup or other brackets.
+ */
+const CLASS_NAME = /^[a-z][a-z0-9-]*(?:\[--[a-z][a-z0-9-]*:[a-z0-9.-]{1,16}\])?!?$/;
 
 const MAX_CLASS_PREFIX_LENGTH = 16;
 const MAX_CLASS_NAME_LENGTH = 64;

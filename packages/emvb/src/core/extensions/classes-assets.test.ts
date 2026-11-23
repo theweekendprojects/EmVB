@@ -115,6 +115,27 @@ describe("class allowlist at registration (W-1086)", () => {
     expect(normalizeClasses({ prefix: "d-", allow: "d-btn" })).toBeUndefined();
   });
 
+  test("an arbitrary CSS variable and an important class are kept; other brackets are dropped", () => {
+    const allow = [
+      "daisy-[--value:70]",
+      "daisy-[--digits:2]",
+      "daisy-size-24!",
+      "daisy-[--value:70]!",
+      "daisy-[url(x)]",
+      "daisy-[--value:70;color:red]",
+      'daisy-[--value:"x"]',
+      "daisy-[--value:a b]",
+      "daisy-[--value:]",
+      "daisy-[--Value:1]",
+      "daisy-[--value:1]]",
+    ];
+    expect(normalizeClasses({ prefix: "daisy-", allow })?.allow).toEqual([
+      "daisy-[--value:70]",
+      "daisy-[--digits:2]",
+      "daisy-size-24!",
+      "daisy-[--value:70]!",
+    ]);
+  });
   test("the extension's manifest carries the checked allowlist; a bad one is left out", () => {
     const ok = normalizeExtension(kit());
     expect(ok?.manifest.classes?.allow).toEqual(["kit-btn", "kit-btn-primary", "kit-card"]);
