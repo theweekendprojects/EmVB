@@ -88,8 +88,11 @@ function stableJson(value: unknown): string {
  * W-1086: the key of one extension element's output: its type and props. The admin has no
  * extension code, so the editor canvas and the HTML export ask the server for outputs by key.
  */
-export function extensionOutputKey(node: { type: string; props?: unknown }): string {
-  return `${node.type}\n${stableJson(propsOf(node))}`;
+export function extensionOutputKey(node: { type: string; props?: unknown; id?: unknown }): string {
+  // The id is part of the key: a markup output carries its element's ids, so two instances with the
+  // same props must not share one output.
+  const id = typeof node.id === "string" ? `\n#${node.id}` : "";
+  return `${node.type}${id}\n${stableJson(propsOf(node))}`;
 }
 
 /** Raw render output per `extensionOutputKey`, rendered by the server for the admin. */
@@ -112,7 +115,7 @@ function checkedMarkup(raw: ExtensionMarkup, pkg: string, scope?: string): VNode
  * The id scope of one layout node: its ids and their references are prefixed with it, so two
  * instances of one element never share an id on a page. Only the node id's letters and digits.
  */
-function markupScope(nodeId: string | undefined): string | undefined {
+export function markupScope(nodeId: string | undefined): string | undefined {
   if (typeof nodeId !== "string") return undefined;
   const clean = nodeId.replace(/[^A-Za-z0-9]/g, "");
   return clean.length > 0 ? `ext-${clean}` : undefined;

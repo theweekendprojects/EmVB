@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { extensionOutputKey } from "../core/extensions/render-ext.ts";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import {
@@ -32,10 +33,12 @@ const layout = {
 };
 
 describe("extensionNodesIn (W-1086)", () => {
-  test("finds each extension element once by type and props, in stored JSON text too", () => {
+  test("finds each extension element once per node (id, type and props), in stored JSON text too", () => {
+    // Two identical tiles are two instances: each has its own id, so each has its own output.
     expect(extensionNodesIn([layout, JSON.stringify(layout), "{broken"])).toEqual([
-      { type: "ext:kit/tile", props: { b: 1, a: 2 } },
-      { type: "ext:kit/tile" },
+      { type: "ext:kit/tile", props: { b: 1, a: 2 }, id: "a0000001" },
+      { type: "ext:kit/tile", props: { a: 2, b: 1 }, id: "a0000002" },
+      { type: "ext:kit/tile", id: "a0000003" },
     ]);
   });
 
@@ -75,7 +78,8 @@ describe("useExtensionOutputs (W-1086)", () => {
     schemaVersion: 18,
     root: { id: "root0001", type: "container", props: {}, children },
   });
-  const keyOf = (text: string) => `ext:kit/tile\n{"text":${JSON.stringify(text)}}`;
+  const keyOf = (text: string) =>
+    extensionOutputKey({ type: "ext:kit/tile", props: { text }, id: "a0000001" });
 
   /** Mounts the hook; returns a way to change the layout and the latest outputs. */
   async function mountHook(fetcher: unknown, first: unknown) {
@@ -106,7 +110,7 @@ describe("useExtensionOutputs (W-1086)", () => {
       asked.push(body.nodes.map((n) => JSON.stringify(n.props)));
       if (state.failing) return new Response("down", { status: 503 });
       const outputs = body.nodes.map((n) => ({
-        key: `${n.type}\n${JSON.stringify(n.props)}`,
+        key: extensionOutputKey(n as never),
         nodes: [{ id: "h0000001", type: "heading", props: { text: "x", level: 2 } }],
       }));
       return new Response(JSON.stringify({ data: { outputs } }), {

@@ -51,6 +51,7 @@ export {
   renderExtensionNode,
   extensionOutputKey,
   liveExtensionRender,
+  markupScope,
   type ExtensionOutputs,
 } from "./render-ext.ts";
 export { defineExtension } from "./define.ts";
