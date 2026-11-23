@@ -56695,11 +56695,7 @@
           "replace": "if (name === \"id\") {\n    if (!usableId(value)) return undefined;\n    return value;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*two instances of one element never share an id"
     },
     {
@@ -56713,11 +56709,7 @@
           "replace": "return ID_RULE.test(value) && !value.startsWith(\"emvb\");"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*an id that clobbers a browser global or claims EmVB's names is dropped"
     },
     {
@@ -56731,11 +56723,7 @@
           "replace": "liveExtensionRender(node, markupScope(node.id), \"public\")"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*the element is told the mode the route was asked for"
     },
     {
@@ -56749,11 +56737,7 @@
           "replace": "const MAX_DEPTH = 100000;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*a deeper tree than the limit shows the placeholder"
     },
     {
@@ -56767,11 +56751,7 @@
           "replace": "const MAX_NODES = 100000;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*a tree over the node limit shows the placeholder"
     },
     {
@@ -56785,11 +56765,7 @@
           "replace": "if (name === \"href\") return safeHrefValue(value, scope);"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/test/extensions/cases.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/cases.test.ts"],
       "expect": "\\(fail\\).*an xlink:href with a script URL is dropped"
     },
     {
@@ -56803,11 +56779,7 @@
           "replace": "  return walk(root, 0, { left: MAX_NODES }, classes, scope);"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*a throwing getter inside markup shows the placeholder and leaves siblings"
     },
     {
@@ -56821,11 +56793,7 @@
           "replace": "return ids.join(\" \");"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*references to a scoped id follow the same scope"
     },
     {
@@ -56839,11 +56807,7 @@
           "replace": "return value;"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/markup-render.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*references to a scoped id follow the same scope"
     },
     {
@@ -56857,11 +56821,7 @@
           "replace": "const type"
         }
       ],
-      "command": [
-        "bun",
-        "test",
-        "packages/emvb/src/core/extensions/extensions.test.ts"
-      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/extensions.test.ts"],
       "expect": "\\(fail\\).*refuses path escape, extra colons, HTML and built-in collisions"
     }
   ]

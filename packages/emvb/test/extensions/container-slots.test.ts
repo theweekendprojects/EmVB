@@ -187,6 +187,8 @@ describe("a saved container without a children array", () => {
       }),
     ]);
     expect(isParentNode({ id: "box00001", type: BOX, props: {} } as never)).toBe(false);
-    expect(isParentNode({ id: "box00002", type: BOX, props: {}, children: [] } as never)).toBe(true);
+    expect(isParentNode({ id: "box00002", type: BOX, props: {}, children: [] } as never)).toBe(
+      true,
+    );
   });
 });
