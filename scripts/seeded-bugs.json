@@ -55514,6 +55514,48 @@
       "expect": "\\(fail\\).*a throwing getter inside markup shows the placeholder and leaves siblings"
     },
     {
+      "id": "W-927/gap-leaf-is-parent",
+      "requirement": "W-927",
+      "description": "every extension element counts as a parent, so a leaf takes drops and renders stored children",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/containers.ts",
+          "search": "return store().types.has(type);",
+          "replace": "return type.startsWith(\"ext:\");"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/container-slots.test.ts"],
+      "expect": "\\(fail\\).*only a container element is a parent node"
+    },
+    {
+      "id": "W-927/gap-slot-children-lose-classes",
+      "requirement": "W-927",
+      "description": "core-rendered children lose their classes inside a container, so the package's class list is applied to them",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "const filled = fillSlot(markup, kids);",
+          "replace": "const filled = fillSlot(markup, kids.map((k) => ({ ...k, attrs: {} })));"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/container-slots.test.ts"],
+      "expect": "\\(fail\\).*children keep their core classes"
+    },
+    {
+      "id": "W-927/gap-key-includes-children",
+      "requirement": "W-927",
+      "description": "the output key includes a container's children, so the output cache is keyed by content core places",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "return `${node.type}${id}\\n${stableJson(propsOf(node))}`;",
+          "replace": "return `${node.type}${id}\\n${stableJson({ ...propsOf(node), kids: (node as { children?: unknown }).children ?? null })}`;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/test/extensions/container-slots.test.ts"],
+      "expect": "\\(fail\\).*the output key ignores children, which core places"
+    },
+    {
       "id": "W-927/gap-idref-not-scoped",
       "requirement": "W-927",
       "description": "an aria-labelledby reference is not scoped with its element's ids",
