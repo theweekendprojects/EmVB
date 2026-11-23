@@ -171,6 +171,22 @@ export function liveExtensionOutput(node: {
 }
 
 /**
+ * A container's list parts (radio tabs, say) share a group by their `name`. Two containers on one
+ * page must not share one, so each part's name is scoped by its container. Inside one container
+ * the parts keep one name, so they stay one group.
+ */
+function scopePartNames(kids: VNode[], scope: string | undefined): VNode[] {
+  if (scope === undefined) return kids;
+  return kids.map((kid) => {
+    const type = kid.attrs?.["data-emvb-ext"];
+    const name = kid.attrs?.name;
+    if (typeof type !== "string" || !isPartExtensionType(type) || typeof name !== "string")
+      return kid;
+    return { ...kid, attrs: { ...kid.attrs, name: `${scope}-${name}` } };
+  });
+}
+
+/**
  * Build the VNode for a stored extension element. Always returns a node (placeholder
  * on failure) so siblings keep rendering. A container's stored children are rendered by core and
  * placed at its slot (markup) or after its output (nodes); a leaf ignores them.
@@ -217,10 +233,11 @@ export function renderExtensionNode(
     children,
   });
 
+  const kids = scopePartNames(visitChildren(stored), markupScope(id));
   if (markup) {
     rendered?.(parsed.pkg);
     // The children are core output, already safe: they are placed after the check, never filtered.
-    const filled = fillSlot(markup, visitChildren(stored));
+    const filled = fillSlot(markup, kids);
     if (isPartExtensionType(type)) {
       // A list part sits directly in its parent's markup: no wrapper of its own.
       return {
@@ -239,5 +256,5 @@ export function renderExtensionNode(
     return extensionPlaceholderVNode(type, id, mode);
   }
   rendered?.(parsed.pkg);
-  return wrap([...visitChildren(safe), ...visitChildren(stored)]);
+  return wrap([...visitChildren(safe), ...kids]);
 }
