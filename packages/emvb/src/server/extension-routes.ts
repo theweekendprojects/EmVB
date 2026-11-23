@@ -6,6 +6,7 @@ import {
   liveExtensionOutput,
   resolveExtensionSource,
   liveExtensionRender,
+  markupScope,
   withExtensionClasses,
   type ExtensionManifest,
 } from "../core/extensions/index.ts";
@@ -53,6 +54,8 @@ const RenderInput = z.object({
       z.object({
         type: z.string().max(200),
         props: boundedProps.optional(),
+        // The layout node's id: scopes a markup output's ids to this instance.
+        id: z.string().max(64).optional(),
       }),
     )
     .max(MAX_EXTENSION_RENDERS),
@@ -71,7 +74,7 @@ export const extensionRenderRoute: PluginRoute<z.infer<typeof RenderInput>> = {
     outputs: ctx.input.nodes.map((node) => {
       const key = extensionOutputKey(node);
       if (!isExtensionType(node.type)) return { key, nodes: null };
-      const live = liveExtensionRender(node, undefined, ctx.input.mode);
+      const live = liveExtensionRender(node, markupScope(node.id), ctx.input.mode);
       // Markup is already checked here (markup.ts); the admin checks it again before drawing it.
       if (live?.kind === "markup") return { key, markup: live.markup };
       if (live?.kind === "nodes") return { key, nodes: withExtensionClasses(live.nodes) };

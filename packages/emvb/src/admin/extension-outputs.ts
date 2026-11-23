@@ -13,7 +13,7 @@ const BATCH = 100;
 /** Different extension elements the admin asks about for one page or export. */
 const MAX_ELEMENTS = 1000;
 
-type ExtNode = { type: string; props?: Record<string, unknown> };
+type ExtNode = { type: string; props?: Record<string, unknown>; id?: string };
 
 /**
  * W-1086: every extension element in some layouts (stored layouts may arrive as JSON text), one
@@ -30,7 +30,13 @@ export function extensionNodesIn(layouts: readonly unknown[]): ExtNode[] {
         node.props && typeof node.props === "object" && !Array.isArray(node.props)
           ? (node.props as Record<string, unknown>)
           : undefined;
-      const ext = { type: node.type, ...(props ? { props } : {}) };
+      const ext = {
+        type: node.type,
+        ...(props ? { props } : {}),
+        ...(typeof (node as { id?: unknown }).id === "string"
+          ? { id: (node as { id: string }).id }
+          : {}),
+      };
       found.set(extensionOutputKey(ext), ext);
     }
     if (Array.isArray(node.children)) for (const child of node.children) walk(child, depth + 1);

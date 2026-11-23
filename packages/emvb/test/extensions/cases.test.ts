@@ -343,3 +343,46 @@ describe("the editor's render route", () => {
     expect(asEditor.outputs[0]?.markup?.children).toEqual(["editor"]);
   });
 });
+
+describe("instances of one element on the canvas and in the export (gap 5)", () => {
+  test("two identical instances get their own scoped ids, through the route and the editor fallback", async () => {
+    const { extensionRenderRoute } = await import("../../src/server/extension-routes.ts");
+    const { extensionOutputKey } = await import("../../src/core/extensions/render-ext.ts");
+    register(() => ({ markup: { tag: "div", attrs: { id: "item" }, children: [] } }));
+    const handler = extensionRenderRoute.handler as unknown as (ctx: unknown) => Promise<{
+      outputs: { key: string; markup?: unknown }[];
+    }>;
+    const a = { type: RAW, props: {}, id: "aaaa0001" };
+    const b = { type: RAW, props: {}, id: "bbbb0002" };
+    const result = await handler({ input: { mode: "editor", nodes: [a, b] } });
+    const [outA, outB] = result.outputs;
+    expect(JSON.stringify(outA?.markup)).toContain('"id":"ext-aaaa0001-item"');
+    expect(JSON.stringify(outB?.markup)).toContain('"id":"ext-bbbb0002-item"');
+    expect(outA?.key).not.toEqual(outB?.key);
+
+    // The canvas draws the two nodes from those outputs: the ids must still be unique on the page.
+    const layout: Layout = {
+      schemaVersion: LAYOUT_SCHEMA_VERSION,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          { id: "aaaa0001", type: RAW, props: {} },
+          { id: "bbbb0002", type: RAW, props: {} },
+        ],
+      } as never,
+    };
+    const outputs = new Map<string, unknown>([
+      [extensionOutputKey(a), { markup: outA?.markup }],
+      [extensionOutputKey(b), { markup: outB?.markup }],
+    ]);
+    const canvas = renderPage(layout, emptyDesign(), {
+      mode: "editor",
+      extensionOutputs: outputs,
+    }).html;
+    expect(canvas).toContain('id="ext-aaaa0001-item"');
+    expect(canvas).toContain('id="ext-bbbb0002-item"');
+    expect(canvas.match(/id="ext-aaaa0001-item"/g)?.length).toBe(1);
+  });
+});
