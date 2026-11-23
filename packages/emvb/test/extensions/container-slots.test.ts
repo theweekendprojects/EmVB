@@ -168,3 +168,25 @@ describe("container elements", () => {
 function SLOT_NODE() {
   return { tag: SLOT_TAG, attrs: {}, children: [] };
 }
+
+describe("a saved container without a children array", () => {
+  test("is not a parent node: drops into it are refused until it is saved with children", () => {
+    rememberExtensions([
+      defineExtension({
+        id: "emvb-ext-frame",
+        elements: [
+          {
+            name: "box",
+            label: "Box",
+            container: true,
+            schema: { type: "object", properties: {} },
+            fields: [],
+            render: (() => ({ markup: { tag: "div", attrs: {}, children: [] } })) as never,
+          },
+        ],
+      }),
+    ]);
+    expect(isParentNode({ id: "box00001", type: BOX, props: {} } as never)).toBe(false);
+    expect(isParentNode({ id: "box00002", type: BOX, props: {}, children: [] } as never)).toBe(true);
+  });
+});
