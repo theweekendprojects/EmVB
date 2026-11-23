@@ -2097,7 +2097,11 @@ export const isParentNode = (
   | PriceListNode
   | ShareButtonsNode
   | HotspotsNode =>
-  // An extension container holds children when its stored node has a children array.
+  // An extension container is a parent only when its stored node has a children array AND its type
+  // is a registered container. The registry (extensions/containers.ts) is what stops a user dropping
+  // children into a leaf, which renders nothing. A structural check (any extension node with a
+  // children array) would accept those drops, so the registry stays; it is filled identically on the
+  // server (rememberExtensions) and the admin (rememberExtensionManifests).
   (isContainerExtensionType(node.type) &&
     Array.isArray((node as { children?: unknown }).children)) ||
   node.type === "container" ||
