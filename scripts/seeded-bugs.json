@@ -53038,7 +53038,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/extensions/classes.ts",
-          "search": "    CLASS_NAME.test(name) &&\n",
+          "search": "    CLASS_NAME.test(name.slice(prefix.length)) &&\n",
           "replace": ""
         }
       ],
@@ -56873,7 +56873,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/extensions/classes.ts",
-          "search": "const CLASS_NAME = /^[a-z][a-z0-9-]*(?:\\[--[a-z][a-z0-9-]*:[a-z0-9.-]{1,16}\\])?!?$/;",
+          "search": "const CLASS_NAME =\n  /^(?:(?:max-)?(?:sm|md|lg|xl|2xl):)?(?:[a-z][a-z0-9-]*(?:\\[--[a-z][a-z0-9-]*:[a-z0-9.-]{1,16}\\])?|\\[--[a-z][a-z0-9-]*:[a-z0-9.-]{1,16}\\])!?$/;",
           "replace": "const CLASS_NAME = /^[a-z][a-z0-9-]*$/;"
         }
       ],
@@ -56907,6 +56907,20 @@
       ],
       "command": ["bun", "test", "packages/emvb/src/core/extensions/markup-render.test.ts"],
       "expect": "\\(fail\\).*visitors get nothing for a refused element"
+    },
+    {
+      "id": "W-1086/class-breakpoint-dropped",
+      "requirement": "W-1086",
+      "description": "the class rule drops breakpoint variants, so a navbar, timeline or footer loses its responsive layout",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/classes.ts",
+          "search": "(?:(?:max-)?(?:sm|md|lg|xl|2xl):)?",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/extensions/classes-assets.test.ts"],
+      "expect": "\\(fail\\).*a breakpoint variant is kept"
     }
   ]
 }
