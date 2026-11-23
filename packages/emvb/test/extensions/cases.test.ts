@@ -83,6 +83,9 @@ const layoutWith = (
 
 const html = (layout: Layout, mode: "public" | "editor" = "public") =>
   renderPage(layout, emptyDesign(), { mode }).html;
+/** The placeholder shows only when asked for (W-1088: visitors get nothing). */
+const placeholderHtml = (layout: Layout) =>
+  renderPage(layout, emptyDesign(), { mode: "public", extensionPlaceholders: true }).html;
 
 const para = (id: string, text: string) => ({ id, type: "text", props: { text } });
 
@@ -132,7 +135,7 @@ describe("the markup check drops what it cannot allow", () => {
     };
     for (let i = 0; i < 14; i++) node = { tag: "div", attrs: {}, children: [node] };
     register(() => ({ markup: node }));
-    expect(html(layoutWith(RAW))).toContain(EXTENSION_PLACEHOLDER_TEXT);
+    expect(placeholderHtml(layoutWith(RAW))).toContain(EXTENSION_PLACEHOLDER_TEXT);
   });
 
   test("a tree over the node limit shows the placeholder", () => {
@@ -142,7 +145,7 @@ describe("the markup check drops what it cannot allow", () => {
       children: [`n${i}`],
     }));
     register(() => ({ markup: { tag: "div", attrs: {}, children } }));
-    expect(html(layoutWith(RAW))).toContain(EXTENSION_PLACEHOLDER_TEXT);
+    expect(placeholderHtml(layoutWith(RAW))).toContain(EXTENSION_PLACEHOLDER_TEXT);
   });
 });
 

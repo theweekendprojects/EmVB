@@ -47,6 +47,9 @@ const page = (type: string = TYPE): Layout => ({
 
 const publicHtml = (layout: Layout = page()) =>
   renderPage(layout, emptyDesign(), { mode: "public" }).html;
+/** Visitors get nothing for a refused element (W-1088); the placeholder shows only when asked. */
+const placeholderHtml = (layout: Layout = page()) =>
+  renderPage(layout, emptyDesign(), { mode: "public", extensionPlaceholders: true }).html;
 
 beforeEach(() => clearExtensions());
 
@@ -103,18 +106,24 @@ describe("markup output (extensionApi 1.x)", () => {
     expect(html).not.toContain("onclick");
   });
 
+  test("visitors get nothing for a refused element; the placeholder is for the editor (W-1088)", () => {
+    register(() => ({ markup: { tag: "script", attrs: {}, children: ["alert(1)"] } }));
+    const html = publicHtml();
+    expect(html).not.toContain(EXTENSION_PLACEHOLDER_TEXT);
+    expect(html).not.toContain("emvb-ext-missing");
+  });
   test("a tag outside the serializer allowlist shows the placeholder", () => {
     register(() => ({
       markup: { tag: "script", attrs: {}, children: ["alert(1)"] },
     }));
-    const html = publicHtml();
+    const html = placeholderHtml();
     expect(html).toContain(EXTENSION_PLACEHOLDER_TEXT);
     expect(html).not.toContain("<script");
   });
 
   test("malformed children show the placeholder, never throw", () => {
     register(() => ({ markup: { tag: "div", attrs: {}, children: 5 } }));
-    expect(publicHtml()).toContain(EXTENSION_PLACEHOLDER_TEXT);
+    expect(placeholderHtml()).toContain(EXTENSION_PLACEHOLDER_TEXT);
   });
 
   test("a throwing getter inside markup shows the placeholder and leaves siblings", () => {
@@ -139,7 +148,7 @@ describe("markup output (extensionApi 1.x)", () => {
         ],
       },
     };
-    const html = publicHtml(layout);
+    const html = placeholderHtml(layout);
     expect(html).toContain("Sibling");
     expect(html).toContain(EXTENSION_PLACEHOLDER_TEXT);
   });
