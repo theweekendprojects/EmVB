@@ -55101,6 +55101,407 @@
         "CI": "1"
       },
       "expect": "✘.*\\[node\\]"
+    },
+    {
+      "id": "W-927/markup-class-allowlist",
+      "requirement": "W-927",
+      "description": "markup keeps classes that the package did not declare",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "const kept = value.split(/\\s+/).filter((token) => classes.has(token));",
+          "replace": "const kept = value.split(/\\s+/);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/markup-render.test.ts"
+      ],
+      "expect": "\\(fail\\).*only classes on the package allowlist survive"
+    },
+    {
+      "id": "W-927/markup-image-scheme",
+      "requirement": "W-927",
+      "description": "a javascript: image source reaches the page",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (name === \"src\" || name === \"poster\") return sanitizeUrl(value, MEDIA_SCHEMES);",
+          "replace": "if (name === \"src\" || name === \"poster\") return value;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/cases.test.ts"
+      ],
+      "expect": "\\(fail\\).*an img src that is not http"
+    },
+    {
+      "id": "W-927/markup-tag-allowlist",
+      "requirement": "W-927",
+      "description": "a tag outside the allowlist passes the markup check",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (!isAllowedTag(node.tag)) return undefined;",
+          "replace": "// tag check removed"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/markup-render.test.ts"
+      ],
+      "expect": "\\(fail\\).*a tag outside the serializer allowlist shows the placeholder"
+    },
+    {
+      "id": "W-927/markup-inline-style",
+      "requirement": "W-927",
+      "description": "inline style reaches the serializer",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (typeof value !== \"string\" || /^on/i.test(name) || !isAllowedAttr(name)) continue;",
+          "replace": "if (typeof value !== \"string\" || /^on/i.test(name) || (!isAllowedAttr(name) && name !== \"style\")) continue;"
+        },
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "if (name === \"style\") return undefined;",
+          "replace": "if (name === \"style\") return value;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/cases.test.ts"
+      ],
+      "expect": "\\(fail\\).*a style attribute is dropped"
+    },
+    {
+      "id": "W-927/markup-href-scheme",
+      "requirement": "W-927",
+      "description": "a javascript: href reaches the page",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "  return sanitizeHref(value);\n}",
+          "replace": "  return value;\n}"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/markup-render.test.ts"
+      ],
+      "expect": "\\(fail\\).*an unsafe href is dropped and the link text is kept"
+    },
+    {
+      "id": "W-927/render-mode",
+      "requirement": "W-927",
+      "description": "an element is not told its render mode",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "    sources: syncSourceValues(parsed.pkg),\n    mode,\n",
+          "replace": "    sources: syncSourceValues(parsed.pkg),\n    mode: \"public\",\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/markup-render.test.ts"
+      ],
+      "expect": "\\(fail\\).*an element reads the mode it is drawn in"
+    },
+    {
+      "id": "W-927/container-slot-dropped",
+      "requirement": "W-927",
+      "description": "a container's children never reach its slot marker",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/markup.ts",
+          "search": "    return [...children];",
+          "replace": "    return [];"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/container-slots.test.ts"
+      ],
+      "expect": "\\(fail\\).*children fill the slot, in order"
+    },
+    {
+      "id": "W-927/container-child-count",
+      "requirement": "W-927",
+      "description": "an element is not told how many children it holds",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "    mode,\n    childCount,\n  };",
+          "replace": "    mode,\n    childCount: 0,\n  };"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/container-slots.test.ts"
+      ],
+      "expect": "\\(fail\\).*the element is told how many children it holds"
+    },
+    {
+      "id": "W-927/insert-container-no-children",
+      "requirement": "W-927",
+      "description": "a new container from the Add panel has no children array",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/dnd/new-element.ts",
+          "search": "      ...(isContainerExtensionType(type) ? { children: [] } : {}),",
+          "replace": "      ...({}),"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/container-slots.test.ts"
+      ],
+      "expect": "\\(fail\\).*a new container starts with an empty children array"
+    },
+    {
+      "id": "W-927/part-wrapped",
+      "requirement": "W-927",
+      "description": "a list part is wrapped in an extra div",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "if (isPartExtensionType(type)) {",
+          "replace": "if (false && isPartExtensionType(type)) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/parts.test.ts"
+      ],
+      "expect": "\\(fail\\).*renders without the element wrapper"
+    },
+    {
+      "id": "W-927/part-outside-parent",
+      "requirement": "W-927",
+      "description": "a list part can be dropped into a container that does not list it",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/arrange.ts",
+          "search": "if (isPartExtensionType(child.type) && !accepted) return REASONS.partOutsideParent;",
+          "replace": "if (false) return REASONS.partOutsideParent;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/parts.test.ts"
+      ],
+      "expect": "\\(fail\\).*does not list it"
+    },
+    {
+      "id": "W-927/accepts-ignored",
+      "requirement": "W-927",
+      "description": "a container accepts children it does not list",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/arrange.ts",
+          "search": "if (accepted && !accepted.has(child.type)) return REASONS.extensionNotAccepted;",
+          "replace": "if (false) return REASONS.extensionNotAccepted;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/core/extensions/parts.test.ts"
+      ],
+      "expect": "\\(fail\\).*refuses anything it does not accept"
+    },
+    {
+      "id": "W-927/element-cap",
+      "requirement": "W-927",
+      "description": "a package larger than the element cap loses the rest",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/normalize.ts",
+          "search": "const MAX_ELEMENTS = 128;",
+          "replace": "const MAX_ELEMENTS = 32;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/cases.test.ts"
+      ],
+      "expect": "\\(fail\\).*a package may register up to 128 elements"
+    },
+    {
+      "id": "W-927/layers-extension-label",
+      "requirement": "W-927",
+      "description": "Layers shows the stored type, not the element label",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/LayersPanel.tsx",
+          "search": "const typeName = ELEMENT_NAMES[node.type] ?? extensionName ?? node.type;",
+          "replace": "const typeName = ELEMENT_NAMES[node.type] ?? node.type;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"
+      ],
+      "expect": "\\(fail\\).*shows its label, not its stored type"
+    },
+    {
+      "id": "W-927/extension-heading",
+      "requirement": "W-927",
+      "description": "the Add panel heading is a generic name",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/extension-manifests.ts",
+          "search": "return names.length === 1 && only !== undefined ? only : \"Extensions\";",
+          "replace": "return \"Extensions\";"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"
+      ],
+      "expect": "\\(fail\\).*the Add panel heading is the extension"
+    },
+    {
+      "id": "W-927/container-flag-dropped",
+      "requirement": "W-927",
+      "description": "a container element loses its container flag, so its children are never kept",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/normalize.ts",
+          "search": "    ...(element.container === true || accepts.length > 0 ? { container: true } : {}),",
+          "replace": "    ...({}),"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/container-slots.test.ts"
+      ],
+      "expect": "\\(fail\\).*only a container element is a parent node"
+    },
+    {
+      "id": "W-927/leaf-renders-children",
+      "requirement": "W-927",
+      "description": "a leaf element renders children stored under it",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "    : [];\n\n  const live = liveExtensionRender(node, markupScope(id), mode, stored.length);",
+          "replace": "    : ((node as { children?: LayoutNode[] }).children ?? []);\n\n  const live = liveExtensionRender(node, markupScope(id), mode, stored.length);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/container-slots.test.ts"
+      ],
+      "expect": "\\(fail\\).*a leaf ignores stored children"
+    },
+    {
+      "id": "W-927/container-no-children-crash",
+      "requirement": "W-927",
+      "description": "a container saved without a children array becomes a parent and takes drops it cannot render",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "  (isContainerExtensionType(node.type) &&\n    Array.isArray((node as { children?: unknown }).children)) ||",
+          "replace": "  isContainerExtensionType(node.type) ||"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/container-slots.test.ts"
+      ],
+      "expect": "\\(fail\\).*is not a parent node"
+    },
+    {
+      "id": "W-927/gap5-route-unscoped",
+      "requirement": "W-927",
+      "description": "the editor's render route does not scope markup ids, so two instances share ids on the canvas",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/extension-routes.ts",
+          "search": "liveExtensionRender(node, markupScope(node.id), ctx.input.mode)",
+          "replace": "liveExtensionRender(node, undefined, ctx.input.mode)"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/cases.test.ts"
+      ],
+      "expect": "\\(fail\\).*two identical instances get their own scoped ids"
+    },
+    {
+      "id": "W-927/gap5-key-ignores-id",
+      "requirement": "W-927",
+      "description": "the output key ignores the node id, so identical instances share one output",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "  const id = typeof node.id === \"string\" ? `\\n#${node.id}` : \"\";",
+          "replace": "  const id = \"\";"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/cases.test.ts"
+      ],
+      "expect": "\\(fail\\).*two identical instances get their own scoped ids"
+    },
+    {
+      "id": "W-927/gap1-chip-stored-type",
+      "requirement": "W-927",
+      "description": "the canvas selection label falls back to the stored type for extension elements",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/extension-manifests.ts",
+          "search": "    if (el) return el.label;",
+          "replace": "    if (el) return undefined;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/src/admin/editor/panels/extension-labels.test.tsx"
+      ],
+      "expect": "\\(fail\\).*canvas selection label"
+    },
+    {
+      "id": "W-927/gap2-parts-share-group",
+      "requirement": "W-927",
+      "description": "list parts on every container share one radio group name",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/render-ext.ts",
+          "search": "  if (scope === undefined) return kids;",
+          "replace": "  if (scope === undefined || true) return kids;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "packages/emvb/test/extensions/cases.test.ts"
+      ],
+      "expect": "\\(fail\\).*list parts share a group only inside their container"
     }
   ]
 }
