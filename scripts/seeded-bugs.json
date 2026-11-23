@@ -56879,6 +56879,20 @@
       ],
       "command": ["bun", "test", "packages/emvb/src/core/extensions/classes-assets.test.ts"],
       "expect": "\\(fail\\).*an arbitrary CSS variable and an important class are kept"
+    },
+    {
+      "id": "W-1068/provider-sections-dropped",
+      "requirement": "W-1068",
+      "description": "a provider-era section template is missing from the starter templates",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/templates/sections.ts",
+          "search": "    id: \"nav\",\n    name: \"Navigation bar\"",
+          "replace": "    id: \"nav-gone\",\n    name: \"Navigation bar\""
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/templates/templates.test.ts"],
+      "expect": "\\(fail\\).*the provider-era sections are back as templates"
     }
   ]
 }
