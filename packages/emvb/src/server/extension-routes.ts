@@ -3,7 +3,6 @@ import { z } from "zod";
 import {
   extensionOutputKey,
   isExtensionType,
-  liveExtensionOutput,
   resolveExtensionSource,
   liveExtensionRender,
   markupScope,
