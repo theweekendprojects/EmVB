@@ -6,6 +6,7 @@ import { defineExtension } from "../../src/core/extensions/define.ts";
 import { isContainerExtensionType } from "../../src/core/extensions/containers.ts";
 import { clearExtensions, rememberExtensions } from "../../src/core/extensions/registry.ts";
 import { SLOT_TAG } from "../../src/core/extensions/markup.ts";
+import { extensionOutputKey } from "../../src/core/extensions/render-ext.ts";
 import { newElement } from "../../src/admin/editor/dnd/new-element.ts";
 
 const BOX = "ext:emvb-ext-frame/box";
@@ -117,6 +118,13 @@ describe("container elements", () => {
     expect(out.indexOf("header")).toBeLessThan(out.indexOf("tail"));
   });
 
+  test("children keep their core classes; the package's class list does not apply to them", () => {
+    register({ markup: { tag: "section", attrs: { class: "frame" }, children: [SLOT_NODE()] } });
+    const out = html(
+      withBox([{ id: "h0000001", type: "heading", props: { text: "Kid", level: 2 } }]),
+    );
+    expect(out).toContain('<h2 class="emvb-heading">Kid</h2>');
+  });
   test("the slot marker never reaches the page", () => {
     register({ markup: { tag: "div", attrs: {}, children: [SLOT_NODE()] } });
     expect(html(withBox([]))).not.toContain(SLOT_TAG);
@@ -170,6 +178,11 @@ function SLOT_NODE() {
 }
 
 describe("a saved container without a children array", () => {
+  test("the output key ignores children, which core places", () => {
+    const a = { id: "box00001", type: BOX, props: {}, children: [para("p1", "a")] };
+    const b = { id: "box00001", type: BOX, props: {}, children: [para("p2", "b")] };
+    expect(extensionOutputKey(a as never)).toBe(extensionOutputKey(b as never));
+  });
   test("is not a parent node: drops into it are refused until it is saved with children", () => {
     rememberExtensions([
       defineExtension({
