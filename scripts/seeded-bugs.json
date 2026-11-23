@@ -1776,8 +1776,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/vnode.ts",
-          "search": "  \"tspan\",\n]);",
-          "replace": "  \"tspan\",\n  \"script\",\n]);"
+          "search": "  \"pre\",\n  \"dialog\",\n]);",
+          "replace": "  \"pre\",\n  \"dialog\",\n  \"script\",\n]);"
         },
         {
           "file": "packages/emvb/src/core/elements/index.ts",
@@ -53164,8 +53164,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/extension-routes.ts",
-          "search": "nodes ? withExtensionClasses(nodes) : null",
-          "replace": "nodes ?? null"
+          "search": "nodes: withExtensionClasses(live.nodes)",
+          "replace": "nodes: live.nodes"
         }
       ],
       "command": ["bun", "test", "packages/emvb/test/server/extension-render-route.test.ts"],

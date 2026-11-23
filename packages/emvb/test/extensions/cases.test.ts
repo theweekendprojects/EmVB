@@ -3,14 +3,18 @@
  * the id references, nested containers, and the node output's children. One test per case.
  */
 import { beforeEach, describe, expect, test } from "bun:test";
-import { emptyDesign } from "../schema/design.ts";
-import { LAYOUT_SCHEMA_VERSION, type Layout } from "../schema/layout.ts";
-import { renderPage } from "../render/index.ts";
-import { defineExtension } from "./define.ts";
-import { clearExtensions, liveElement, rememberExtensions } from "./registry.ts";
-import { SLOT_TAG } from "./markup.ts";
-import { isContainerExtensionType } from "./containers.ts";
-import { EXTENSION_PLACEHOLDER_TEXT } from "./placeholder.ts";
+import { emptyDesign } from "../../src/core/schema/design.ts";
+import { LAYOUT_SCHEMA_VERSION, type Layout } from "../../src/core/schema/layout.ts";
+import { renderPage } from "../../src/core/render/index.ts";
+import { defineExtension } from "../../src/core/extensions/define.ts";
+import {
+  clearExtensions,
+  liveElement,
+  rememberExtensions,
+} from "../../src/core/extensions/registry.ts";
+import { SLOT_TAG } from "../../src/core/extensions/markup.ts";
+import { isContainerExtensionType } from "../../src/core/extensions/containers.ts";
+import { EXTENSION_PLACEHOLDER_TEXT } from "../../src/core/extensions/placeholder.ts";
 
 const PROPS = { type: "object" as const, properties: {} };
 const BOX = "ext:emvb-ext-cases/box";
@@ -286,7 +290,7 @@ describe("limits and registration", () => {
 
 describe("the editor's render route", () => {
   test("markup comes back as markup, nodes as nodes, a missing element as null", async () => {
-    const { extensionRenderRoute } = await import("../../server/extension-routes.ts");
+    const { extensionRenderRoute } = await import("../../src/server/extension-routes.ts");
     register(() => ({ markup: { tag: "p", attrs: {}, children: ["route text"] } }));
     const handler = extensionRenderRoute.handler as unknown as (ctx: unknown) => Promise<{
       outputs: { key: string; markup?: unknown; nodes: unknown }[];
@@ -309,7 +313,7 @@ describe("the editor's render route", () => {
   });
 
   test("the element is told the mode the route was asked for", async () => {
-    const { extensionRenderRoute } = await import("../../server/extension-routes.ts");
+    const { extensionRenderRoute } = await import("../../src/server/extension-routes.ts");
     rememberExtensions([
       defineExtension({
         id: "emvb-ext-cases",
