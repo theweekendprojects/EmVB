@@ -453,8 +453,8 @@ describe("list parts share a group only inside their container (gap 2)", () => {
         ],
       },
     };
-    const html = renderPage(layout, emptyDesign(), { mode: "public" }).html;
-    const names = [...html.matchAll(/name="([^"]+)"/g)].map((m) => m[1]);
+    const page = renderPage(layout, emptyDesign(), { mode: "public" }).html;
+    const names = [...page.matchAll(/name="([^"]+)"/g)].map((m) => m[1]);
     expect(names).toHaveLength(4);
     expect(names[0]).toBe(names[1]);
     expect(names[2]).toBe(names[3]);
