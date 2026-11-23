@@ -136,6 +136,25 @@ describe("class allowlist at registration (W-1086)", () => {
       "daisy-[--value:70]!",
     ]);
   });
+  test("a breakpoint variant is kept; unknown variants and empty words are dropped", () => {
+    const allow = [
+      "daisy-sm:hidden",
+      "daisy-lg:flex",
+      "daisy-max-sm:timeline-vertical",
+      "daisy-md:footer-horizontal",
+      "daisy-hover:btn",
+      "daisy-xx:hidden",
+      "daisy-sm:",
+      "daisy-!",
+      "daisy-sm:[url(x)]",
+    ];
+    expect(normalizeClasses({ prefix: "daisy-", allow })?.allow).toEqual([
+      "daisy-sm:hidden",
+      "daisy-lg:flex",
+      "daisy-max-sm:timeline-vertical",
+      "daisy-md:footer-horizontal",
+    ]);
+  });
   test("the extension's manifest carries the checked allowlist; a bad one is left out", () => {
     const ok = normalizeExtension(kit());
     expect(ok?.manifest.classes?.allow).toEqual(["kit-btn", "kit-btn-primary", "kit-card"]);
