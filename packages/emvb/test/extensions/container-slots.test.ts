@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import { emptyDesign } from "../schema/design.ts";
-import { LAYOUT_SCHEMA_VERSION, type Layout, isParentNode } from "../schema/layout.ts";
-import { renderPage } from "../render/index.ts";
-import { defineExtension } from "./define.ts";
-import { isContainerExtensionType } from "./containers.ts";
-import { clearExtensions, rememberExtensions } from "./registry.ts";
-import { SLOT_TAG } from "./markup.ts";
-import { newElement } from "../../admin/editor/dnd/new-element.ts";
+import { emptyDesign } from "../../src/core/schema/design.ts";
+import { LAYOUT_SCHEMA_VERSION, type Layout, isParentNode } from "../../src/core/schema/layout.ts";
+import { renderPage } from "../../src/core/render/index.ts";
+import { defineExtension } from "../../src/core/extensions/define.ts";
+import { isContainerExtensionType } from "../../src/core/extensions/containers.ts";
+import { clearExtensions, rememberExtensions } from "../../src/core/extensions/registry.ts";
+import { SLOT_TAG } from "../../src/core/extensions/markup.ts";
+import { newElement } from "../../src/admin/editor/dnd/new-element.ts";
 
 const BOX = "ext:emvb-ext-frame/box";
 const LEAF = "ext:emvb-ext-frame/leaf";

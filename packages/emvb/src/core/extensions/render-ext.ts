@@ -146,7 +146,7 @@ function checkedMarkup(raw: ExtensionMarkup, pkg: string, scope?: string): VNode
  * The id scope of one layout node: its ids and their references are prefixed with it, so two
  * instances of one element never share an id on a page. Only the node id's letters and digits.
  */
-export function markupScope(nodeId: string | undefined): string | undefined {
+function markupScope(nodeId: string | undefined): string | undefined {
   if (typeof nodeId !== "string") return undefined;
   const clean = nodeId.replace(/[^A-Za-z0-9]/g, "");
   return clean.length > 0 ? `ext-${clean}` : undefined;
