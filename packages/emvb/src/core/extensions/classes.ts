@@ -8,13 +8,12 @@ import type { ExtensionAssets, ExtensionClasses } from "./types.ts";
 /** A prefix: lowercase words joined by hyphens, ending in `-` (`d-`, `acme-ui-`). */
 const PREFIX = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*-$/;
 /**
- * The part of a class name after its prefix: a lowercase word, then lowercase letters, digits and
- * hyphens. It may start with one Tailwind breakpoint variant (`sm:`, `max-sm:`), end in one
- * arbitrary CSS variable (`[--name:value]`, a per-instance value such as a radial's `--value`) and
- * in `!` (important). Nothing else: no spaces, quotes, markup or other brackets.
+ * The part of a class name after its prefix. Exact match, nothing parsed (extensionApi 1.5): the
+ * characters compiled kits use in class names (lowercase letters, digits, `-`, and `: / ! . _`),
+ * starting with a letter or digit. No square brackets, spaces, quotes or markup. Whether the name
+ * means anything comes from the kit's own CSS; EmVB only checks the name is on the static list.
  */
-const CLASS_NAME =
-  /^(?:(?:max-)?(?:sm|md|lg|xl|2xl):)?(?:[a-z][a-z0-9-]*(?:\[--[a-z][a-z0-9-]*:[a-z0-9.-]{1,16}\])?|\[--[a-z][a-z0-9-]*:[a-z0-9.-]{1,16}\])!?$/;
+const CLASS_NAME = /^[a-z0-9][a-z0-9:/!._-]*$/;
 
 const MAX_CLASS_PREFIX_LENGTH = 16;
 const MAX_CLASS_NAME_LENGTH = 64;

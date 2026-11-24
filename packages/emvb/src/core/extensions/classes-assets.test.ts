@@ -115,44 +115,40 @@ describe("class allowlist at registration (W-1086)", () => {
     expect(normalizeClasses({ prefix: "d-", allow: "d-btn" })).toBeUndefined();
   });
 
-  test("an arbitrary CSS variable and an important class are kept; other brackets are dropped", () => {
+  test("exact names with the compiled-kit characters are kept; brackets, spaces and quotes are dropped", () => {
     const allow = [
-      "daisy-[--value:70]",
-      "daisy-[--digits:2]",
       "daisy-size-24!",
-      "daisy-[--value:70]!",
+      "daisy-w-1/2",
+      "daisy-w-auto!",
+      "daisy-sm:card-side",
+      "daisy-[--value:70]",
       "daisy-[url(x)]",
-      "daisy-[--value:70;color:red]",
-      'daisy-[--value:"x"]',
+      "daisy-btn d-evil",
+      'daisy-x"onmouseover="y',
       "daisy-[--value:a b]",
-      "daisy-[--value:]",
-      "daisy-[--Value:1]",
-      "daisy-[--value:1]]",
     ];
     expect(normalizeClasses({ prefix: "daisy-", allow })?.allow).toEqual([
-      "daisy-[--value:70]",
-      "daisy-[--digits:2]",
       "daisy-size-24!",
-      "daisy-[--value:70]!",
+      "daisy-w-1/2",
+      "daisy-w-auto!",
+      "daisy-sm:card-side",
     ]);
   });
-  test("a breakpoint variant is kept; unknown variants and empty words are dropped", () => {
+  test("names are not parsed: any name with the allowed characters and the prefix is kept", () => {
     const allow = [
       "daisy-sm:hidden",
       "daisy-lg:flex",
       "daisy-max-sm:timeline-vertical",
-      "daisy-md:footer-horizontal",
-      "daisy-hover:btn",
       "daisy-xx:hidden",
-      "daisy-sm:",
       "daisy-!",
-      "daisy-sm:[url(x)]",
+      "daisy-.x",
+      "daisy-_y",
     ];
     expect(normalizeClasses({ prefix: "daisy-", allow })?.allow).toEqual([
       "daisy-sm:hidden",
       "daisy-lg:flex",
       "daisy-max-sm:timeline-vertical",
-      "daisy-md:footer-horizontal",
+      "daisy-xx:hidden",
     ]);
   });
   test("the extension's manifest carries the checked allowlist; a bad one is left out", () => {
