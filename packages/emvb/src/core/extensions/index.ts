@@ -52,6 +52,7 @@ export {
   extensionVarsOf,
   withExtensionClasses,
 } from "./safe-nodes.ts";
+export { markupOf } from "./markup.ts";
 export {
   syncSourceValues,
   resolveExtensionSource,

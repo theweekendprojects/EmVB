@@ -14,6 +14,7 @@ import {
 import { validateExtensionProps } from "./schema.ts";
 import { safeExtensionOutput } from "./safe-nodes.ts";
 import { extensionPlaceholderVNode } from "./placeholder.ts";
+import { scopeIds } from "./scope-ids.ts";
 import type { ExtensionRenderContext } from "./types.ts";
 import { parseExtensionType } from "./namespace.ts";
 import { cleanBoundText } from "../data/bindings.ts";
@@ -173,6 +174,8 @@ export function renderExtensionNode(
   outputs?: ExtensionOutputs,
   /** W-1086: told the package id whenever one of its elements renders. */
   rendered?: (pkg: string) => void,
+  /** extensionApi 1.5: the render's id space (`uniqueId`), which the output's ids are scoped by. */
+  uniqueId: (base: string) => string = (base) => base,
 ): VNode {
   const id = typeof node.id === "string" ? node.id : undefined;
   const type = node.type;
@@ -197,15 +200,19 @@ export function renderExtensionNode(
   rendered?.(parsed.pkg);
 
   const children = visitChildren(safe);
-  // extensionApi 1.5: the wrapper carries the scope class its stylesheet is written against.
+  // extensionApi 1.5: the wrapper carries the scope class its stylesheet is written against, and
+  // the ids in the output are scoped through the render's id space.
   const token = cssScopeToken(parsed.pkg);
-  return {
-    tag: "div",
-    attrs: {
-      class: token ? `emvb-ext ${EXTENSION_WRAPPER_CLASS(token)}` : "emvb-ext",
-      "data-emvb-ext": type,
-      ...(id && mode === "editor" ? { "data-emvb-id": id } : {}),
+  return scopeIds(
+    {
+      tag: "div",
+      attrs: {
+        class: token ? `emvb-ext ${EXTENSION_WRAPPER_CLASS(token)}` : "emvb-ext",
+        "data-emvb-ext": type,
+        ...(id && mode === "editor" ? { "data-emvb-id": id } : {}),
+      },
+      children,
     },
-    children,
-  };
+    uniqueId,
+  );
 }

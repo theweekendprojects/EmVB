@@ -69,6 +69,7 @@ import {
   extensionClassesOf,
   extensionVarsOf,
   extensionStylesheets,
+  markupOf,
   isExtensionType,
   renderExtensionNode,
   isExtensionPlaceholder,
@@ -124,6 +125,19 @@ export type RenderResult = {
 
 const ID = /^[A-Za-z0-9_-]{4,24}$/;
 const HTML_ID = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
+
+/** The author ids (Advanced > CSS) a layout writes on the page, the ones `nodeAttrs` emits. */
+function authorHtmlIds(root: LayoutNode): string[] {
+  const ids: string[] = [];
+  const visit = (node: LayoutNode): void => {
+    if (node.htmlId && HTML_ID.test(node.htmlId) && !isShadowingId(node.htmlId)) {
+      ids.push(node.htmlId);
+    }
+    for (const child of nodeChildren(node)) visit(child);
+  };
+  visit(root);
+  return ids;
+}
 
 /** A focal-point percentage, or the fallback when that axis is unset. Anything else is dropped. */
 function focalPercent(value: unknown, fallback: number): number | undefined {
@@ -415,6 +429,18 @@ export function renderPage(
   let listSteps = false;
 
   const domIds = new Map<string, number>();
+  // extensionApi 1.5: every author id is reserved before any generated id, so an extension's
+  // generated id never takes one, whatever the order they render in.
+  // Synced sections and loop items render inside the page too, so their author ids are reserved.
+  const parts = opts.dynamic;
+  const reserved = [
+    layout,
+    ...Object.values(parts?.sectionTemplates ?? {}),
+    ...Object.values(parts?.loopTemplates ?? {}),
+  ];
+  for (const source of reserved) {
+    for (const id of authorHtmlIds(source.root)) domIds.set(id, 1);
+  }
   const idSuffix = opts.partIds && opts.scope ? `-t${originHash(opts.scope)}` : "";
   // W-253: runtimes follow what renders, including synced section and loop item contents,
   // which the page's own layout doesn't hold.
@@ -770,6 +796,7 @@ export function renderPage(
               .filter((child): child is VNode => child !== undefined),
           opts.extensionOutputs,
           (pkg) => extensionsUsed.add(pkg),
+          ctx.uniqueId,
         );
         // W-1088 (#37): visitors get nothing for an extension element that can't render; the
         // stored element is kept and renders again once its extension is back.
@@ -788,6 +815,30 @@ export function renderPage(
       };
     }
     usedTypes.add(type);
+    // extensionApi 1.5: an extension's generic markup node renders its own tag and attributes.
+    const markup = markupOf(stored);
+    if (markup) {
+      for (const child of nodeChildren(node)) parentOf.set(child, node);
+      // W-1086: the kit's classes an extension put on this node (`class` itself is refused above).
+      const classes = [...(extensionClassesOf(stored) ?? [])];
+      // extensionApi 1.5: its custom properties go in its own rule, as on any output node.
+      const vars = Object.entries(extensionVarsOf(stored) ?? {});
+      const markupRuleId = id === undefined ? undefined : ruleIdFor(id, dynamic?.idOrigin ?? "");
+      if (markupRuleId && vars.length > 0) {
+        classes.push(`emvb-e-${markupRuleId}`);
+        localRules.push({
+          id: markupRuleId,
+          declarations: vars.map(([property, value]) => ({ property, value })),
+          states: {},
+        });
+      }
+      return finish(node, {
+        tag: markup.tag,
+        attrs: { ...markup.attrs, ...(classes.length ? { class: classes.join(" ") } : {}) },
+        children:
+          markup.text !== undefined ? [markup.text] : ctx.children(nodeChildren(node), dynamic),
+      });
+    }
     if (isFormNode(node) && node.props.formId.trim()) rendered.form = true;
     if (isTabsNode(node)) rendered.tabs = true;
     if (type === "menu-item" && hasChildren(node)) rendered.menuDropdown = true;

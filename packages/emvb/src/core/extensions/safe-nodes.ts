@@ -11,6 +11,7 @@ import { validateLayout } from "../validate.ts";
 import { newNodeId } from "../tree-ops.ts";
 import { isExtensionType } from "./namespace.ts";
 import { filterExtensionClasses, filterExtensionVars, type ExtensionVarRule } from "./classes.ts";
+import { MARKUP_TYPE, markupOf, markupSpec, setMarkup, type MarkupSpec } from "./markup.ts";
 
 /**
  * W-1086: the extension classes each validated output node keeps. Render output only: they ride
@@ -34,6 +35,8 @@ type Coerced = {
   classes: string[];
   vars: Record<string, string>;
   children?: Coerced[];
+  /** The generic markup node's checked spec; its `node` is a plain container. */
+  markup?: MarkupSpec;
 };
 
 const KNOWN = new Set<string>(KNOWN_ELEMENT_TYPES);
@@ -52,7 +55,11 @@ function coerce(
   if (typeof value === "string") return undefined; // raw HTML / text — refused
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const node = value as Record<string, unknown>;
-  if (typeof node.type !== "string" || !KNOWN.has(node.type) || isExtensionType(node.type)) {
+  const isMarkup = node.type === MARKUP_TYPE;
+  if (
+    !isMarkup &&
+    (typeof node.type !== "string" || !KNOWN.has(node.type) || isExtensionType(node.type))
+  ) {
     return undefined;
   }
   if (
@@ -61,6 +68,9 @@ function coerce(
   ) {
     return undefined;
   }
+  // extensionApi 1.5: the generic markup node is checked whole, or refused whole.
+  const markup = isMarkup ? markupSpec((node.props ?? {}) as Record<string, unknown>) : undefined;
+  if (isMarkup && !markup) return undefined;
   budget.left -= 1;
   const id =
     typeof node.id === "string" && /^[A-Za-z0-9_-]{4,24}$/.test(node.id)
@@ -79,25 +89,29 @@ function coerce(
   return {
     node: {
       id,
-      type: node.type,
-      props: { ...(node.props as Record<string, unknown>) },
-      ...(children ? { children: children.map((c) => c.node) } : {}),
+      // A markup node validates as a plain container; its spec rides beside it (see markup.ts).
+      type: isMarkup ? "container" : node.type,
+      props: isMarkup ? {} : { ...(node.props as Record<string, unknown>) },
+      // A container needs its children array, even an empty one (the layout schema requires it).
+      ...(children || isMarkup ? { children: (children ?? []).map((c) => c.node) } : {}),
     },
     classes: filterExtensionClasses(node.extClasses, allow),
     vars: filterExtensionVars(node.extVars, varRule),
+    ...(markup ? { markup } : {}),
     ...(children ? { children } : {}),
   };
 }
 
-/** Pair each validated node with the classes its coerced twin kept (same tree shape). */
-function attachClasses(validated: LayoutNode, coerced: Coerced): void {
+/** Pair each validated node with the classes and markup its coerced twin kept (same tree shape). */
+function attachTwin(validated: LayoutNode, coerced: Coerced): void {
   if (coerced.classes.length > 0) EXT_CLASSES.set(validated, coerced.classes);
   if (Object.keys(coerced.vars).length > 0) EXT_VARS.set(validated, coerced.vars);
+  if (coerced.markup) setMarkup(validated, coerced.markup);
   const kids = (validated as { children?: LayoutNode[] }).children;
   if (!Array.isArray(kids) || !coerced.children || kids.length !== coerced.children.length) return;
   kids.forEach((kid, i) => {
     const twin = coerced.children?.[i];
-    if (twin) attachClasses(kid, twin);
+    if (twin) attachTwin(kid, twin);
   });
 }
 
@@ -110,6 +124,21 @@ export function withExtensionClasses(nodes: readonly LayoutNode[]): unknown[] {
     const classes = EXT_CLASSES.get(node);
     const vars = EXT_VARS.get(node);
     const kids = (node as { children?: LayoutNode[] }).children;
+    const markup = markupOf(node);
+    if (markup) {
+      // Back in its raw form, so the admin's own safeExtensionOutput checks it again.
+      return {
+        id: node.id,
+        type: MARKUP_TYPE,
+        props: {
+          tag: markup.tag,
+          attrs: markup.attrs,
+          ...(markup.text !== undefined ? { text: markup.text } : {}),
+        },
+        ...(Array.isArray(kids) ? { children: kids.map(copy) } : {}),
+        ...(classes ? { extClasses: [...classes] } : {}),
+      };
+    }
     return {
       ...node,
       ...(Array.isArray(kids) ? { children: kids.map(copy) } : {}),
@@ -160,7 +189,7 @@ export function safeExtensionOutput(
   if (out.length === coerced.length) {
     out.forEach((node, i) => {
       const twin = coerced[i];
-      if (twin) attachClasses(node, twin);
+      if (twin) attachTwin(node, twin);
     });
   }
   return out;
