@@ -75,7 +75,8 @@ export type ExtensionOutputNode =
        */
       extVars?: Readonly<Record<string, string>>;
     })
-  | ExtensionMarkupNode;
+  | ExtensionMarkupNode
+  | ExtensionSlotNode;
 /**
  * extensionApi 1.5: the generic markup node. `tag` must be on the serializer's list and each
  * attribute name on its list; a refused tag, attribute or URL refuses the whole element (markup.ts).
@@ -89,6 +90,11 @@ export type ExtensionMarkupNode = {
   extClasses?: readonly string[];
   extVars?: Readonly<Record<string, string>>;
 };
+/**
+ * extensionApi 1.5: where the element's stored children render. `name` must be the slot the
+ * element declares; any other name renders nothing. Output only: it is never stored.
+ */
+export type ExtensionSlotNode = { type: "ext-slot"; name: string };
 
 /**
  * W-1086: the static class allowlist an extension declares. Every name starts with `prefix`
@@ -112,6 +118,24 @@ export type ExtensionRenderContext = {
 };
 
 /**
+ * extensionApi 1.5: a slot an element's output marks with `{ type: "ext-slot", name }`. Stored
+ * children render there. `accepts` lists the child element names allowed (this extension's names,
+ * or built-in types); absent means any child.
+ */
+export type ExtensionSlot = {
+  name: string;
+  label: string;
+  accepts?: readonly string[];
+};
+
+/** A slot as the manifest holds it: `accepts` as stored types. */
+export type ExtensionSlotManifest = {
+  name: string;
+  label: string;
+  accepts?: readonly string[];
+};
+
+/**
  * A custom element. `name` becomes the stored type `ext:<extension.id>/<name>`.
  * `render` returns EmVB layout nodes (built-in types only), never HTML strings.
  */
@@ -123,6 +147,10 @@ export type ExtensionElement = {
   schema: ExtensionPropSchema;
   fields: readonly ExtensionField[];
   defaults?: () => Record<string, unknown>;
+  /** extensionApi 1.5: where stored children render. One slot per element in 1.5. */
+  slots?: readonly ExtensionSlot[];
+  /** extensionApi 1.5: this extension's element names that may only live inside this element. */
+  parts?: readonly string[];
   render: (
     props: Record<string, unknown>,
     ctx: ExtensionRenderContext,
@@ -204,6 +232,10 @@ export type ExtensionElementManifest = {
   schema: ExtensionPropSchema;
   fields: readonly ExtensionField[];
   defaults: Record<string, unknown>;
+  /** extensionApi 1.5: at most one entry; types as stored (`ext:<pkg>/<name>` or a built-in type). */
+  slots?: readonly ExtensionSlotManifest[];
+  /** extensionApi 1.5: stored types that may only be children of this element. */
+  parts?: readonly string[];
 };
 
 export type ExtensionPanelManifest = {

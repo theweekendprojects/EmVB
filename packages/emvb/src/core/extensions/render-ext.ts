@@ -6,6 +6,7 @@
 import type { LayoutNode } from "../schema/layout.ts";
 import type { VNode } from "../render/vnode.ts";
 import {
+  elementManifest,
   extensionClassAllowlist,
   extensionVarRule,
   liveElement,
@@ -15,7 +16,8 @@ import { validateExtensionProps } from "./schema.ts";
 import { safeExtensionOutput } from "./safe-nodes.ts";
 import { extensionPlaceholderVNode } from "./placeholder.ts";
 import { scopeIds } from "./scope-ids.ts";
-import type { ExtensionRenderContext } from "./types.ts";
+import { fillSlots } from "./slots.ts";
+import type { ExtensionElementManifest, ExtensionRenderContext } from "./types.ts";
 import { parseExtensionType } from "./namespace.ts";
 import { cleanBoundText } from "../data/bindings.ts";
 import { cssScopeToken, EXTENSION_WRAPPER_CLASS } from "../css/scope.ts";
@@ -105,6 +107,26 @@ export async function resolveExtensionSource(
 }
 
 export type VisitChildren = (nodes: LayoutNode[]) => VNode[];
+
+/** A stored extension element's children; an extension element may hold children in its slot. */
+function storedChildrenOf(node: LayoutNode): LayoutNode[] {
+  const children = (node as { children?: unknown }).children;
+  return Array.isArray(children) ? (children as LayoutNode[]) : [];
+}
+
+/**
+ * extensionApi 1.5: the stored children a slot takes. With `accepts`, a child must be on that list,
+ * or be one of the element's `parts` (which only live here). Without `accepts`, any child.
+ */
+function slotChildren(
+  stored: LayoutNode[],
+  manifest: ExtensionElementManifest | undefined,
+): LayoutNode[] {
+  const accepts = manifest?.slots?.[0]?.accepts;
+  if (!accepts) return stored;
+  const parts = manifest?.parts ?? [];
+  return stored.filter((child) => accepts.includes(child.type) || parts.includes(child.type));
+}
 
 const propsOf = (node: { props?: unknown }): Record<string, unknown> =>
   node.props && typeof node.props === "object" && !Array.isArray(node.props)
@@ -199,11 +221,22 @@ export function renderExtensionNode(
   }
   rendered?.(parsed.pkg);
 
-  const children = visitChildren(safe);
-  // extensionApi 1.5: the wrapper carries the scope class its stylesheet is written against, and
-  // the ids in the output are scoped through the render's id space.
+  // extensionApi 1.5: the element's stored children render in its slot, and nowhere else. A marker
+  // the manifest does not declare renders nothing. The manifest is the same on the server and in
+  // the admin, so the canvas draws what the public page draws. With no manifest at all, the slot
+  // takes every stored child.
+  const manifest = elementManifest(type);
+  const declared = manifest?.slots?.[0];
+  const fill = (name: string): VNode[] => {
+    if (manifest && declared?.name !== name) return [];
+    return visitChildren(slotChildren(storedChildrenOf(node), manifest));
+  };
+  // The scope class its stylesheet is written against, on the wrapper.
   const token = cssScopeToken(parsed.pkg);
-  return scopeIds(
+  // The extension's own ids are scoped first, with the slot markers carried through, and the slots
+  // are filled after. The editor's own content in a slot keeps the page's ids: scoping it as the
+  // extension's would rename and drop what that content owns and links to.
+  const scoped = scopeIds(
     {
       tag: "div",
       attrs: {
@@ -211,7 +244,12 @@ export function renderExtensionNode(
         "data-emvb-ext": type,
         ...(id && mode === "editor" ? { "data-emvb-id": id } : {}),
       },
-      children,
+      children: visitChildren(safe),
+    },
+    uniqueId,
+  );
+  return fillSlots(scoped, fill);
+}
     },
     uniqueId,
   );

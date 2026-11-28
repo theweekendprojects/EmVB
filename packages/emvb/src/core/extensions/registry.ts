@@ -7,6 +7,7 @@
  * and the renderer look them up by id.
  */
 
+import { clearSlotRules, setSlotRules } from "./slot-rules.ts";
 import { cleanExtensionAssets, normalizeClasses, type ExtensionVarRule } from "./classes.ts";
 import { normalizeExtension } from "./normalize.ts";
 import type { EmVBExtension, ExtensionAssets, ExtensionManifest } from "./types.ts";
@@ -69,6 +70,7 @@ function rememberManifest(manifest: ExtensionManifest): void {
   s.manifests = s.manifests.filter((m) => m.id !== manifest.id);
   s.manifests.push(manifest);
   rememberClasses(manifest.id, manifest.classes);
+  setSlotRules(s.manifests.flatMap((m) => m.elements));
 }
 
 /** Register live extensions from `emvb({ extensions })`. Returns serializable manifests. */
@@ -208,12 +210,24 @@ export function liveElement(type: string):
   return undefined;
 }
 
+/**
+ * The manifest of a stored element type, from the manifests remembered here. The admin has these
+ * (from editor/config) without any live extension code, so slot rules read this, not `liveElement`.
+ */
+export function elementManifest(type: string): ExtensionManifest["elements"][number] | undefined {
+  for (const manifest of store().manifests) {
+    const found = manifest.elements.find((e) => e.type === type);
+    if (found) return found;
+  }
+  return undefined;
+}
 /** Test helper: drop every registered extension. */
 export function clearExtensions(): void {
   const s = store();
   s.byId.clear();
   s.manifests = [];
   s.scoped?.clear();
+  clearSlotRules();
   s.assets?.clear();
   s.allow?.clear();
   s.varRules?.clear();

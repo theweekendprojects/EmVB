@@ -12,6 +12,7 @@ import { newNodeId } from "../tree-ops.ts";
 import { isExtensionType } from "./namespace.ts";
 import { filterExtensionClasses, filterExtensionVars, type ExtensionVarRule } from "./classes.ts";
 import { MARKUP_TYPE, markupOf, markupSpec, setMarkup, type MarkupSpec } from "./markup.ts";
+import { markSlot, SLOT_NAME_RULE, SLOT_TYPE, slotNameOf } from "./slots.ts";
 
 /**
  * W-1086: the extension classes each validated output node keeps. Render output only: they ride
@@ -37,6 +38,8 @@ type Coerced = {
   children?: Coerced[];
   /** The generic markup node's checked spec; its `node` is a plain container. */
   markup?: MarkupSpec;
+  /** The name of a slot marker; its `node` is a plain empty container (extensionApi 1.5). */
+  slot?: string;
 };
 
 const KNOWN = new Set<string>(KNOWN_ELEMENT_TYPES);
@@ -55,6 +58,7 @@ function coerce(
   if (typeof value === "string") return undefined; // raw HTML / text — refused
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const node = value as Record<string, unknown>;
+  if (node.type === SLOT_TYPE) return coerceSlot(node, budget, random);
   const isMarkup = node.type === MARKUP_TYPE;
   if (
     !isMarkup &&
@@ -102,11 +106,35 @@ function coerce(
   };
 }
 
-/** Pair each validated node with the classes and markup its coerced twin kept (same tree shape). */
+/**
+ * extensionApi 1.5: a slot marker, kept as an empty container with its name beside it. The
+ * container always carries its children array, as the layout schema requires.
+ */
+function coerceSlot(
+  node: Record<string, unknown>,
+  budget: { left: number },
+  random: () => number,
+): Coerced | undefined {
+  if (typeof node.name !== "string" || !SLOT_NAME_RULE.test(node.name)) return undefined;
+  budget.left -= 1;
+  const id =
+    typeof node.id === "string" && /^[A-Za-z0-9_-]{4,24}$/.test(node.id)
+      ? node.id
+      : newNodeId(random);
+  return {
+    node: { id, type: "container", props: {}, children: [] },
+    classes: [],
+    vars: {},
+    children: [],
+    slot: node.name,
+  };
+}
+/** Pair each validated node with what its coerced twin kept: classes, vars, markup, slot. */
 function attachTwin(validated: LayoutNode, coerced: Coerced): void {
   if (coerced.classes.length > 0) EXT_CLASSES.set(validated, coerced.classes);
   if (Object.keys(coerced.vars).length > 0) EXT_VARS.set(validated, coerced.vars);
   if (coerced.markup) setMarkup(validated, coerced.markup);
+  if (coerced.slot !== undefined) markSlot(validated, coerced.slot);
   const kids = (validated as { children?: LayoutNode[] }).children;
   if (!Array.isArray(kids) || !coerced.children || kids.length !== coerced.children.length) return;
   kids.forEach((kid, i) => {
@@ -121,6 +149,8 @@ function attachTwin(validated: LayoutNode, coerced: Coerced): void {
  */
 export function withExtensionClasses(nodes: readonly LayoutNode[]): unknown[] {
   const copy = (node: LayoutNode): Record<string, unknown> => {
+    const slot = slotNameOf(node);
+    if (slot !== undefined) return { type: SLOT_TYPE, name: slot };
     const classes = EXT_CLASSES.get(node);
     const vars = EXT_VARS.get(node);
     const kids = (node as { children?: LayoutNode[] }).children;
@@ -137,6 +167,7 @@ export function withExtensionClasses(nodes: readonly LayoutNode[]): unknown[] {
         },
         ...(Array.isArray(kids) ? { children: kids.map(copy) } : {}),
         ...(classes ? { extClasses: [...classes] } : {}),
+        ...(vars ? { extVars: { ...vars } } : {}),
       };
     }
     return {

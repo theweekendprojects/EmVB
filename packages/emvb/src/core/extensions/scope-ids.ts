@@ -27,6 +27,7 @@
  */
 import type { VNode } from "../render/vnode.ts";
 import { isShadowingId } from "../shadowing-ids.ts";
+import { markSlot, slotNameOf } from "./slots.ts";
 
 /** A plain element id: starts with a letter, then letters, digits, `-` or `_`. */
 const ID_RULE = /^[A-Za-z][\w-]{0,63}$/;
@@ -153,13 +154,17 @@ function rewrite(node: VNode, owned: ReadonlyMap<string, string>, seen: Set<stri
     const scoped = scopedValue(name, value, owned, seen);
     if (scoped !== undefined) attrs[name] = scoped;
   }
-  return {
+  const copy: VNode = {
     tag: node.tag,
     attrs,
     children: node.children.map((child) =>
       typeof child === "string" ? child : rewrite(child, owned, seen),
     ),
   };
+  // A slot marker is tracked by identity, so the copy has to carry it (slots.ts).
+  const slot = slotNameOf(node);
+  if (slot !== undefined) markSlot(copy, slot);
+  return copy;
 }
 
 /**
