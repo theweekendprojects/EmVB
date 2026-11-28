@@ -47589,11 +47589,11 @@
         {
           "file": "packages/emvb/src/core/extensions/types.ts",
           "search": "  | (WithOutputChildren<LayoutNode> & {",
-          "replace": "  | (LayoutNode & {"
+          "replace": "  | ((WithOutputChildren<never> | LayoutNode) & {"
         }
       ],
       "command": ["bun", "run", "typecheck"],
-      "expect": "markup\\.test\\.ts.*error TS2322"
+      "expect": "markup\\.test\\.ts.*TS2322"
     },
     {
       "id": "W-1008/no-1.4-job",
