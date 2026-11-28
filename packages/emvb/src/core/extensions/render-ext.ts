@@ -14,6 +14,7 @@ import {
 import { validateExtensionProps } from "./schema.ts";
 import { safeExtensionOutput } from "./safe-nodes.ts";
 import { extensionPlaceholderVNode } from "./placeholder.ts";
+import { scopeIds } from "./scope-ids.ts";
 import { fillSlots } from "./slots.ts";
 import type { ExtensionElementManifest, ExtensionRenderContext } from "./types.ts";
 import { parseExtensionType } from "./namespace.ts";
@@ -188,6 +189,8 @@ export function renderExtensionNode(
   outputs?: ExtensionOutputs,
   /** W-1086: told the package id whenever one of its elements renders. */
   rendered?: (pkg: string) => void,
+  /** extensionApi 1.5: the render's id space (`uniqueId`), which the output's ids are scoped by. */
+  uniqueId: (base: string) => string = (base) => base,
 ): VNode {
   const id = typeof node.id === "string" ? node.id : undefined;
   const type = node.type;
@@ -220,14 +223,21 @@ export function renderExtensionNode(
     if (manifest && declared?.name !== name) return [];
     return visitChildren(slotChildren(storedChildrenOf(node), manifest));
   };
-  const children = visitChildren(safe).map((child) => fillSlots(child, fill));
-  return {
-    tag: "div",
-    attrs: {
-      class: "emvb-ext",
-      "data-emvb-ext": type,
-      ...(id && mode === "editor" ? { "data-emvb-id": id } : {}),
+  // The extension's own ids are scoped first, with the slot markers carried through the copy, and
+  // the slots are filled after. The author's content in a slot keeps the page's ids and links
+  // exactly as outside an extension: scoping it as the extension's would rename its ids and drop
+  // its links to the page.
+  const scoped = scopeIds(
+    {
+      tag: "div",
+      attrs: {
+        class: "emvb-ext",
+        "data-emvb-ext": type,
+        ...(id && mode === "editor" ? { "data-emvb-id": id } : {}),
+      },
+      children: visitChildren(safe),
     },
-    children,
-  };
+    uniqueId,
+  );
+  return fillSlots(scoped, fill);
 }

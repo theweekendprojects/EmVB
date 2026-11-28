@@ -30,19 +30,19 @@ export function slotNameOf(node: object): string | undefined {
 }
 
 /**
- * Replaces each slot marked in a rendered tree with `fill(name)`, in a rebuilt copy. A marked node
- * is replaced whole, and the tree is not changed.
+ * Replaces each slot marked under `root` with `fill(name)`, in a rebuilt copy: the children take the
+ * marker's place directly, with no wrapper element. A wrapper would be invalid inside a table or a
+ * list, where a slot holds rows or items, and it would break a kit's `ul > li` selectors. The tree
+ * is not changed. The root itself is never a marker: it is the element's own wrapper.
  */
 export function fillSlots(root: VNode, fill: (name: string) => VNode[]): VNode {
-  const name = slotNameOf(root);
-  if (name !== undefined) {
-    return { tag: "div", attrs: { class: "emvb-ext-slot" }, children: fill(name) };
-  }
   return {
     tag: root.tag,
     attrs: root.attrs,
-    children: root.children.map((child) =>
-      typeof child === "string" ? child : fillSlots(child, fill),
-    ),
+    children: root.children.flatMap((child) => {
+      if (typeof child === "string") return [child];
+      const name = slotNameOf(child);
+      return name === undefined ? [fillSlots(child, fill)] : fill(name);
+    }),
   };
 }

@@ -65,9 +65,41 @@ export type ExtensionField = Pick<
  * render output only; it is never stored in a layout.
  */
 export type ExtensionOutputNode =
-  | (LayoutNode & { extClasses?: readonly string[] })
+  | (WithOutputChildren<LayoutNode> & {
+      extClasses?: readonly string[];
+    })
+  | ExtensionMarkupNode
   | ExtensionSlotNode;
+/**
+ * A built-in node whose `children` (when it has them) are output nodes too, so a markup node can sit
+ * inside a built-in container and the other way round. Optional `children` stay optional.
+ */
+type WithOutputChildren<N> = N extends unknown
+  ? "children" extends keyof N
+    ? Omit<N, "children"> &
+        (Record<never, never> extends Pick<N, "children">
+          ? { children?: readonly ExtensionOutputNode[] }
+          : { children: readonly ExtensionOutputNode[] })
+    : N
+  : never;
 
+/**
+ * extensionApi 1.5: the generic markup node. `tag` must be on the serializer's list and each
+ * attribute name on its list; a refused tag, attribute or URL refuses the whole element (markup.ts).
+ * It is output only: it is never stored, and `text` and `children` are alternatives.
+ */
+export type ExtensionMarkupNode = {
+  id?: string;
+  type: "markup";
+  props: { tag: string; attrs?: Readonly<Record<string, string>>; text?: string };
+  children?: readonly ExtensionOutputNode[];
+  extClasses?: readonly string[];
+  /**
+   * CSS custom properties for this node, as on any other output node: checked and written by the
+   * `extVars` rules, so a kit's markup can set `--daisy-value`. Without those rules they are ignored.
+   */
+  extVars?: Readonly<Record<string, string>>;
+};
 /**
  * extensionApi 1.5: where the element's stored children render. `name` must be the slot the
  * element declares; any other name renders nothing. Output only: it is never stored.

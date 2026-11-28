@@ -40,13 +40,36 @@ const cards = () =>
       { ...element("tab-set", [{ name: "body" }], "body"), parts: ["tab-pane"] },
       element("tab-pane", [{ name: "body" }], "body"),
       {
-        // A marker nested in a container. Its type allows a marker at the top level only, so the
-        // nested form needs a cast; at runtime it works at any depth.
+        // A marker nested in a container: it compiles without a cast.
         ...element("boxed", [{ name: "body" }], "body"),
-        render: () =>
-          [
-            { type: "container", props: {}, children: [{ type: "ext-slot", name: "body" }] },
-          ] as unknown as ExtensionOutputNode[],
+        render: (): ExtensionOutputNode[] => [
+          {
+            id: "box00001",
+            type: "container",
+            props: {},
+            children: [{ type: "ext-slot", name: "body" }],
+          },
+        ],
+      },
+      {
+        // The extension's own output has an id and a link to it; its slot holds the author's content.
+        ...element("framed", [{ name: "body" }], "body"),
+        render: (): ExtensionOutputNode[] => [
+          { type: "markup", props: { tag: "h3", attrs: { id: "title" }, text: "Own title" } },
+          { type: "markup", props: { tag: "a", attrs: { href: "#title" }, text: "Own link" } },
+          { type: "ext-slot", name: "body" },
+        ],
+      },
+      {
+        // A box whose slot holds the author's content, as a kit's `.card-body > h2` expects.
+        ...element("body-box", [{ name: "body" }], "body"),
+        render: (): ExtensionOutputNode[] => [
+          {
+            type: "markup",
+            props: { tag: "div", attrs: { "data-box": "" } },
+            children: [{ type: "ext-slot", name: "body" }],
+          },
+        ],
       },
     ],
   });
@@ -93,7 +116,8 @@ describe("rendering the stored children into the slot", () => {
     rememberExtensions([cards()]);
     const page = renderPage(pageWithCard(CARD), emptyDesign(), { mode: "public" });
     expect(page.html).toContain("Kept copy");
-    expect(page.html).toContain("emvb-ext-slot");
+    // The children sit in the extension's output with no wrapper element of their own.
+    expect(page.html).not.toContain("emvb-ext-slot");
   });
 
   test("a child not on the slot's accepts list does not render", () => {
@@ -213,5 +237,85 @@ describe("the editor treats a slot holder as a parent", () => {
       ok: false,
       reason: REASONS.slotRefused,
     });
+  });
+});
+
+describe("slot content keeps the page's ids and links (scope first, fill after)", () => {
+  const html = (layout: Layout) => renderPage(layout, emptyDesign(), { mode: "public" }).html;
+  const root = (children: unknown[]): Layout =>
+    ({
+      schemaVersion: LAYOUT_SCHEMA_VERSION,
+      root: { id: "root0001", type: "container", props: {}, children },
+    }) as Layout;
+  const framed = (children: unknown[]) => ({
+    id: "fram0001",
+    type: `ext:${PKG}/framed`,
+    props: {},
+    children,
+  });
+
+  test("a page link to an id on the author's slot content still points at it", () => {
+    rememberExtensions([cards()]);
+    const out = html(
+      root([
+        { id: "go000001", type: "button", props: { text: "Go", href: "#pricing" } },
+        framed([
+          {
+            id: "head0001",
+            type: "heading",
+            htmlId: "pricing",
+            props: { text: "Pricing", level: 2 },
+          },
+        ]),
+      ]),
+    );
+    expect(out).toContain('href="#pricing"');
+    expect(out).toContain('id="pricing"');
+    expect(out).not.toContain("ext-pricing");
+  });
+
+  test("a link in the author's slot content to an anchor elsewhere on the page is kept", () => {
+    rememberExtensions([cards()]);
+    const out = html(
+      root([
+        framed([{ id: "top00001", type: "button", props: { text: "Top", href: "#top-anchor" } }]),
+        { id: "head0002", type: "heading", htmlId: "top-anchor", props: { text: "Top", level: 2 } },
+      ]),
+    );
+    expect(out).toContain('href="#top-anchor"');
+    expect(out).toContain('id="top-anchor"');
+  });
+
+  test("the extension's own ids and links are still scoped", () => {
+    rememberExtensions([cards()]);
+    const out = html(root([framed([])]));
+    expect(out).toContain('id="ext-title"');
+    expect(out).toContain('href="#ext-title"');
+  });
+});
+
+describe("a slot has no wrapper element", () => {
+  test("the author's content is a direct child of the element the slot sits in", () => {
+    rememberExtensions([cards()]);
+    const layout = {
+      schemaVersion: LAYOUT_SCHEMA_VERSION,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          {
+            id: "boxx0001",
+            type: `ext:${PKG}/body-box`,
+            props: {},
+            children: [
+              { id: "head0001", type: "heading", props: { text: "In the box", level: 2 } },
+            ],
+          },
+        ],
+      },
+    } as Layout;
+    const page = renderPage(layout, emptyDesign(), { mode: "public" });
+    expect(page.html).toMatch(/<div data-box="">\s*<h2 /);
   });
 });

@@ -200,6 +200,12 @@ the children go in the output with `{ type: "ext-slot", name }`:
 - `parts` lists this extension's element names that may only live inside this element
   (a tab panel inside tabs). A part is refused anywhere else in the editor.
 - A marker whose name the element does not declare renders nothing.
+- The children render directly where the marker is, with no wrapper element of their own, so a
+  kit's `.card-body > h2` still matches. They are the author's content: they keep their own ids
+  and links exactly as outside an extension. Only the extension's own output is id-scoped.
+- Don't put a slot directly inside table or list markup (`table`, `tbody`, `tr`, `ul`, `ol`). The
+  children are built-in elements and other extension elements, which render as `div`s, and a
+  `div` is not valid there. Put the slot inside a `td` or an `li`.
 - Children are ordinary stored nodes, so the layout format is unchanged. The slot marker is
   output only; it is never stored.
 - If the extension is missing, its children stay saved and visitors see nothing, as for any
