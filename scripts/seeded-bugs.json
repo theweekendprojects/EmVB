@@ -47448,8 +47448,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/extensions/types.ts",
-          "search": "          : { children: readonly ExtensionOutputNode[] })",
-          "replace": "          : { children: readonly LayoutNode[] })"
+          "search": "  | (WithOutputChildren<LayoutNode> & {",
+          "replace": "  | ((WithOutputChildren<never> | LayoutNode) & {"
         }
       ],
       "command": ["bun", "run", "typecheck"],
