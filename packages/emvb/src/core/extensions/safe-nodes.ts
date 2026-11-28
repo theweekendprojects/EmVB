@@ -43,8 +43,9 @@ type Coerced = {
 };
 
 const KNOWN = new Set<string>(KNOWN_ELEMENT_TYPES);
-const MAX_NODES = 32;
-const MAX_DEPTH = 8;
+/** One cap for everything an element returns: built-in nodes and the generic node alike. */
+const MAX_NODES = 200;
+const MAX_DEPTH = 12;
 
 function coerce(
   value: unknown,

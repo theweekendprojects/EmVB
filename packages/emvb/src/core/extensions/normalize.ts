@@ -29,7 +29,7 @@ export type NormalizedExtension = {
   manifest: ExtensionManifest;
 };
 
-const MAX_ELEMENTS = 32;
+const MAX_ELEMENTS = 128;
 const MAX_PANELS = 8;
 const MAX_SOURCES = 8;
 
