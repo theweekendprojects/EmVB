@@ -39,7 +39,7 @@ export function fillSlots(root: VNode, fill: (name: string) => VNode[]): VNode {
   return {
     tag: root.tag,
     attrs: root.attrs,
-    children: root.children.flatMap((child) => {
+    children: root.children.flatMap((child): (VNode | string)[] => {
       if (typeof child === "string") return [child];
       const name = slotNameOf(child);
       return name === undefined ? [fillSlots(child, fill)] : fill(name);
