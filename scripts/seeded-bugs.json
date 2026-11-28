@@ -47448,8 +47448,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/extensions/types.ts",
-          "search": "  ? \"children\" extends keyof N",
-          "replace": "  ? \"no-children\" extends keyof N"
+          "search": "          : { children: readonly ExtensionOutputNode[] })",
+          "replace": "          : { children: readonly LayoutNode[] })"
         }
       ],
       "command": ["bun", "run", "typecheck"],
