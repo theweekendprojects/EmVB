@@ -47442,6 +47442,20 @@
       "expect": "\\(fail\\).*carries the kit's allowlisted classes"
     },
     {
+      "id": "ext15-markup/output-children-untyped",
+      "requirement": "extensionApi 1.5 markup and ids (#43, #52)",
+      "description": "A built-in output node's children are typed as built-in nodes only, so a markup node inside a container no longer compiles.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/extensions/types.ts",
+          "search": "  | (WithOutputChildren<LayoutNode> & {",
+          "replace": "  | (LayoutNode & {"
+        }
+      ],
+      "command": ["bun", "run", "typecheck"],
+      "expect": "markup\\.test\\.ts.*error TS2322"
+    },
+    {
       "id": "W-1008/no-1.4-job",
       "requirement": "W-1008",
       "description": "CI stops testing the EmDash 1.4 floor.",

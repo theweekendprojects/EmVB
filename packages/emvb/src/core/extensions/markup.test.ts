@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { emptyDesign } from "../schema/design.ts";
-import { LAYOUT_SCHEMA_VERSION, type Layout } from "../schema/layout.ts";
+import { LAYOUT_SCHEMA_VERSION, type Layout, type LayoutNode } from "../schema/layout.ts";
+import { nodeChildren } from "../tree-ops.ts";
 import { renderPage } from "../render/index.ts";
 import { isAllowedAttr, isAllowedTag } from "../render/vnode.ts";
 import { defineExtension } from "./define.ts";
@@ -266,6 +267,32 @@ describe("render of the markup node", () => {
       expect(page.html).toContain(`id="ext-title${suffix}"`);
       expect(page.html).toContain(`href="#ext-title${suffix}"`);
     }
+  });
+});
+
+describe("output nodes nest both ways", () => {
+  // The declarations below are checked by `bun run typecheck`: they stop compiling if a built-in
+  // node's `children` stop accepting a markup node, or the reverse.
+  const markupInBuiltIn: ExtensionOutputNode = {
+    id: "box00001",
+    type: "container",
+    props: {},
+    children: [{ type: "markup", props: { tag: "p", text: "inside" } }],
+  };
+  const builtInInMarkup: ExtensionOutputNode = {
+    type: "markup",
+    props: { tag: "div" },
+    children: [{ id: "head0001", type: "heading", props: { text: "inside", level: 2 } }],
+  };
+
+  test("a markup node inside a built-in container, and the reverse, validate with their specs", () => {
+    const out = safeExtensionOutput([markupInBuiltIn, builtInInMarkup]);
+    expect(out).toHaveLength(2);
+    const [box, wrapper] = out as [LayoutNode, LayoutNode];
+    expect(box.type).toBe("container");
+    expect(markupOf(only(nodeChildren(box)))?.tag).toBe("p");
+    expect(markupOf(wrapper)?.tag).toBe("div");
+    expect(only(nodeChildren(wrapper)).type).toBe("heading");
   });
 });
 

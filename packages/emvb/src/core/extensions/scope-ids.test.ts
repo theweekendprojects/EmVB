@@ -89,7 +89,7 @@ describe("scopeIds", () => {
     expect(p?.attrs).toEqual({ id: "ext-mine", "aria-labelledby": "ext-mine" });
   });
 
-  test("ids that start with emvb, shadow a browser global, or are not plain ids are dropped with their references", () => {
+  test("author ids that shadow a browser global or are not plain ids are dropped with their references", () => {
     const out = scopeIds(
       el(
         "div",
