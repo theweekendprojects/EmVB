@@ -47532,7 +47532,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "        attrs: { ...markup.attrs, ...(kitClasses?.length ? { class: kitClasses.join(\" \") } : {}) },",
+          "search": "        attrs: { ...markup.attrs, ...(classes.length ? { class: classes.join(\" \") } : {}) },",
           "replace": "        attrs: { ...markup.attrs },"
         }
       ],
