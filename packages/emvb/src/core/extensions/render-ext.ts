@@ -250,7 +250,3 @@ export function renderExtensionNode(
   );
   return fillSlots(scoped, fill);
 }
-    },
-    uniqueId,
-  );
-}
