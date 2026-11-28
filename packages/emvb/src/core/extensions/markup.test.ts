@@ -8,7 +8,7 @@ import { defineExtension } from "./define.ts";
 import { markupOf, markupSpec } from "./markup.ts";
 import { clearExtensions, rememberExtensions } from "./registry.ts";
 import { safeExtensionOutput, withExtensionClasses } from "./safe-nodes.ts";
-import type { ExtensionOutputNode } from "./types.ts";
+import type { ExtensionMarkupNode, ExtensionOutputNode } from "./types.ts";
 
 /** The ten tags extensionApi 1.5 adds to the serializer's list (no `tfoot`). */
 const NEW_TAGS = ["dialog", "table", "caption", "thead", "tbody", "tr", "th", "td", "pre", "kbd"];
@@ -271,18 +271,26 @@ describe("render of the markup node", () => {
 });
 
 describe("output nodes nest both ways", () => {
-  // The declarations below are checked by `bun run typecheck`: they stop compiling if a built-in
-  // node's `children` stop accepting a markup node, or the reverse.
+  // The declarations below are checked by `bun run typecheck`, not by this run. They use values
+  // that already have the markup node's type, as a kit package does: a fresh object literal is
+  // accepted by `LayoutNode`'s catch-all shapes and would not show the regression. They stop
+  // compiling if a built-in node's `children` stop accepting a markup node, or the reverse.
+  const row: ExtensionMarkupNode = { type: "markup", props: { tag: "p", text: "inside" } };
   const markupInBuiltIn: ExtensionOutputNode = {
     id: "box00001",
     type: "container",
     props: {},
-    children: [{ type: "markup", props: { tag: "p", text: "inside" } }],
+    children: [row],
   };
-  const builtInInMarkup: ExtensionOutputNode = {
+  const heading: ExtensionOutputNode = {
+    id: "head0001",
+    type: "heading",
+    props: { text: "inside", level: 2 },
+  };
+  const builtInInMarkup: ExtensionMarkupNode = {
     type: "markup",
     props: { tag: "div" },
-    children: [{ id: "head0001", type: "heading", props: { text: "inside", level: 2 } }],
+    children: [heading, row],
   };
 
   test("a markup node inside a built-in container, and the reverse, validate with their specs", () => {
@@ -292,7 +300,7 @@ describe("output nodes nest both ways", () => {
     expect(box.type).toBe("container");
     expect(markupOf(only(nodeChildren(box)))?.tag).toBe("p");
     expect(markupOf(wrapper)?.tag).toBe("div");
-    expect(only(nodeChildren(wrapper)).type).toBe("heading");
+    expect(nodeChildren(wrapper).map((child) => child.type)).toEqual(["heading", "container"]);
   });
 });
 
